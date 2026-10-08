@@ -1,3 +1,0 @@
-{"session":"fixture-rc9-contract-cascade","ordinal":1,"stage":"preflight","path":"analyses[1].payload.consequences_and_alternatives","kind":"missing_key"}
-{"session":"fixture-rc9-contract-cascade","ordinal":2,"stage":"preflight","path":"analyses[1].payload.wage_composition.verified_on","kind":"missing_date"}
-{"session":"fixture-rc9-contract-cascade","ordinal":3,"stage":"preflight","path":"analyses[1].payload.wage_composition.verification_status","kind":"invalid_enum","value":"unavailable"}

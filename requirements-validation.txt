@@ -1,2 +1,0 @@
-# Skill metadata validation only; keep separate from runtime/document dependencies.
-PyYAML==6.0.3

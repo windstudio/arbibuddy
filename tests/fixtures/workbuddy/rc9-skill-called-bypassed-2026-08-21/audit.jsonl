@@ -1,4 +1,0 @@
-{"sessionId":"fixture-rc9-skill-bypassed","timestamp":100,"commandPreview":"python -m venv .venv","returncode":0}
-{"sessionId":"fixture-rc9-skill-bypassed","timestamp":200,"commandPreview":"pip install python-docx","returncode":0}
-{"sessionId":"fixture-rc9-skill-bypassed","timestamp":300,"commandPreview":"python gen_application.py","returncode":0}
-{"sessionId":"fixture-rc9-skill-bypassed","timestamp":400,"commandPreview":"present_files 仲裁申请书.docx","returncode":0}

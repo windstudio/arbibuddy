@@ -1,5 +1,0 @@
-{"sessionId":"fixture-rc7-no-skill","timestamp":100,"commandPreview":"python -B -X utf8 -m scripts.core_workflow.cli next-turn CASE","returncode":0}
-{"sessionId":"fixture-rc7-no-skill","timestamp":200,"commandPreview":"python -m venv .venv","returncode":0}
-{"sessionId":"fixture-rc7-no-skill","timestamp":300,"commandPreview":"pip install python-docx","returncode":0}
-{"sessionId":"fixture-rc7-no-skill","timestamp":400,"commandPreview":"python gen_arbitration.py","returncode":0}
-{"sessionId":"fixture-rc7-no-skill","timestamp":500,"commandPreview":"present_files 仲裁申请书.docx","returncode":0}

@@ -1,3 +1,0 @@
-# 仅供显式 scripts.agent_eval.cli 真实 Agent Eval 使用；不属于 ArbiBuddy Skill 运行时依赖。
-openai-codex
-PyYAML==6.0.3
