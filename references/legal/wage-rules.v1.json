@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "NAT-WAGE-001",
+      "version": "1.1.0",
+      "applicable_claims": ["拖欠工资", "单方降薪工资差额", "法定津贴补贴差额", "销售提成", "项目奖金", "绩效奖金", "年终奖金", "十三薪", "工资差额", "绩效", "年终奖"],
+      "jurisdiction": "全国基线；上海专项增强；其他地区须动态核验",
+      "effective_from": "1995-01-01",
+      "effective_to": null,
+      "summary": "用人单位应按约定和国家规定及时足额支付劳动报酬；降薪、津贴补贴、提成、项目奖金、绩效奖金、年终奖金和十三薪是否应付，须结合收入性质、约定或法定依据、触发条件、归属期间、地方口径及证据个案核验",
+      "conditions": [
+        "存在劳动报酬约定或依法可确定的支付标准",
+        "劳动者已满足对应劳动报酬的支付条件",
+        "存在未支付或未足额支付的差额"
+      ],
+      "exceptions": [
+        "合法代扣、书面调薪或支付条件未成就可能影响金额或是否应付",
+        "法定津贴补贴应与普通福利、费用报销和商业激励区分，绩效和年终奖不得仅凭名称推定为当然应付",
+        "提成、项目奖金、绩效奖金、年终奖金和十三薪不得因名称或业绩发生自动推定支付条件已经成就",
+        "时效、上海专项或其他地方受理口径、工资构成纳入规则发生变化或冲突时必须动态核验"
+      ],
+      "source_ids": [
+        "SRC-NAT-LABOR-LAW-050",
+        "SRC-NAT-LCL-030",
+        "SRC-NAT-WAGE-PAYMENT-006-007",
+        "SRC-SH-WAGE-PAYMENT"
+      ],
+      "verified_on": "2026-08-01",
+      "review_on": "2026-11-01"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-NAT-LABOR-LAW-050",
+      "title": "中华人民共和国劳动法第五十条",
+      "authority": "全国人民代表大会常务委员会（人力资源社会保障部发布）",
+      "url": "https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394625.html",
+      "effective_from": "1995-01-01",
+      "effective_to": null,
+      "verified_on": "2026-07-17"
+    },
+    {
+      "source_id": "SRC-NAT-LCL-030",
+      "title": "中华人民共和国劳动合同法第三十条",
+      "authority": "全国人民代表大会常务委员会（国家市场监督管理总局发布）",
+      "url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_0abfdd261c03417b949df19d869add8d.html",
+      "effective_from": "2008-01-01",
+      "effective_to": null,
+      "verified_on": "2026-07-17"
+    },
+    {
+      "source_id": "SRC-NAT-WAGE-PAYMENT-006-007",
+      "title": "工资支付暂行规定第六条、第七条",
+      "authority": "原劳动部（上海市人力资源和社会保障局公开）",
+      "url": "https://rsj.sh.gov.cn/trlzyhshbzbgz_17256/20200617/t0035_1388318.html",
+      "effective_from": "1995-01-01",
+      "effective_to": null,
+      "verified_on": "2026-09-23"
+    },
+    {
+      "source_id": "SRC-SH-WAGE-PAYMENT",
+      "title": "上海市企业工资支付办法",
+      "authority": "上海市人力资源和社会保障局",
+      "url": "https://rsj.sh.gov.cn/tgzfl_17732/20260731/t0035_1442850.html",
+      "effective_from": "2026-08-01",
+      "effective_to": "2031-07-31",
+      "verified_on": "2026-09-22"
+    }
+  ]
+}

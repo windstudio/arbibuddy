@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "NAT-EMPLOYMENT-RELATIONSHIP-001",
+      "version": "1.0.0",
+      "applicable_claims": ["劳动关系确认"],
+      "jurisdiction": "全国",
+      "effective_from": "2008-01-01",
+      "effective_to": null,
+      "summary": "劳动关系自实际用工之日起建立；未订立书面劳动合同时，应结合主体资格、劳动管理、有报酬劳动及业务组成等用工事实综合判断",
+      "conditions": [
+        "用人单位和劳动者具备建立劳动关系的主体资格",
+        "劳动者接受用人单位劳动管理并从事其安排的有报酬劳动",
+        "劳动者提供的劳动属于用人单位业务组成部分"
+      ],
+      "exceptions": [
+        "合同名称或是否签订书面合同不单独决定关系性质，应以实际用工事实为基础",
+        "劳务派遣、平台用工、业务外包或承揽及涉外用工属于复杂用工形态，仅进入分层支持和专业复核路径",
+        "主体资格、特殊身份、地方受理口径、来源冲突或规则变化需案件动态核验"
+      ],
+      "source_ids": [
+        "SRC-NAT-LCL-007-010",
+        "SRC-NAT-RELATIONSHIP-NOTICE-001-002"
+      ],
+      "verified_on": "2026-07-17",
+      "review_on": "2027-01-17"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-NAT-LCL-007-010",
+      "title": "中华人民共和国劳动合同法第七条、第十条",
+      "authority": "全国人民代表大会常务委员会（国家市场监督管理总局发布）",
+      "url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_0abfdd261c03417b949df19d869add8d.html",
+      "effective_from": "2008-01-01",
+      "effective_to": null,
+      "verified_on": "2026-07-17"
+    },
+    {
+      "source_id": "SRC-NAT-RELATIONSHIP-NOTICE-001-002",
+      "title": "关于确立劳动关系有关事项的通知第一条、第二条",
+      "authority": "原劳动和社会保障部（人力资源社会保障部公开）",
+      "url": "https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/gfxwj/ldgx/201407/t20140717_136260.html",
+      "effective_from": "2005-05-25",
+      "effective_to": null,
+      "verified_on": "2026-09-23"
+    }
+  ]
+}

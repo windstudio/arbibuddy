@@ -1,0 +1,138 @@
+schema_version: 2
+id: ML01-wage-bonus-overtime
+title: 工资、绩效奖金与加班争议及仲裁材料
+relative_calendar:
+  departure_months_ago: 3
+  wage_start_months_ago: 5
+  last_demand_months_ago: 2
+initial_user_message: 我想梳理工资、季度绩效奖金和加班费，准备劳动仲裁材料。我 2024 年 3 月 1 日入职上海澄明云科信息技术有限公司，岗位是产品经理，主要在浦东工作；合同约定月薪 12000 元，工资和社保也由这家公司处理，但注册地址、办公地址和收件地址我说不准。{departure_date}已离职，离职方式和手续尚未核清，暂时找不到解除通知、离职申请、离职证明或协议。{wage_period}工资没足额发，12000 元是否为固定月薪总额、有无津贴或提成，以及每月应发、到账和差额都待核。合同有季度绩效奖金，这次主张的那期没收到，具体季度、条件和金额要查。{wage_period_short}有加班，有些由领导在工作群安排，日期、时数、审批记录及工时制度待核。我有合同、部分工资流水和工资条、考勤截图、项目群聊天、内部邮件及催款记录，考勤不完整，奖金规则可能在邮件里。离职后半年内我通过邮件和工作群追讨过工资，公司仍未付清；最后一次催要的细节我可以补充，尚未仲裁、起诉或调解。这次先处理上述三项，我的身份和联系方式稍后补。请先建档，说明现有材料能支持什么、金额和补证缺口，并准备带待核项的仲裁申请候选稿及证据目录；如需我确认事实，请先给出摘要。
+initial_fact_ids: [employment, party_and_workplace, wage_dispute, performance_bonus, overtime, evidence, limitation_and_proceedings, termination_and_claim_scope, analysis_scope]
+simulator:
+  persona: 虚构劳动争议中的当事人
+  objective: >-
+    只依据已声明事实回答模型 A 当前问题。单主题只答相关事实；多个主题在上限内补齐直接相关事实，不用范围卡代替案情。
+    A 询问或请再次确认单位、工作地及适用地区时，选择 party_and_workplace，重申主要在上海浦东工作；登记、办公、收件地址仍未知。
+    问最后催讨选择 last_demand；权益扫描后问本轮是否增加事项选择 rights_scan_scope；问最终事实或材料补充选择 final_supplement_none。
+    A 请确认摘要基本准确时：若 rights_scan_scope 或 final_supplement_none 尚未在此前轮次发送，选择 initial_summary_confirmation，只核对已知事实并继续收集；两者均已发送后才选择 final_confirmation。
+    初步核对不代表完成最终补充后的完整摘要确认，不按固定轮次播放。A 更新摘要后明确再次请确认时，可在 max_uses 内再次选择确认卡；曾确认过不能成为回答 unavailable 的理由。
+    摘要基本涵盖欠薪、这期奖金未收、加班及本轮三项范围即可；不要求逐项复述全部日期、金额、材料。只有核心争议状态或范围明显缺失、误述才选择 confirmation_summary_revision_requested。
+    若一条回复既请确认摘要又问地区，可一并选择适用确认卡和 party_and_workplace；具体未知项继续待核，不推定已审阅材料或认可法律结论。
+  max_facts_per_turn: 5
+  unavailable_message: 这个具体信息我现在说不准，得核对材料；先标成待核项，其他已知部分可以继续。
+  max_unavailable_uses: null
+  confirmation_fact_id: final_confirmation
+  confirmation_prerequisite_fact_ids: [wage_dispute, performance_bonus, overtime, evidence, rights_scan_scope, final_supplement_none]
+  confirmation_conflict_fact_ids: [initial_summary_confirmation]
+  confirmation_conflict_markers: [欠薪月份仍待核, 工资欠付期间仍待核, 欠付工资的月份尚不清楚, 季度绩效奖金已收到, 季度奖金已经支付, 没有发生加班, 未发生加班, 没有任何证据材料]
+  prompt_version: scenario-responder-prompt-v16
+  schema_version: scenario-responder-schema-v4
+  confirmation_summary_required_groups:
+    wage_shortfall: ["未足额", "没足额发", "欠发工资", "拖欠工资", "工资未付清"]
+    bonus_unpaid: ["未收到", "未发", "未付", "没拿到"]
+    overtime_claim: ["有加班", "发生加班", "月加班", "加班期间", "加班安排", "加班由"]
+    scope_wage: ["工资差额", "欠发工资", "拖欠工资"]
+    scope_bonus: ["季度绩效奖金", "季度奖金"]
+    scope_overtime: ["加班费"]
+fact_pool:
+  - id: employment
+    message: 我是 2024 年 3 月 1 日入职，{departure_date}已离职，目前不在职，当前劳动关系已经结束；签过劳动合同，岗位是产品经理，约定月薪 12000 元。
+  - id: party_and_workplace
+    max_uses: 10
+    message: 劳动合同上的单位是“上海澄明云科信息技术有限公司”，工资和社保也由这家公司处理。我主要在上海市浦东新区工作，注册地址、办公地址和收件地址我现在说不准。
+  - id: wage_dispute
+    max_uses: 1
+    message: "{wage_period}的工资没有足额发。合同写月薪 12000 元，但我还没核对这是不是固定月薪总额、有没有津贴或提成；每月应发、到账和差额也还没整理出来。"
+  - id: performance_bonus
+    max_uses: 2
+    message: 合同里有季度绩效奖金，这部分目前没拿到。我还得查合同、公司制度、邮件和工资条，才能说清是哪一季、是否满足发放条件以及具体金额。
+  - id: bonus_history_unknown
+    max_uses: 1
+    message: 以前是否收到过各季度的绩效奖金我还没核对，要查工资条和奖金记录；我目前只确认这次主张的那期奖金没有收到。
+  - id: overtime
+    max_uses: 1
+    message: "{wage_period}有加班，有些是领导在工作群里安排的。具体哪天、加到几点还没逐日整理；有些考勤截图和工作群记录，审批记录不全，工时制度我也不清楚。"
+  - id: evidence
+    max_uses: 1
+    message: 我手头有劳动合同、部分月份的工资流水和工资条、考勤截图、项目群聊天、内部邮件以及催款记录。奖金规则可能在邮件里，考勤记录也不完整。
+  - id: limitation_and_proceedings
+    max_uses: 1
+    message: 离职后半年内，我通过邮件和工作群追讨过工资，公司一直没付清；最后一次催要的细节我可以补充。我还没有申请仲裁、起诉或参加调解。
+  - id: last_demand
+    max_uses: 1
+    message: 最后一次催讨是 {last_demand_date}通过工作群发消息，要求补发{wage_period}的工资差额；没有在这次消息中催要季度绩效奖金或加班费。公司在群里回复会核对，但没有承诺付款日期，也没有付清。我保存了该群聊截图和原始聊天记录，具体发送和回复时间可以据此核对。
+  - id: termination_and_claim_scope
+    max_uses: 1
+    message: 我已经离职，但当时的手续和具体离职方式还没核对清楚，暂时找不到解除通知、离职申请、离职证明或协议。这次先处理工资、季度绩效奖金和加班费；我的姓名、证件、住址和联系方式稍后补。
+  - id: analysis_scope
+    max_uses: 1
+    message: 我这次先处理工资差额、季度绩效奖金和加班费。现有材料能支持的先说明，金额缺口和补证方向列清楚，并准备带明确待核项的仲裁申请候选稿。申请人和单位主体信息我之后补。
+  - id: rights_scan_scope
+    max_uses: 1
+    message: 本次先处理工资差额、这期季度绩效奖金和加班费；权益扫描提到的其他方向暂不纳入，之后查到新材料再决定是否补充。
+  - id: final_supplement_none
+    max_uses: 1
+    message: 目前没有其他事实或材料要补充；没核清的地方先保留待核，按已说的继续。
+  - id: confirmation_summary_revision_requested
+    max_uses: 1
+    message: 这段摘要还没说清工资未足额发、这期季度绩效奖金未收到和加班这三项基本情况。请按我已说的简要补进摘要，不清楚的仍标待核；本次先处理工资差额、季度绩效奖金和加班费。补充后我再确认。
+  - id: initial_summary_confirmation
+    max_uses: 10
+    requires_sent_facts: [wage_dispute, performance_bonus, overtime, evidence]
+    message: 上述已知事实和本轮工资差额、这期季度绩效奖金、加班费三项范围基本准确，具体金额、材料及法律口径未核清的仍待核。可以继续收集和核对其他权益方向；最终补充后，再给我完整摘要确认后准备候选材料。
+  - id: final_confirmation
+    max_uses: 10
+    message: 事实和本轮三项处理范围确认；法律时效和金额口径中没核清的仍按待核处理。请按当前档案准备仲裁申请候选稿、证据目录和提交前核对清单，暂不定稿。
+milestones:
+  - id: archive_written
+    response_any: [案情档案, 已保存, 记录到档案]
+  - id: delivery_observed
+    response_any: [DOCX, 文书, 核验清单]
+expect:
+  required_artifacts: [case_archive, docx, checklist]
+  required_deliveries:
+    - document_type: arbitration_application
+      mode: candidate
+      require_case_archive: true
+      require_checklist: true
+      require_same_case_id: true
+      require_current_archive_revision: true
+    - document_type: evidence_catalog
+      mode: candidate
+      require_case_archive: true
+      require_checklist: true
+      require_same_case_id: true
+      require_current_archive_revision: true
+  allow_extra_deliveries: false
+  min_turns: 2
+  allow_degraded_delivery: true
+  degradation_markers: [未提供, 不能虚称, 无法, 不可用]
+  response_markers:
+    facts: [事实, 证据, 材料]
+    amount: [金额, 占位, 待补]
+    delivery: [DOCX, 文书, 清单]
+    delivery_degraded: [未生成 DOCX, 不能交付合格 Word, 安装兼容包, 更换已支持环境]
+  completion_paths:
+    - id: delivered
+      requires_sent_facts: [final_confirmation]
+      required_artifacts: [case_archive, docx, checklist]
+      required_deliveries:
+        - document_type: arbitration_application
+          mode: candidate
+          require_case_archive: true
+          require_checklist: true
+          require_same_case_id: true
+          require_current_archive_revision: true
+        - document_type: evidence_catalog
+          mode: candidate
+          require_case_archive: true
+          require_checklist: true
+          require_same_case_id: true
+          require_current_archive_revision: true
+      required_response_groups: [facts, amount, delivery]
+    - id: delivery_degraded
+      requires_sent_facts: [final_confirmation]
+      required_artifacts: [case_archive]
+      required_response_groups_after_trigger: [delivery_degraded]
+      requires_capabilities_unavailable: [complete_document_pipeline_available]
+      forbids_artifacts: [docx, checklist]
+  max_turns: 10

@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "NAT-UNSIGNED-CONTRACT-001",
+      "version": "1.0.0",
+      "applicable_claims": ["未签书面劳动合同二倍工资差额"],
+      "jurisdiction": "全国",
+      "effective_from": "2008-01-01",
+      "effective_to": null,
+      "summary": "建立劳动关系后超过一个月未依法订立书面劳动合同的，二倍工资按月计算，不满一个月按实际工作日计算；首次用工情形通常截至补订合同前一日或满一年前一日，并须排除法定免责及等效书面协议等情形",
+      "conditions": [
+        "存在受劳动合同法调整的劳动关系",
+        "自用工之日起超过一个月仍未依法订立书面劳动合同",
+        "成立期间、各期间工资基数和已付金额均有可核对依据",
+        "仲裁时效、申请日期和当前程序阶段已按履行地现行口径核验"
+      ],
+      "exceptions": [
+        "不可抗力、劳动者本人故意或者重大过失导致未订立的除外",
+        "其他书面协议已具备劳动合同主要条款并固定双方权利义务的，可能排除二倍工资",
+        "劳动合同期限依法自动续延的，不属于未订立书面劳动合同",
+        "自用工之日起满一年视为已订立无固定期限劳动合同，此后不得仅以未补订书面合同继续主张二倍工资",
+        "仲裁时效起算和支持期间可能存在地方口径差异，必须结合程序阶段动态核验"
+      ],
+      "source_ids": [
+        "SRC-NAT-LCL-010-014-017-082",
+        "SRC-NAT-LCL-REGULATION-005-007",
+        "SRC-NAT-LABOR-INTERPRETATION-II-006-009",
+        "SRC-NAT-GUIDING-CASE-179",
+        "SRC-NAT-ARBITRATION-027"
+      ],
+      "verified_on": "2026-07-18",
+      "review_on": "2027-01-18"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-NAT-LCL-010-014-017-082",
+      "title": "中华人民共和国劳动合同法第十条、第十四条、第十七条、第八十二条",
+      "authority": "全国人民代表大会常务委员会（国家市场监督管理总局发布）",
+      "url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_0abfdd261c03417b949df19d869add8d.html",
+      "effective_from": "2008-01-01",
+      "effective_to": null,
+      "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-LCL-REGULATION-005-007",
+      "title": "中华人民共和国劳动合同法实施条例第五条至第七条",
+      "authority": "国务院（司法部行政法规库发布）",
+      "url": "https://xzfg.moj.gov.cn/law/download?LawID=284&type=pdf",
+      "effective_from": "2008-09-18",
+      "effective_to": null,
+      "verified_on": "2026-09-23"
+    },
+    {
+      "source_id": "SRC-NAT-LABOR-INTERPRETATION-II-006-009",
+      "title": "最高人民法院关于审理劳动争议案件适用法律问题的解释（二）第六条至第九条",
+      "authority": "最高人民法院",
+      "url": "https://www.court.gov.cn/zixun/xiangqing/472691.html",
+      "effective_from": "2025-09-01",
+      "effective_to": null,
+      "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-GUIDING-CASE-179",
+      "title": "指导案例179号：聂美兰诉北京林氏兄弟文化有限公司确认劳动关系案",
+      "authority": "最高人民法院",
+      "url": "https://www.court.gov.cn/shenpan/xiangqing/364631.html",
+      "effective_from": "2022-07-04",
+      "effective_to": null,
+      "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-ARBITRATION-027",
+      "title": "中华人民共和国劳动争议调解仲裁法第二十七条",
+      "authority": "全国人民代表大会常务委员会（驻马店市中级人民法院公开）",
+      "url": "https://zmdzy.hncourt.gov.cn/upload/file/20250710/20250710121409_65235.pdf",
+      "effective_from": "2008-05-01",
+      "effective_to": null,
+      "verified_on": "2026-09-23"
+    }
+  ]
+}

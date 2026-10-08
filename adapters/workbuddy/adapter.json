@@ -1,0 +1,33 @@
+{
+  "schema_version": 2,
+  "platform": "workbuddy",
+  "project_discovery_path": "arbibuddy",
+  "user_discovery_path": "arbibuddy",
+  "required_metadata": [],
+  "discovery_probe": {
+    "kind": "workbuddy-lifecycle-evidence",
+    "required_observations": [
+      "installed",
+      "reload_observed",
+      "registered",
+      "exposed_to_model",
+      "invoked"
+    ],
+    "hot_reload_is_not_registration": true,
+    "fail_closed_when_missing": true,
+    "next_action": "重载、重启或重新导入 WorkBuddy Skill 后重新验证生命周期证据",
+    "evidence_format": "utf-8-json"
+  },
+  "installation": {
+    "mechanism": "audited-local-package",
+    "automated_local_install": true,
+    "artifact_build_supported": true,
+    "verification_boundary": "新安装树与 UTF-8 安装回执共同原子提交；逐文件身份、共享核心契约、客户端生命周期和首个用户屏障分别验证",
+    "receipt_location": "skill_root/arbibuddy.install.json",
+    "portable_runtime_marker": "skill_root/arbibuddy.runtime.json",
+    "native_upload_verification": "只保留 Skill 子树时使用内置便携标记；不要求受管安装回执或外部信任锚",
+    "cleanup_policy": "提交后清理失败只产生 warning，并由 cleanup 幂等回收",
+    "instruction": "可先生成并验签本地 Skill ZIP；本地生命周期命令只验证受管安装树，WorkBuddy 原生注册、触发和首个屏障必须另附生命周期证据"
+  },
+  "official_documentation": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market"
+}

@@ -1,0 +1,32 @@
+{
+  "trace": {
+    "traceId": "trace-ml03-2-redacted",
+    "sessionId": "ml03-session-2-redacted"
+  },
+  "spans": [
+    {
+      "traceId": "trace-ml03-2-redacted",
+      "spanId": "span-cleanup-ml03-2",
+      "sessionId": "ml03-session-2-redacted",
+      "kind": "function",
+      "toolName": "shell",
+      "toolInput": {"command": "remove-item .arbibuddy/cases/case-cccccccccccccccccccccccc/output -recurse"},
+      "toolOutput": {"ok": true},
+      "status": "success",
+      "startedAt": "2026-09-17T04:00:00.000Z",
+      "endedAt": "2026-09-17T04:00:00.100Z"
+    },
+    {
+      "traceId": "trace-ml03-2-redacted",
+      "spanId": "span-read-ml03-2",
+      "sessionId": "ml03-session-2-redacted",
+      "kind": "function",
+      "toolName": "CaseArchive.read",
+      "toolInput": {"operation": "read", "case_id": "case-cccccccccccccccccccccccc", "root": "<workspace>"},
+      "toolOutput": {"ok": true, "result": {"case_id": "case-cccccccccccccccccccccccc", "revision": 3}},
+      "status": "success",
+      "startedAt": "2026-09-17T04:01:00.000Z",
+      "endedAt": "2026-09-17T04:01:00.100Z"
+    }
+  ]
+}

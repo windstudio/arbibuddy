@@ -1,0 +1,57 @@
+schema_version: 2
+id: ML03-interruption-correction-degradation
+title: 中断恢复、事实纠正与动态核验失败降级
+initial_user_message: 我想继续梳理一件工资争议，现在没法联网查最新规定。请先问我最要紧的情况。
+simulator:
+  persona: 虚构劳动争议中的当事人
+  objective: 先发送 initial_facts，明确说欠薪两个月；只能在下一轮发送 correction，更正为三个月。重开会话并收到模型 A 的恢复答复后，下一轮立即发送 degradation，即使 A 仍追问其他未知细节；这是当事人主动转向现有档案的分析目标。其他无法对应的问题使用 unavailable，不主动编造或扩展事实。
+  max_facts_per_turn: 1
+  unavailable_message: 这个信息我目前没有，能否先根据已知信息继续？
+  max_unavailable_uses: null
+  after_restart_fact_id: degradation
+  prompt_version: scenario-responder-prompt-v16
+  schema_version: scenario-responder-schema-v3
+fact_pool:
+  - id: initial_facts
+    message: 我仍在职并正常上班，2025 年 1 月入职，月薪 10000 元，公司之前拖欠我两个月工资。我有书面劳动合同、银行流水、群聊和考勤，还没发过催告或解除通知。具体欠薪月份和公司所在地区我现在说不准。
+  - id: correction
+    requires_sent_facts: [initial_facts]
+    immediately_after: initial_facts
+    message: 更正一下，不是两个月，而是三个月；我刚才说错了。
+  - id: degradation
+    requires_sent_facts: [initial_facts, correction]
+    message: 我暂时无法提供更多材料，本轮不生成文书。如果当前无法取得必要的最新官方依据，请只根据当前档案说明：哪些事项仍待核实、哪些分析可以继续、哪些高风险定稿必须暂缓；最后只问一个下一步问题。
+milestones:
+  - id: correction_committed
+    response_any: [三个月, 修正]
+    archive_all: [三个月]
+  - id: archive_recovered_after_restart
+    after_restart: true
+    response_any: [档案接续, 档案读取, 案情档案接上]
+    archive_all: [三个月]
+  - id: degradation_explained
+    response_any: [待核实, 待核验, 无法核验, 降级]
+restart:
+  after_milestone: correction_committed
+  message: 我刚才被中断了，请先读取已经保存的案情后继续，不要只依赖聊天记忆。
+expect:
+  required_artifacts: [case_archive]
+  required_deliveries: []
+  allow_extra_deliveries: false
+  degradation_markers: [无法核验, 待核实, 待核验, 降级, 不能确定]
+  response_markers:
+    archive: [档案, 保存]
+    correction: [更正, 修正, 三个月]
+    degradation: [待核实, 待核验, 无法, 不能确定, 降级]
+  completion_paths:
+    - id: recovered_and_degraded
+      requires_sent_facts: [degradation]
+      required_artifacts: [case_archive]
+      required_response_groups: [archive, correction]
+      required_response_groups_after_trigger: [degradation]
+      required_milestones:
+        - correction_committed
+        - archive_recovered_after_restart
+        - degradation_explained
+  min_turns: 5
+  max_turns: 6

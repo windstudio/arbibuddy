@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "platform": "codex",
+  "project_discovery_path": ".agents/skills/arbibuddy",
+  "user_discovery_path": ".agents/skills/arbibuddy",
+  "required_metadata": [
+    "agents/openai.yaml"
+  ],
+  "discovery_probe": {
+    "kind": "codex-prompt-input",
+    "trigger": "我想梳理一件劳动争议并准备仲裁材料。"
+  },
+  "installer": "python -m scripts.platform_adapters.cli install --platform codex",
+  "uninstaller": "python -m scripts.platform_adapters.cli uninstall --platform codex",
+  "verifier": "python -m scripts.platform_adapters.cli verify-install --platform codex",
+  "runtime_permissions": {
+    "workspace": {
+      "scope": "installed-project-or-user-root",
+      "write": true,
+      "uninstall": "receipt-bound-only"
+    },
+    "network": {
+      "scope": "per-command",
+      "request_method": "GET",
+      "denied_behavior": "report-capability-degradation"
+    }
+  },
+  "official_documentation": "https://developers.openai.com/codex/skills"
+}

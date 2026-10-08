@@ -1,0 +1,138 @@
+{
+  "schema_version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "NAT-DISPUTE-ROUTING-001",
+      "version": "1.0.0",
+      "applicable_claims": ["社会保险路径", "住房公积金路径", "六类复杂争议分层"],
+      "jurisdiction": "全国基线；上海受理机关、办理程序与地方口径专项增强",
+      "effective_from": "2026-07-18",
+      "effective_to": null,
+      "summary": "缴费事项优先识别行政处理路径，交叉例外使用受控状态；六类复杂争议只进入风险识别与专业复核",
+      "conditions": [
+        "社会保险和住房公积金缴费问题分别识别征缴、经办、监察、税务或公积金中心候选路径",
+        "地区、程序阶段、请求类型和现行口径必须动态核验",
+        "工伤、职业病、竞业限制、劳务派遣、股权激励和涉外用工只提供分层支持"
+      ],
+      "exceptions": [
+        "社保待遇损失、解除与经济补偿等可能形成仲裁或诉讼交叉请求，不能与单纯补缴混同",
+        "地方受理机关、历史时段分工、程序期限和请求性质变化时必须重新路由",
+        "涉外用工的旧就业证条款不得直接作为现行办证流程；2017年起两证整合，工作许可、居留及当地窗口以现行官方指南另核",
+        "来源过期、冲突或无法完成动态核验时必须降级为 pending_verification"
+      ],
+      "local_differences": [
+        "上海人社2025年咨询答复称本市各级仲裁机构自2014年7月起不再受理社保缴费争议，可向劳动保障监察投诉或请求社保经办机构依法处理；征收、税务分工及历史欠缴时段需另核，不能由该答复直接推定",
+        "上海公积金中心受理单位不缴、少缴投诉并依行政执法程序处理"
+      ],
+      "source_ids": [
+        "SRC-NAT-SOCIAL-INSURANCE", "SRC-SH-SOCIAL-ROUTE", "SRC-NAT-SOCIAL-LOSS",
+        "SRC-NAT-HOUSING-FUND", "SRC-SH-HOUSING-COMPLAINT", "SRC-NAT-WORK-INJURY",
+        "SRC-NAT-OCCUPATIONAL-DISEASE", "SRC-NAT-NON-COMPETE", "SRC-NAT-LABOR-DISPATCH",
+        "SRC-OFFICIAL-EQUITY-INCENTIVE", "SRC-NAT-FOREIGN-EMPLOYMENT"
+      ],
+      "verified_on": "2026-07-18",
+      "review_on": "2026-10-18"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-NAT-SOCIAL-INSURANCE",
+      "title": "中华人民共和国社会保险法第六十条、第六十三条",
+      "authority": "全国人民代表大会常务委员会",
+      "jurisdiction": "全国",
+      "url": "https://shanxi.chinatax.gov.cn/web/detail/sx-11400-545-1784612",
+      "effective_from": "2011-07-01", "effective_to": null,
+      "status": "current", "verified_on": "2026-09-23", "review_on": "2027-01-18"
+    },
+    {
+      "source_id": "SRC-SH-SOCIAL-ROUTE",
+      "title": "补缴养老等社会保险事项可以申请劳动仲裁吗？依据是什么？",
+      "authority": "上海市人力资源和社会保障局",
+      "jurisdiction": "上海；地方咨询答复，仅社保缴费争议受理路径",
+      "url": "https://rsj.sh.gov.cn/tfkcx_17604/20250312/t0035_1431158.html",
+      "effective_from": "2025-03-11", "effective_to": null,
+      "status": "current", "verified_on": "2026-09-23", "review_on": "2026-10-18"
+    },
+    {
+      "source_id": "SRC-NAT-SOCIAL-LOSS",
+      "title": "最高人民法院关于审理劳动争议案件适用法律问题的解释（一）第一条第五项",
+      "authority": "最高人民法院",
+      "jurisdiction": "全国；仅涉及不能补办导致待遇损失等交叉请求，不等同于补缴请求",
+      "url": "https://www.court.gov.cn/zixun/xiangqing/282121.html",
+      "effective_from": "2021-01-01", "effective_to": null,
+      "status": "current", "verified_on": "2026-09-23", "review_on": "2027-01-18"
+    },
+    {
+      "source_id": "SRC-NAT-HOUSING-FUND",
+      "title": "住房公积金管理条例第三十八条",
+      "authority": "国务院（上海市人民政府发布）",
+      "jurisdiction": "全国",
+      "url": "https://www.shanghai.gov.cn/nw4544/20200905/0001-4544_302.html",
+      "effective_from": "2002-03-24", "effective_to": null,
+      "status": "current", "verified_on": "2026-07-18", "review_on": "2027-01-18"
+    },
+    {
+      "source_id": "SRC-SH-HOUSING-COMPLAINT",
+      "title": "上海市住房公积金行政执法管理办法第十六条至第十九条",
+      "authority": "上海市住房公积金管理委员会",
+      "jurisdiction": "上海",
+      "url": "https://www.shzfgjj.cn/html/newxxgk/zcwj/gfxwj/209543.html",
+      "effective_from": "2022-01-01", "effective_to": "2026-12-31",
+      "status": "current", "verified_on": "2026-09-23", "review_on": "2026-10-18"
+    },
+    {
+      "source_id": "SRC-NAT-WORK-INJURY",
+      "title": "工伤保险条例",
+      "authority": "国务院（上海市人力资源和社会保障局发布）",
+      "jurisdiction": "全国；待遇标准与办理程序需核验地方规则",
+      "url": "https://rsj.sh.gov.cn/tgwyxzfgwj_17255/20200617/t0035_1388264.html",
+      "effective_from": "2011-01-01", "effective_to": null,
+      "status": "current", "verified_on": "2026-07-18", "review_on": "2027-01-18"
+    },
+    {
+      "source_id": "SRC-NAT-OCCUPATIONAL-DISEASE",
+      "title": "职业病诊断与鉴定管理办法",
+      "authority": "国家卫生健康委员会",
+      "jurisdiction": "全国；诊断机构与鉴定程序需核验地方名录",
+      "url": "https://www.nhc.gov.cn/bgt/201801fgp/202106/1b2fcff4e8444b8b99e1bc108e90d443/files/1733795711156_76263.pdf",
+      "effective_from": "2021-01-04", "effective_to": null,
+      "status": "current", "verified_on": "2026-09-23", "review_on": "2027-01-18"
+    },
+    {
+      "source_id": "SRC-NAT-NON-COMPETE",
+      "title": "最高人民法院关于审理劳动争议案件适用法律问题的解释（二）第十三条、第十四条",
+      "authority": "最高人民法院",
+      "jurisdiction": "全国",
+      "url": "https://www.court.gov.cn/zixun/xiangqing/472691.html",
+      "effective_from": "2025-09-01", "effective_to": null,
+      "status": "current", "verified_on": "2026-07-18", "review_on": "2027-01-18"
+    },
+    {
+      "source_id": "SRC-NAT-LABOR-DISPATCH",
+      "title": "劳务派遣暂行规定",
+      "authority": "人力资源和社会保障部（上海市人力资源和社会保障局发布）",
+      "jurisdiction": "全国；行政受理与地方执行口径需动态核验",
+      "url": "https://rsj.sh.gov.cn/trlzyhshbzbgz_17256/20240813/t0035_1427021.html",
+      "effective_from": "2014-03-01", "effective_to": null,
+      "status": "current", "verified_on": "2026-07-18", "review_on": "2027-01-18"
+    },
+    {
+      "source_id": "SRC-OFFICIAL-EQUITY-INCENTIVE",
+      "title": "北京一中院涉股权激励劳动争议典型案例",
+      "authority": "人民法院报（最高人民法院网站发布）",
+      "jurisdiction": "案例参考；争议性质、管辖与请求基础必须个案复核",
+      "url": "https://www.court.gov.cn/zixun/xiangqing/398832.html",
+      "effective_from": "2023-05-06", "effective_to": null,
+      "status": "current", "verified_on": "2026-07-18", "review_on": "2027-01-18"
+    },
+    {
+      "source_id": "SRC-NAT-FOREIGN-EMPLOYMENT",
+      "title": "外国人在中国就业管理规定",
+      "authority": "原劳动部等部门（北京市政府门户转载2017年修订文本）",
+      "jurisdiction": "全国；工作许可、居留、法律适用与管辖需个案复核",
+      "url": "https://www.beijing.gov.cn/zhengce/zhengcefagui/qtwj/201704/t20170413_780614.html",
+      "effective_from": "1996-05-01", "effective_to": null,
+      "status": "current", "verified_on": "2026-09-23", "review_on": "2027-01-18"
+    }
+  ]
+}

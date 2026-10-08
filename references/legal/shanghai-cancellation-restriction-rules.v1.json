@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-09-23",
+  "next_review_on": "2026-11-25",
+  "jurisdiction": "上海市",
+  "document_position": "上海劳动仲裁已受理案件中的实务申请材料",
+  "public_evidence_conclusion": "现有官方公开材料能够证明上海企业注销流程存在部门信息共享、欠薪预检及配合调解仲裁机构处理尚未办结劳动争议的协同机制，也能证明正在仲裁程序中的企业不适用简易注销；但不足以证明劳动人事争议仲裁机构对个案申请当然受理、必然发函或当然阻止普通注销。",
+  "sources": [
+    {
+      "source_id": "SRC-SH-CANCEL-ONE-THING-2024",
+      "title": "上海市市场监督管理局等8个部门关于印发《企业注销登记“一件事”工作实施方案》的通知",
+      "url": "https://www.shanghai.gov.cn/gwk/search/content/2c984a7290b92f7801910d290b207c9d",
+      "issuer": "上海市市场监督管理局等8部门",
+      "published_on": "2024-08-01",
+      "verified_on": "2026-08-25",
+      "region": "上海市",
+      "validity": "current",
+      "evidence_strength": "strong",
+      "supports": "上海注销平台向人社等部门共享信息，预检欠薪，并由相关部门配合调解仲裁机构处理尚未办结劳动争议。",
+      "does_not_support": "不证明仲裁机构必须接受特定名称申请书、必须发函或登记机关必须停止全部注销路径。"
+    },
+    {
+      "source_id": "SRC-NAT-CANCELLATION-GUIDE-2025",
+      "title": "市场监管总局等六部门关于发布《企业注销指引（2025年修订）》的公告",
+      "url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/djzcj/art/2025/art_1b0f53c66d4c4daf893f7220a394ac7b.html",
+      "issuer": "国家市场监督管理总局等六部门",
+      "published_on": "2025-12-30",
+      "verified_on": "2026-09-23",
+      "region": "全国",
+      "validity": "current",
+      "evidence_strength": "strong",
+      "supports": "简易注销要求无未结债权债务，正在诉讼或仲裁程序中的企业不适用简易注销；公示期内利害关系人可通过公示系统提出异议。",
+      "does_not_support": "简易注销异议是独立在线路径，不等同于向仲裁机构提交申请，也不证明普通注销当然被阻止。"
+    },
+    {
+      "source_id": "SRC-NAT-MARKET-REGISTRATION-RULES",
+      "title": "中华人民共和国市场主体登记管理条例实施细则",
+      "url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/fgs/art/2023/art_37bd9ff741584f9289394193fe2c3c3a.html",
+      "issuer": "国家市场监督管理总局",
+      "published_on": "2022-03-01",
+      "verified_on": "2026-09-23",
+      "region": "全国",
+      "validity": "current",
+      "evidence_strength": "strong",
+      "supports": "正在诉讼或仲裁程序中的市场主体不得申请简易注销；公示期内相关部门、债权人和其他利害关系人可以提出异议。",
+      "does_not_support": "不创设仲裁机构向市场监管部门发函的统一强制程序，也不替代法院财产保全。"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "rule_set_id": "enforcement-rules.v1",
+  "region": "全国",
+  "verified_on": "2026-07-25",
+  "next_review_on": "2026-10-25",
+  "sources": [
+    {
+      "source_id": "SRC-NAT-CPL-ENFORCEMENT",
+      "title": "中华人民共和国民事诉讼法（2023年修正）",
+      "publisher": "全国人民代表大会",
+      "region": "全国",
+      "status": "current",
+      "effective_from": "2024-01-01",
+      "effective_to": null,
+      "url": "https://fgw.sh.gov.cn/cmsres/1e/1e778fe2c7624624b1f10df61c70748f/3bd06523779207c19277828db4ef1cf2.pdf",
+      "rules": ["执行管辖", "申请执行期间为二年", "履行期间起算"]
+    },
+    {
+      "source_id": "SRC-SPC-ENFORCEMENT-WORK",
+      "title": "最高人民法院关于人民法院执行工作若干问题的规定（试行）",
+      "publisher": "最高人民法院",
+      "region": "全国",
+      "status": "current",
+      "effective_from": "1998-07-18",
+      "effective_to": null,
+      "url": "https://www.court.gov.cn/fabu/xiangqing/282661.html",
+      "rules": ["受理执行申请的条件", "申请执行材料", "执行管辖"]
+    },
+    {
+      "source_id": "SRC-SPC-EXECUTION-PROPERTY",
+      "title": "最高人民法院关于民事执行中财产调查若干问题的规定",
+      "publisher": "最高人民法院",
+      "region": "全国",
+      "status": "current",
+      "effective_from": "2017-05-01",
+      "effective_to": null,
+      "url": "https://www.court.gov.cn/fabu/xiangqing/282661.html",
+      "rules": ["申请执行人提供财产线索", "财产线索调查核实"]
+    }
+  ]
+}

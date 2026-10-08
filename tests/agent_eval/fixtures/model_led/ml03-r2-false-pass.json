@@ -1,0 +1,33 @@
+{
+  "scenario_id": "ML03-interruption-correction-degradation",
+  "capabilities": {
+    "complete_document_pipeline_available": true
+  },
+  "sent_fact_ids": ["initial_facts", "correction", "degradation"],
+  "observed_milestones": ["correction_committed", "degradation_explained"],
+  "restarted": true,
+  "restart_context": {
+    "status": "available",
+    "case_id": "case-0123456789abcdef01234567",
+    "archive_revision": 3,
+    "archive_path": ".arbibuddy/cases/case-0123456789abcdef01234567/案情档案.md",
+    "confirmed_fact_summary_sha256": "fixture"
+  },
+  "observation": {
+    "case_archive": true,
+    "docx": false,
+    "checklist": false,
+    "invalid_docx_count": 0,
+    "invalid_delivery_count": 0,
+    "case_archives": [{"case_id": "case-0123456789abcdef01234567", "archive_revision": 3}],
+    "archive_text": "当前工资争议为两个月，尚未完成修正。",
+    "deliveries": []
+  },
+  "transcripts": [
+    {"turn": 1, "assistant_response": "已保存案情档案，当前为两个月。", "selected_fact_ids": ["initial_facts"]},
+    {"turn": 2, "assistant_response": "已修正为三个月并写入档案。", "selected_fact_ids": ["correction"]},
+    {"turn": 3, "assistant_response": "中断前先结束本轮。", "selected_fact_ids": []},
+    {"turn": 4, "assistant_response": "我已恢复案件，可以继续。", "session_restarted": true, "selected_fact_ids": []},
+    {"turn": 5, "assistant_response": "动态规则无法核验，相关结论待核实。", "session_restarted": false, "selected_fact_ids": ["degradation"]}
+  ]
+}

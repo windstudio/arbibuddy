@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "platform": "claude-code",
+  "project_discovery_path": ".claude/skills/arbibuddy",
+  "user_discovery_path": ".claude/skills/arbibuddy",
+  "required_metadata": [],
+  "discovery_probe": {
+    "kind": "claude-help-contract",
+    "marker": "Skills still resolve via /skill-name."
+  },
+  "installer": "python -m scripts.platform_adapters.cli install --platform claude-code",
+  "uninstaller": "python -m scripts.platform_adapters.cli uninstall --platform claude-code",
+  "verifier": "python -m scripts.platform_adapters.cli verify-install --platform claude-code",
+  "official_documentation": "https://code.claude.com/docs/en/skills"
+}

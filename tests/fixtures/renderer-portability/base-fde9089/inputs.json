@@ -1,0 +1,271 @@
+{
+  "base_commit": "fde9089",
+  "documents": {
+    "employment-obligation-demand-letter": {
+      "builder": "build_demand_letter",
+      "content": {},
+      "fields": {
+        "demand_purpose": "劳动关系存续期间催告具体劳动用工义务",
+        "effective_instrument_enforcement": "否",
+        "employee_address": "上海市示例路20号",
+        "employee_name": "赵小禾",
+        "employee_phone": "13800000000",
+        "employer_address": "上海市虚构路100号",
+        "employer_name": "星河智造（虚构）有限公司",
+        "employment_status": "存续",
+        "letter_date": "2026年7月18日",
+        "obligation": "支付2026年3月至4月工资差额人民币6000.00元。",
+        "response_deadline": "收到本函之日起5个工作日内"
+      }
+    },
+    "enforcement-application": {
+      "builder": "build_enforcement_application",
+      "content": {
+        "_draft_blockers": [],
+        "_manifest_context": {
+          "evidence_scope": "六步门槛已完成；已核验执行依据、生效、履行期限、执行管辖、申请执行时效、履行扣减和财产线索",
+          "region": "全国",
+          "source_ids": [
+            "SRC-NAT-CPL-ENFORCEMENT",
+            "SRC-SPC-ENFORCEMENT-WORK",
+            "SRC-SPC-EXECUTION-PROPERTY"
+          ],
+          "source_registry_sha256": "4b4dc0af0919c900e77c0aae90e05aa57d33c74c082e6c9b4572eb473f685a7d",
+          "status": "verified",
+          "verified_on": "2026-07-25"
+        },
+        "attachments": [
+          "生效裁决、履行及财产线索材料"
+        ]
+      },
+      "fields": {
+        "adjudicated_amount": "人民币120000.00元",
+        "applicant_address": "上海市示例路20号",
+        "applicant_id_number": "310101199001010018",
+        "applicant_name": "李明",
+        "applicant_phone": "13800000000",
+        "application_date": "2026年7月25日",
+        "application_period_basis": "自2026年7月11日起计算，申请日未满二年",
+        "application_period_status": "申请执行时效期间内",
+        "confirmed_paid_amount": "人民币20000.00元",
+        "court_name": "上海市浦东新区人民法院",
+        "enforcement_amount": "人民币100000.00元",
+        "instrument_case_number": "浦劳人仲（2026）办字第1234号",
+        "instrument_effective_date": "2026年6月25日",
+        "instrument_effective_status": "已生效",
+        "instrument_name": "浦劳人仲（2026）办字第1234号仲裁裁决书",
+        "instrument_type": "劳动仲裁裁决书",
+        "issuing_authority": "上海市浦东新区劳动人事争议仲裁委员会",
+        "jurisdiction_basis": "被执行人住所地位于上海市浦东新区",
+        "performance_deadline": "2026年7月10日",
+        "performance_status": "履行期限已届满，尚未全部履行",
+        "procedure_stage": "生效法律文书履行期限届满后的首次申请执行",
+        "property_clue": "银行账户：户名上海星河科技有限公司、账号622200001234、开户行虚构银行上海分行｜应收账款：上海示例商贸有限公司尚欠被执行人货款人民币50000.00元",
+        "respondent_address": "上海市虚构路100号",
+        "respondent_name": "上海星河科技有限公司",
+        "respondent_uscc": "91310000MA0000000X"
+      }
+    },
+    "evidence-catalog": {
+      "builder": "build_evidence_catalog",
+      "content": {
+        "_user_review_items": [
+          "证据“虚构工资流水”：补写页码；核对真实性“待提交前核对原始设备”、取得方式风险“低”、保全动作“保留原文件并录屏银行应用上下文”及对方可能质疑点“可能主张款项属于报销”"
+        ],
+        "rows": [
+          [
+            "E-001",
+            "虚构工资流水",
+            "虚构银行导出；原始载体：PDF及银行应用页面",
+            "证明2026年4月仅收到部分工资，尚欠工资差额。"
+          ]
+        ]
+      },
+      "fields": {}
+    },
+    "forced-termination-notice": {
+      "builder": "build_forced_termination_notice",
+      "content": {
+        "_draft_blockers": [],
+        "_user_review_items": [
+          "解除理由“未及时足额支付劳动报酬”：核对事实“用人单位2026年4月至6月未及时足额支付劳动报酬。”及法律依据“《中华人民共和国劳动合同法》第三十八条第一款第二项、第四十六条第一项”",
+          "解除理由“未依法缴纳社会保险费”：核对事实“用人单位2026年1月至6月未依法缴纳社会保险费。”及法律依据“《中华人民共和国劳动合同法》第三十八条第一款第三项、第四十六条第一项”"
+        ],
+        "reasons": [
+          [
+            "未及时足额支付劳动报酬",
+            "用人单位2026年4月至6月未及时足额支付劳动报酬。",
+            "《中华人民共和国劳动合同法》第三十八条第一款第二项、第四十六条第一项"
+          ],
+          [
+            "未依法缴纳社会保险费",
+            "用人单位2026年1月至6月未依法缴纳社会保险费。",
+            "《中华人民共和国劳动合同法》第三十八条第一款第三项、第四十六条第一项"
+          ]
+        ]
+      },
+      "fields": {
+        "delivery_method": "合同地址EMS与公司人事邮箱同步送达",
+        "employee_name": "李明",
+        "employee_phone": "13800000000",
+        "employer_address": "上海市浦东新区虚构路88号",
+        "employer_name": "上海星河科技有限公司",
+        "notice_date": "2026年7月20日",
+        "termination_effective_date": "2026年7月20日"
+      }
+    },
+    "labor-arbitration-application": {
+      "builder": "build_arbitration_application",
+      "content": {
+        "_user_review_items": [
+          "第1项仲裁请求：核对期间“2026年3月至4月”、项目“工资差额”和金额“6000.00元”",
+          "第2项仲裁请求：核对期间“2025年度”、项目“年终奖”和金额“8000.00元”"
+        ],
+        "facts": [
+          "申请人于2025年1月入职被申请人，从事产品运营工作。",
+          "被申请人尚欠2026年3月至4月工资差额6000.00元。",
+          "被申请人尚欠2025年度年终奖8000.00元。",
+          "根据中华人民共和国劳动法第五十条、中华人民共和国劳动合同法第三十条、工资支付暂行规定第六条、第七条，用人单位应当按照约定和国家规定及时、足额支付劳动报酬。绩效或年终奖是否应付，还应结合双方约定、用人单位制度、支付条件及现有证据具体判断。",
+          "被申请人存在上述未足额支付劳动报酬的情形，与前述法定义务不符。因此，申请人提出上述仲裁请求，请依法予以支持。"
+        ],
+        "requests": [
+          "请求裁决被申请人向申请人支付2026年3月至4月工资差额6000.00元。",
+          "请求裁决被申请人向申请人支付2025年度年终奖8000.00元。"
+        ]
+      },
+      "fields": {
+        "applicant_address": "上海市示例路20号",
+        "applicant_id_number": "310000199001010000",
+        "applicant_name": "林小满",
+        "applicant_phone": "13800000000",
+        "application_date": "2026年7月22日",
+        "arbitration_commission": "上海市浦东新区劳动人事争议仲裁委员会",
+        "respondent_address": "上海市虚构路100号",
+        "respondent_legal_representative": "周某某",
+        "respondent_name": "远舟数字（虚构）有限公司"
+      }
+    },
+    "labor-arbitration-defense": {
+      "builder": "build_arbitration_defense",
+      "content": {
+        "_user_review_items": [
+          "第1项对方请求：请求答辩人支付培训服务期违约金10000元。",
+          "第1项对方材料：虚构仲裁申请书",
+          "第1项待补材料：核对培训费用原始凭证",
+          "第1项风险说明：如存在另行签署的有效协议，应重新评估",
+          "第2项对方请求：请求答辩人返还2026年4月工资6000元。",
+          "第2项对方材料：虚构仲裁申请书",
+          "第2项待补材料：无",
+          "第2项风险说明：无"
+        ],
+        "items": [
+          [
+            "请求答辩人支付培训服务期违约金10000元。",
+            "劳动者未签署培训服务期协议。",
+            "请求驳回该项仲裁请求。"
+          ],
+          [
+            "请求答辩人返还2026年4月工资6000元。",
+            "2026年4月工资差额6000.00元尚未支付。",
+            "请求驳回该项仲裁请求。"
+          ]
+        ]
+      },
+      "fields": {
+        "arbitration_commission": "上海市浦东新区劳动人事争议仲裁委员会",
+        "defending_employee_address": "上海市示例路20号",
+        "defending_employee_id_number": "310000199001010000",
+        "defending_employee_name": "林小满",
+        "defending_employee_phone": "13800000000",
+        "defense_date": "2026年7月22日",
+        "opposing_employer_address": "上海市虚构路100号",
+        "opposing_employer_legal_representative": "周某某",
+        "opposing_employer_name": "远舟数字（虚构）有限公司"
+      }
+    },
+    "property-preservation-application": {
+      "builder": "build_property_preservation_application",
+      "content": {
+        "_draft_blockers": [],
+        "_manifest_context": {
+          "evidence_scope": "六步门槛已完成；已核验管辖、程序阶段、财产线索、担保和错误保全后果",
+          "region": "全国",
+          "source_ids": [
+            "SRC-NAT-CPL-PRESERVATION",
+            "SRC-SPC-PRESERVATION-2020"
+          ],
+          "source_registry_sha256": "4d13372af121bfdc2a0ebf0ec977392c89a4c97c2a9ce6823f75c03f0b637f27",
+          "status": "verified",
+          "verified_on": "2026-07-25"
+        },
+        "risk_facts": [
+          "被申请人正在转移经营回款，可能影响后续执行"
+        ]
+      },
+      "fields": {
+        "applicant_address": "上海市示例路20号",
+        "applicant_id_number": "310101199001010018",
+        "applicant_name": "李明",
+        "applicant_phone": "13800000000",
+        "application_date": "2026年7月25日",
+        "court_name": "上海市浦东新区人民法院",
+        "guarantee_plan": "以保险公司诉讼财产保全责任保险保函提供担保，待法院审查",
+        "jurisdiction_basis": "被申请人住所地及被保全财产所在地均在上海市浦东新区",
+        "preservation_amount": "人民币120000元",
+        "procedure_stage": "劳动仲裁已受理、仲裁裁决作出前",
+        "property_clue": "银行账户：户名上海星河科技有限公司、账号622200001234、开户行虚构银行上海分行｜应收账款：被申请人对虚构客户有限公司享有到期应收款人民币50000元",
+        "related_case_number": "浦劳人仲（2026）办字第1234号",
+        "respondent_address": "上海市虚构路100号",
+        "respondent_name": "上海星河科技有限公司",
+        "respondent_uscc": "91310000MA0000000X",
+        "wrongful_preservation_risk": "申请人已知悉申请错误可能承担赔偿责任"
+      }
+    },
+    "shanghai-cancellation-restriction-application": {
+      "builder": "build_shanghai_cancellation_restriction_application",
+      "content": {
+        "_draft_blockers": [],
+        "_manifest_context": {
+          "evidence_scope": "上海专项实务申请与个案协同可能性；不证明当然受理、必然发函或当然阻止注销",
+          "region": "上海市",
+          "source_ids": [
+            "SRC-SH-CANCEL-ONE-THING-2024",
+            "SRC-NAT-CANCELLATION-GUIDE-2025",
+            "SRC-NAT-MARKET-REGISTRATION-RULES"
+          ],
+          "source_registry_sha256": "b2662f6dfc8e7eb5e78417d564c139aa7bfcc883cbc88d43a7eea6f584997663",
+          "status": "verified_practice_only",
+          "verified_on": "2026-07-24"
+        },
+        "_user_review_items": [
+          "确认本材料属于上海专项实务申请材料，不是全国统一法定文书",
+          "确认是否采取协同措施、是否影响注销登记，仍以有关机构依法审查为准",
+          "确认本申请、简易注销异议和法院财产保全属于三个独立路径"
+        ],
+        "attachments": [
+          "仲裁受理通知书",
+          "简易注销公告页面"
+        ],
+        "risk_facts": [
+          "被申请人于2026年7月22日在国家企业信用信息公示系统发布简易注销公告。"
+        ]
+      },
+      "fields": {
+        "applicant_address": "上海市示例路20号",
+        "applicant_id_number": "310101199001010018",
+        "applicant_name": "李明",
+        "applicant_phone": "13800000000",
+        "application_date": "2026年7月24日",
+        "arbitration_acceptance_date": "2026年7月18日",
+        "arbitration_acceptance_status": "已受理",
+        "arbitration_case_number": "浦劳人仲（2026）办字第1234号",
+        "arbitration_commission": "上海市浦东新区劳动人事争议仲裁委员会",
+        "jurisdiction": "上海市",
+        "respondent_address": "上海市虚构路100号",
+        "respondent_legal_representative": "王某",
+        "respondent_name": "上海星河科技有限公司",
+        "respondent_uscc": "91310000MA0000000X"
+      }
+    }
+  }
+}

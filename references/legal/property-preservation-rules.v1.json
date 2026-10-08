@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "rule_set_id": "property-preservation-rules.v1",
+  "region": "全国",
+  "verified_on": "2026-07-25",
+  "next_review_on": "2026-10-25",
+  "sources": [
+    {
+      "source_id": "SRC-NAT-CPL-PRESERVATION",
+      "title": "中华人民共和国民事诉讼法（2023年修正）",
+      "publisher": "全国人民代表大会",
+      "region": "全国",
+      "status": "current",
+      "effective_from": "2024-01-01",
+      "effective_to": null,
+      "url": "https://fgw.sh.gov.cn/cmsres/1e/1e778fe2c7624624b1f10df61c70748f/3bd06523779207c19277828db4ef1cf2.pdf",
+      "rules": ["第一百零三条", "第一百零四条", "第一百零五条", "第一百零八条"]
+    },
+    {
+      "source_id": "SRC-SPC-PRESERVATION-2020",
+      "title": "最高人民法院关于人民法院办理财产保全案件若干问题的规定（2020年修正）",
+      "publisher": "最高人民法院",
+      "region": "全国",
+      "status": "current",
+      "effective_from": "2021-01-01",
+      "effective_to": null,
+      "url": "https://www.court.gov.cn/fabu/xiangqing/282661.html",
+      "rules": ["第一条", "第五条", "第七条", "第九条"]
+    }
+  ]
+}

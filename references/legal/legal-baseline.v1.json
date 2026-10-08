@@ -1,0 +1,67 @@
+{
+  "schema_version": "legal-baseline-v1",
+  "baseline_id": "arbibuddy-national-labor-baseline-2026-09",
+  "policy": "稳定全国基础法在发布维护时核验；具体案件不为重复证明基础法而联网。",
+  "rules": [
+    {
+      "rule_id": "NAT-LABOR-LAW-BASELINE",
+      "name": "中华人民共和国劳动法",
+      "issuing_authority": "全国人民代表大会常务委员会",
+      "version": "1995年施行；2018年修正信息按发布时核对",
+      "status": "effective",
+      "jurisdiction": "全国",
+      "official_url": "https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394625.html",
+      "last_verified_on": "2026-08-30",
+      "review_due_on": "2026-11-30",
+      "verification_basis": "发布维护时核对法律名称、现行修正信息、生效状态和全国适用范围；本条目不是由链接可访问性单独推导。"
+    },
+    {
+      "rule_id": "NAT-LABOR-CONTRACT-LAW-BASELINE",
+      "name": "中华人民共和国劳动合同法",
+      "issuing_authority": "全国人民代表大会常务委员会",
+      "version": "2008年施行；2012年12月28日修正信息按发布时核对",
+      "status": "effective",
+      "jurisdiction": "全国",
+      "official_url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_0abfdd261c03417b949df19d869add8d.html",
+      "last_verified_on": "2026-08-30",
+      "review_due_on": "2026-11-30",
+      "verification_basis": "发布维护时核对法律名称、现行修正信息、生效状态和全国适用范围；本条目不是由链接可访问性单独推导。"
+    },
+    {
+      "rule_id": "NAT-LABOR-DISPUTE-ARBITRATION-BASELINE",
+      "name": "中华人民共和国劳动争议调解仲裁法",
+      "issuing_authority": "全国人民代表大会常务委员会",
+      "version": "2008年施行；现行修正信息按发布时核对",
+      "status": "effective",
+      "jurisdiction": "全国",
+      "official_url": "https://www.npc.gov.cn/c2986/c4488/201905/t20190523_48437.html",
+      "last_verified_on": "2026-08-30",
+      "review_due_on": "2026-11-30",
+      "verification_basis": "发布维护时核对法律名称、现行修正信息、生效状态和全国适用范围；本条目不是由链接可访问性单独推导。"
+    },
+    {
+      "rule_id": "NAT-LABOR-CONTRACT-REGULATION-BASELINE",
+      "name": "中华人民共和国劳动合同法实施条例",
+      "issuing_authority": "国务院",
+      "version": "2008年施行；现行有效状态按发布时核对",
+      "status": "effective",
+      "jurisdiction": "全国",
+      "official_url": "https://xzfg.moj.gov.cn/law/download?LawID=284&type=pdf",
+      "last_verified_on": "2026-08-30",
+      "review_due_on": "2026-11-30",
+      "verification_basis": "发布维护时核对法规名称、现行有效状态、生效范围和与劳动合同法的适用关系；本条目不是由链接可访问性单独推导。"
+    },
+    {
+      "rule_id": "NAT-LABOR-DISPUTE-INTERPRETATION-I-BASELINE",
+      "name": "最高人民法院关于审理劳动争议案件适用法律问题的解释（一）",
+      "issuing_authority": "最高人民法院",
+      "version": "2021年1月1日起施行；与后续司法解释的衔接按案件触发条件核对",
+      "status": "effective",
+      "jurisdiction": "全国",
+      "official_url": "https://www.court.gov.cn/zixun/xiangqing/282121.html",
+      "last_verified_on": "2026-08-30",
+      "review_due_on": "2026-11-30",
+      "verification_basis": "发布维护时核对司法解释名称、施行状态、全国适用范围及后续解释衔接；新解释或冲突情形仍须动态核验。"
+    }
+  ]
+}

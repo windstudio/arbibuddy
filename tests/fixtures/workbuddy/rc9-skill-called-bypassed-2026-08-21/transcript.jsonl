@@ -1,0 +1,10 @@
+{"sessionId":"fixture-rc9-skill-bypassed","type":"function_call","id":"call-skill-1","name":"Skill","arguments":"{\"skill\":\"arbibuddy\"}"}
+{"sessionId":"fixture-rc9-skill-bypassed","type":"function_call_result","call_id":"call-skill-1","name":"Skill","status":"success","result":"# ArbiBuddy\n受控入口已加载。"}
+{"sessionId":"fixture-rc9-skill-bypassed","type":"function_call","id":"call-shell-1","name":"exec_command","arguments":"{\"cmd\":\"python -m venv .venv\"}"}
+{"sessionId":"fixture-rc9-skill-bypassed","type":"function_call_result","call_id":"call-shell-1","status":"success","result":""}
+{"sessionId":"fixture-rc9-skill-bypassed","type":"function_call","id":"call-shell-2","name":"exec_command","arguments":"{\"cmd\":\"pip install python-docx\"}"}
+{"sessionId":"fixture-rc9-skill-bypassed","type":"function_call_result","call_id":"call-shell-2","status":"success","result":""}
+{"sessionId":"fixture-rc9-skill-bypassed","type":"function_call","id":"call-shell-3","name":"exec_command","arguments":"{\"cmd\":\"python gen_application.py\"}"}
+{"sessionId":"fixture-rc9-skill-bypassed","type":"function_call_result","call_id":"call-shell-3","status":"success","result":""}
+{"sessionId":"fixture-rc9-skill-bypassed","type":"function_call","id":"call-present-1","name":"present_files","arguments":"{\"paths\":[\"仲裁申请书.docx\"]}"}
+{"sessionId":"fixture-rc9-skill-bypassed","type":"function_call_result","call_id":"call-present-1","status":"success","result":""}

@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "test_date": "2026-07-25",
+  "timezone": "Asia/Shanghai",
+  "scope": "本地CLI安装、Codex运行时发现、Claude Code本地发现契约及当前执行环境的 Word/OOXML 能力；结果不代表其他会话权限",
+  "platforms": [
+    {
+      "platform": "codex",
+      "version": "codex-cli 0.142.2",
+      "official_documentation": {
+        "verified": true,
+        "method": "Context7 /openai/codex",
+        "source": "https://github.com/openai/codex"
+      },
+      "install_test": {
+        "method": "project-copy",
+        "path": ".agents/skills/arbibuddy",
+        "discovery_contract_valid": true,
+        "resources_complete": true
+      },
+      "platform_discovery": {
+        "verified": true,
+        "level": "runtime-discovery",
+        "runtime_discovered": true,
+        "method": "Codex debug prompt-input 实际解析 $arbibuddy 并返回已安装 SKILL.md 路径"
+      },
+      "capabilities": {
+        "filesystem": {
+          "state": "可用",
+          "method": "临时文件写入、原子替换、读取与清理"
+        },
+        "network": {
+          "state": "可用",
+          "method": "读取中国政府网官方来源，HTTP 200"
+        },
+        "scripts": {
+          "state": "可用",
+          "method": "实际执行 Python 3.14.6"
+        },
+        "word": {
+          "state": "可用",
+          "method": "实际导入统一 Word 生成器及 python-docx 依赖",
+          "tested_at": "2026-07-25T02:23:56Z"
+        },
+        "structure_inspection": {
+          "state": "可用",
+          "method": "实际读取最小 DOCX 并检查 OOXML 主体、样式和页脚结构"
+        }
+      },
+      "outcomes": {
+        "case_file": "完整",
+        "dynamic_verification": "完整",
+        "documents": "完整"
+      },
+      "degradation_tests": {
+        "no_filesystem": "交付可保存的Markdown并要求后续会话重新提供",
+        "no_network": "标记未核验并降低结论强度",
+        "no_scripts": "仅交付待生成内容和安装指引",
+        "no_word": "统一 Word 生成器不可用时仅交付待生成内容和安装指引",
+        "no_structure_inspection": "不得进入正式整包发布，只能返回明确降级"
+      },
+      "tested_at": "2026-07-24T22:01:59+00:00"
+    },
+    {
+      "platform": "claude-code",
+      "version": "2.1.117 (Claude Code)",
+      "official_documentation": {
+        "verified": true,
+        "method": "Context7 /websites/code_claude",
+        "source": "https://code.claude.com/docs/en/skills"
+      },
+      "install_test": {
+        "method": "project-copy",
+        "path": ".claude/skills/arbibuddy",
+        "discovery_contract_valid": true,
+        "resources_complete": true
+      },
+      "platform_discovery": {
+        "verified": true,
+        "level": "local-platform-contract",
+        "runtime_discovered": false,
+        "method": "Claude Code 本地 --bare --help 验证 /skill-name 解析契约；未进行外部模型调用"
+      },
+      "capabilities": {
+        "filesystem": {
+          "state": "可用",
+          "method": "临时文件写入、原子替换、读取与清理"
+        },
+        "network": {
+          "state": "可用",
+          "method": "读取中国政府网官方来源，HTTP 200"
+        },
+        "scripts": {
+          "state": "可用",
+          "method": "实际执行 Python 3.14.6"
+        },
+        "word": {
+          "state": "可用",
+          "method": "实际导入统一 Word 生成器及 python-docx 依赖",
+          "tested_at": "2026-07-25T02:23:56Z"
+        },
+        "structure_inspection": {
+          "state": "可用",
+          "method": "实际读取最小 DOCX 并检查 OOXML 主体、样式和页脚结构"
+        }
+      },
+      "outcomes": {
+        "case_file": "完整",
+        "dynamic_verification": "完整",
+        "documents": "完整"
+      },
+      "degradation_tests": {
+        "no_filesystem": "交付可保存的Markdown并要求后续会话重新提供",
+        "no_network": "标记未核验并降低结论强度",
+        "no_scripts": "仅交付待生成内容和安装指引",
+        "no_word": "统一 Word 生成器不可用时仅交付待生成内容和安装指引",
+        "no_structure_inspection": "不得进入正式整包发布，只能返回明确降级"
+      },
+      "tested_at": "2026-07-24T22:02:07+00:00"
+    }
+  ]
+}

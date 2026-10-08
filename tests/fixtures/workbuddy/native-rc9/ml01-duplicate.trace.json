@@ -1,0 +1,21 @@
+{
+  "trace": {
+    "traceId": "trace-ml01-redacted",
+    "sessionId": "ml01-session-redacted"
+  },
+  "spans": [
+    {
+      "traceId": "trace-ml01-redacted",
+      "spanId": "span-render-application",
+      "sessionId": "ml01-session-redacted",
+      "parentId": "span-skill-ml01",
+      "kind": "function",
+      "toolName": "document.render-v1",
+      "toolInput": "{\"case_id\":\"case-aaaaaaaaaaaaaaaaaaaaaaaa\",\"document_type\":\"arbitration_application\"}",
+      "toolOutput": "{\"ok\":true,\"result\":{\"archive_revision\":7}}",
+      "status": "success",
+      "startedAt": "2026-09-17T01:01:00.000Z",
+      "endedAt": "2026-09-17T01:01:00.100Z"
+    }
+  ]
+}

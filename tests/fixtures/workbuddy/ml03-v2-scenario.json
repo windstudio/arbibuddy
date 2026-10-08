@@ -1,0 +1,12 @@
+{
+  "scenario_id": "ML03-v2",
+  "provided_fact_ids": ["employment-status", "wage-correction"],
+  "forbidden_fact_markers": ["上海"],
+  "expected_deliveries": [],
+  "milestones": [
+    "first_session_correction_commit",
+    "second_session_skill_reactivated",
+    "second_session_first_substantive_action_current_case_read",
+    "no_render_or_present"
+  ]
+}

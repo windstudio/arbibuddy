@@ -1,0 +1,15 @@
+{
+  "action": "被迫解除",
+  "requested_output": "external_final",
+  "confirmation_snapshot_id": "CS-003",
+  "critical_facts": {"fact_ids": ["F-001"]},
+  "procedure_limitation": {"fact_ids": ["F-003"]},
+  "current_authority": {
+    "fact_ids": ["F-006"],
+    "source_ids": ["SRC-NAT-LCL-HIGH-RISK", "SRC-CLIENT-GUESSED"],
+    "scope": "描述性自由文本"
+  },
+  "consequences_alternatives": {"fact_ids": ["F-004"]},
+  "internal_review": {"fact_ids": ["F-005"]},
+  "user_confirmation": {"fact_ids": ["F-002"], "scope": "准备处理解除相关争议"}
+}

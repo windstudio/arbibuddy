@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "NAT-FORCED-TERMINATION-001",
+      "version": "1.0.0",
+      "applicable_claims": ["被迫解除劳动合同经济补偿"],
+      "jurisdiction": "全国",
+      "effective_from": "2008-01-01",
+      "effective_to": null,
+      "summary": "劳动者依据劳动合同法第三十八条法定事由解除并请求经济补偿时，应逐项核对解除理由、通知内容与送达、程序时效、证据及第四十七条金额输入",
+      "conditions": [
+        "每项解除理由分别关联已确认事实、法律依据、证据、对方质疑与待核验项",
+        "劳动者解除通知所依据事由及送达过程需要与后续主张保持可追溯",
+        "经济补偿仅按已确认工资基数、补偿工作年限、已付金额和法定上限计算",
+        "采取解除动作前按固定顺序完成六步高风险动作门槛"
+      ],
+      "exceptions": [
+        "劳动者无因辞职、协商一致、用人单位解除或其他事实应进入不同法律路径",
+        "解除理由缺失、冲突或动态核验失败时不得生成精确金额或可外发定稿",
+        "未依法缴纳社会保险费等具体事由仍须结合现行司法解释和案件事实核验",
+        "理由成立、通知生效、经济补偿及程序结果由有权机关结合证据认定"
+      ],
+      "source_ids": [
+        "SRC-NAT-LCL-038-046-047",
+        "SRC-NAT-LABOR-INTERPRETATION-I",
+        "SRC-NAT-LABOR-INTERPRETATION-II-019",
+        "SRC-NAT-ARBITRATION-027"
+      ],
+      "verified_on": "2026-07-18",
+      "review_on": "2027-01-18"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-NAT-LCL-038-046-047",
+      "title": "中华人民共和国劳动合同法第三十八条、第四十六条、第四十七条",
+      "authority": "全国人民代表大会常务委员会（国家市场监督管理总局发布）",
+      "url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_0abfdd261c03417b949df19d869add8d.html",
+      "effective_from": "2008-01-01", "effective_to": null, "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-LABOR-INTERPRETATION-I",
+      "title": "最高人民法院关于审理劳动争议案件适用法律问题的解释（一）",
+      "authority": "最高人民法院",
+      "url": "https://www.court.gov.cn/zixun/xiangqing/282121.html",
+      "effective_from": "2021-01-01", "effective_to": null, "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-LABOR-INTERPRETATION-II-019",
+      "title": "最高人民法院关于审理劳动争议案件适用法律问题的解释（二）第十九条",
+      "authority": "最高人民法院",
+      "url": "https://www.court.gov.cn/zixun/xiangqing/472691.html",
+      "effective_from": "2025-09-01", "effective_to": null, "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-ARBITRATION-027",
+      "title": "中华人民共和国劳动争议调解仲裁法第二十七条",
+      "authority": "全国人民代表大会常务委员会（驻马店市中级人民法院公开）",
+      "url": "https://zmdzy.hncourt.gov.cn/upload/file/20250710/20250710121409_65235.pdf",
+      "effective_from": "2008-05-01", "effective_to": null, "verified_on": "2026-09-23"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "NAT-UNLAWFUL-TERMINATION-001",
+      "version": "1.0.0",
+      "applicable_claims": ["违法解除或终止劳动合同赔偿金", "继续履行劳动合同"],
+      "jurisdiction": "全国",
+      "effective_from": "2008-01-01",
+      "effective_to": null,
+      "summary": "用人单位解除或终止劳动合同须分别核对作出主体、通知时间、通知所载理由及适用程序；救济需结合能否继续履行、工资基数、补偿工作年限和程序阶段分析",
+      "conditions": [
+        "解除或终止行为由用人单位作出且主体、时间、通知理由和程序均可核对",
+        "以解除或终止通知载明内容为核心核对理由，结合用人单位举证分析",
+        "继续履行须核对劳动合同是否仍可履行；赔偿金与继续履行的冲突关系须明确",
+        "赔偿金金额只能使用已确认工资基数与补偿工作年限，并核对法定上限"
+      ],
+      "exceptions": [
+        "劳动者辞职、协商一致、期满终止或其他事实可能进入经济补偿、被迫解除等不同路径",
+        "司法解释列明的合同期满、依法享受基本养老保险待遇、破产、特定解散及其他客观不能履行情形可能影响继续履行",
+        "工资基数、工作年限或解除事实存在缺失与冲突时不得生成精确金额",
+        "是否构成违法解除或终止及救济结果由劳动仲裁机构或人民法院结合证据认定"
+      ],
+      "source_ids": [
+        "SRC-NAT-LCL-039-048-087",
+        "SRC-NAT-LABOR-INTERPRETATION-I",
+        "SRC-NAT-LABOR-INTERPRETATION-II-016-018",
+        "SRC-NAT-GUIDING-CASE-180",
+        "SRC-NAT-ARBITRATION-027"
+      ],
+      "verified_on": "2026-07-18",
+      "review_on": "2027-01-18"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-NAT-LCL-039-048-087",
+      "title": "中华人民共和国劳动合同法第三十九条至第四十八条、第八十七条",
+      "authority": "全国人民代表大会常务委员会（国家市场监督管理总局发布）",
+      "url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_0abfdd261c03417b949df19d869add8d.html",
+      "effective_from": "2008-01-01",
+      "effective_to": null,
+      "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-LABOR-INTERPRETATION-I",
+      "title": "最高人民法院关于审理劳动争议案件适用法律问题的解释（一）",
+      "authority": "最高人民法院",
+      "url": "https://www.court.gov.cn/zixun/xiangqing/282121.html",
+      "effective_from": "2021-01-01",
+      "effective_to": null,
+      "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-LABOR-INTERPRETATION-II-016-018",
+      "title": "最高人民法院关于审理劳动争议案件适用法律问题的解释（二）第十六条至第十八条",
+      "authority": "最高人民法院",
+      "url": "https://www.court.gov.cn/zixun/xiangqing/472691.html",
+      "effective_from": "2025-09-01",
+      "effective_to": null,
+      "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-GUIDING-CASE-180",
+      "title": "指导案例180号：孙贤锋诉淮安西区人力资源开发有限公司劳动合同纠纷案",
+      "authority": "最高人民法院",
+      "url": "https://gongbao.court.gov.cn/Details/778f051edc240a8087c66d12ba92b7.html",
+      "effective_from": "2022-07-04",
+      "effective_to": null,
+      "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-ARBITRATION-027",
+      "title": "中华人民共和国劳动争议调解仲裁法第二十七条",
+      "authority": "全国人民代表大会常务委员会（驻马店市中级人民法院公开）",
+      "url": "https://zmdzy.hncourt.gov.cn/upload/file/20250710/20250710121409_65235.pdf",
+      "effective_from": "2008-05-01",
+      "effective_to": null,
+      "verified_on": "2026-09-23"
+    }
+  ]
+}

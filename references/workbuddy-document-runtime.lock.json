@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "python_abi": "cp313",
+  "platform_tag": "win_amd64",
+  "wheelhouse": "references/workbuddy-wheels",
+  "packages": [
+    {
+      "distribution": "python-docx",
+      "version": "1.2.0",
+      "wheel_filename": "python_docx-1.2.0-py3-none-any.whl",
+      "wheel_sha256": "3fd478f3250fbbbfd3b94fe1e985955737c145627498896a8a6bf81f4baf66c7",
+      "wheel_path": "references/workbuddy-wheels/python_docx-1.2.0-py3-none-any.whl",
+      "expand_path": "site-packages",
+      "paths": [
+        "docx",
+        "python_docx-1.2.0.dist-info"
+      ],
+      "licenses": [
+        "python_docx-1.2.0.dist-info/licenses/LICENSE"
+      ]
+    },
+    {
+      "distribution": "lxml",
+      "version": "6.1.1",
+      "wheel_filename": "lxml-6.1.1-cp313-cp313-win_amd64.whl",
+      "wheel_sha256": "a10bd2fd62e8ce916ececb342f348f190724a098c1faa056fdfb2a22ad5e8660",
+      "wheel_path": "references/workbuddy-wheels/lxml-6.1.1-cp313-cp313-win_amd64.whl",
+      "expand_path": "site-packages",
+      "paths": [
+        "lxml",
+        "lxml-6.1.1.dist-info"
+      ],
+      "licenses": [
+        "lxml-6.1.1.dist-info/licenses/LICENSE.txt",
+        "lxml-6.1.1.dist-info/licenses/LICENSES.txt"
+      ]
+    },
+    {
+      "distribution": "typing_extensions",
+      "version": "4.16.0",
+      "wheel_filename": "typing_extensions-4.16.0-py3-none-any.whl",
+      "wheel_sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "wheel_path": "references/workbuddy-wheels/typing_extensions-4.16.0-py3-none-any.whl",
+      "expand_path": "site-packages",
+      "paths": [
+        "typing_extensions.py",
+        "typing_extensions-4.16.0.dist-info"
+      ],
+      "licenses": [
+        "typing_extensions-4.16.0.dist-info/licenses/LICENSE"
+      ]
+    }
+  ]
+}

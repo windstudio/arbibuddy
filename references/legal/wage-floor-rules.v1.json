@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "registry_id": "wage-floor-policy",
+  "rules": [
+    {
+      "rule_id": "SH-WAGE-FLOOR-2025",
+      "version": "1.0.0",
+      "region": "上海市",
+      "effective_from": "2025-07-01",
+      "effective_to": "2030-06-30",
+      "applicable_claims": [
+        "拖欠工资",
+        "工资差额",
+        "单方降薪工资差额",
+        "法定津贴补贴差额"
+      ],
+      "floors": {
+        "full_time_monthly": {
+          "value": "2740",
+          "unit": "CNY/month",
+          "excludes": [
+            "延长工作时间的工资",
+            "夏季高温津贴、中夜班津贴及有毒有害等特殊工作环境下的岗位津贴",
+            "伙食补贴、上下班交通费补贴、住房补贴",
+            "个人依法缴纳的社会保险费和住房公积金"
+          ]
+        },
+        "part_time_hourly": {
+          "value": "25",
+          "unit": "CNY/hour",
+          "excludes": [
+            "个人和单位依法缴纳的社会保险费"
+          ]
+        }
+      },
+      "source_ids": [
+        "SRC-SH-WAGE-FLOOR-2025"
+      ],
+      "verified_on": "2026-09-22",
+      "review_on": "2026-12-31"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-SH-WAGE-FLOOR-2025",
+      "title": "上海市人力资源和社会保障局关于调整本市最低工资标准的通知",
+      "authority": "上海市人力资源和社会保障局",
+      "url": "https://rsj.sh.gov.cn/tgzfl_17732/20250714/t0035_1434097.html",
+      "published_on": "2025-07-11",
+      "effective_from": "2025-07-01",
+      "effective_to": "2030-06-30",
+      "verified_on": "2026-09-22",
+      "summary": "自2025年7月1日起，上海月最低工资标准为2740元，小时最低工资标准为25元；月标准适用于全日制，小时标准适用于非全日制。"
+    }
+  ]
+}

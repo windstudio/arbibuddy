@@ -1,0 +1,3840 @@
+{
+  "scope": "public technical deletion-path regression; original audit and private commit history are not included",
+  "entries": [
+    {
+      "path": "adapters/hermes/adapter.json",
+      "reason": "首阶段仅支持三平台，无未支持平台备用入口",
+      "replacement": [
+        "adapters/codex/adapter.json",
+        "adapters/claude-code/adapter.json",
+        "adapters/workbuddy/adapter.json"
+      ]
+    },
+    {
+      "path": "adapters/openclaw/adapter.json",
+      "reason": "首阶段仅支持三平台，无未支持平台备用入口",
+      "replacement": [
+        "adapters/codex/adapter.json",
+        "adapters/claude-code/adapter.json",
+        "adapters/workbuddy/adapter.json"
+      ]
+    },
+    {
+      "path": "evals/scenarios/C01-forced-termination.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/scenarios/C02-unlawful-termination.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/scenarios/C03-wage-only.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/suites/canary.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/suites/regression.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/suites/trigger.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/triggers/T01-should-trigger-wage.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/triggers/T02-should-trigger-reduction.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/triggers/T03-should-trigger-arbitration.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/triggers/T04-should-trigger-dismissal.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/triggers/T05-should-not-trigger-cpu.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "evals/triggers/T06-should-not-trigger-contract.yaml",
+      "reason": "旧逐轮信封Harness专用；新自然语言Journey场景使用model-led契约",
+      "replacement": [
+        "evals/model-led/",
+        "evals/suites/model-led-codex-claude.yaml"
+      ]
+    },
+    {
+      "path": "references/amount-examples/wage-and-primary-compensation.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/analysis-examples/forced-termination.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/analysis-examples/wage-analysis-exact.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/analysis-examples/wage-analysis.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/annual-leave-pay.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/authority-resilience.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/business-difficulty-defense.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/case-file.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/case-pipeline-examples/case-package-request.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/case-pipeline-examples/combined-wage-thirteenth-forced-termination/case-package-request.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/case-pipeline-examples/combined-wage-thirteenth-forced-termination/forced-termination-exact.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/case-pipeline-examples/combined-wage-thirteenth-forced-termination/wage-claims-exact.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/case-pipeline-examples/forced-termination-exact.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/case-pipeline-examples/wage-claims-exact.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/case-pipeline.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/cli-orchestration.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/core-workflow.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/dispute-routing.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/document-examples/arbitration-application.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/document-examples/evidence-catalog.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/document-examples/property-preservation-application.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/document-examples/shanghai-cancellation-restriction-application.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/documents/arbitration-application.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/documents/arbitration-defense.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/documents/demand-letter.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/documents/enforcement-application.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/documents/evidence-catalog.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/documents/forced-termination-notice.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/documents/property-preservation.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/documents/shanghai-cancellation-restriction.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/employment-relationship.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/forced-termination.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/high-risk-gate-semantic-example.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/intake-examples/facts.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/intake-orchestration.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/legal/high-risk-action-gates.v1.json",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/overtime-pay.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/paid-leave-routing.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/public-turn-v2.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/risk-gates.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/topics/forced-termination.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/topics/wage-analysis.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/unlawful-termination.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/unsigned-contract-double-wage.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/wage-analysis.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/workbuddy-client-acceptance.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "references/workflows/main.md",
+      "reason": "旧主链、专项入口或旧参数示例；当前权威参考已逐项迁移，不保留双轨",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "references/document-render.md",
+        "references/amount-calculate.md"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/artifacts.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/codex_compat.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/delivery_evidence.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/driver.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/failure_pack.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/metrics.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/models.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/observer.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/oracle.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/paths.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/reporting.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/runner.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/runtimes/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/runtimes/base.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/runtimes/codex.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/runtimes/fake.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/sanitizer.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/scenario.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/source_snapshot.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/trace.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/agent_eval/workspace.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/amount_calculator/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/amount_calculator/core.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/amount_calculator/presentation.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/annual_leave_pay/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/annual_leave_pay/amount_confirmation.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/annual_leave_pay/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/annual_leave_pay/knowledge.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/annual_leave_pay/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/capability_contract/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/capability_contract/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/delivery_plan.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/dependencies.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/failure_fence.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/high_risk_event.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/high_risk_receipt.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/identifiers.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/intake_state.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/locking.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/model.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/preflight_fence.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/rights_scan.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_file/store.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_pipeline/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_pipeline/business_inputs.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_pipeline/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_pipeline/compiler.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_pipeline/scaffold.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_pipeline/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/case_pipeline/status_contract.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/claim_analysis/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/claim_analysis/amount_confirmation.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/claim_analysis/amounts.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/claim_analysis/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/claim_analysis/composition.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/claim_analysis/knowledge.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/claim_analysis/legal_validation.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/claim_analysis/scheme_comparison.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/claim_analysis/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/claim_analysis/wage_components.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/cli_orchestration/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/cli_orchestration/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/cli_orchestration/registry.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/cli_orchestration/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/codex_acceptance/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/codex_acceptance/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_behavior_contract/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_behavior_contract/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/agent_work.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/barrier.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/case_package_builder.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/command_identity.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/contracts.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/managed_requests.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/migration.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/package.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/public.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/public_protocol.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/public_runtime.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/public_v2.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/core_workflow/termination_routing.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/dispute_routing/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/dispute_routing/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/dispute_routing/knowledge.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/dispute_routing/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/documents/bindings.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/documents/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/documents/composer.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/documents/request_preparation.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/documents/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/employment_relationship/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/employment_relationship/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/employment_relationship/knowledge.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/employment_relationship/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/external_narrative.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/forced_termination/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/forced_termination/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/forced_termination/knowledge.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/forced_termination/notice_authority.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/forced_termination/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/high_risk_action/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/high_risk_action/authority.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/high_risk_action/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/high_risk_action/gate.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/high_risk_action/observation.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/high_risk_action/preparation.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/high_risk_action/receipt.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/high_risk_action/typed_gate.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/intake_orchestration/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/intake_orchestration/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/intake_orchestration/planner.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/intake_orchestration/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/overtime_pay/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/overtime_pay/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/overtime_pay/knowledge.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/overtime_pay/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/paid_leave_routing/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/paid_leave_routing/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/paid_leave_routing/knowledge.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/paid_leave_routing/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/release/core_flow_gate.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/release/failure_injection_runner.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/safety_boundary/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/safety_boundary/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/unlawful_termination/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/unlawful_termination/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/unlawful_termination/knowledge.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/unlawful_termination/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/unsigned_contract_double_wage/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/unsigned_contract_double_wage/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/unsigned_contract_double_wage/knowledge.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/unsigned_contract_double_wage/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/wage_analysis/__init__.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/wage_analysis/cli.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/wage_analysis/holiday_schedule.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/wage_analysis/knowledge.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/wage_analysis/partial_month.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/wage_analysis/service.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/wage_analysis/structured_claims.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/wage_analysis/variable_remuneration.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "scripts/wage_analysis/wage_floor.py",
+      "reason": "旧编排、专项执行层或私有载荷不属于新工具边界；业务知识迁入九领域参考及公共工具",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "references/model-led/",
+        "scripts/case_archive/",
+        "scripts/amount_calculator/public.py",
+        "scripts/documents/public.py"
+      ]
+    },
+    {
+      "path": "tests/acceptance/__init__.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/acceptance/test_adversarial_boundaries.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/acceptance/test_black_box_acceptance.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/acceptance/test_core_flow_end_to_end.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/acceptance/test_p0_p1_release_acceptance.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_codex_compat.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_codex_runtime.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_delivery_evidence.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_driver.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_failure_pack.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_host_turn_adapter.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_observer.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_oracle.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_reporting.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_runner.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_scenario.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_support.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_trace.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md"
+      ]
+    },
+    {
+      "path": "tests/agent_eval/test_workspace.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/agent_eval/test_model_led_harness.py",
+        "tests/agent_eval/test_model_led_journey_remediation.py",
+        "docs/agents/model-led-agent-eval.md"
+      ]
+    },
+    {
+      "path": "tests/amount_calculator/test_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/amount_calculator/test_model_led_working_time_leave_double_wage.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/amount_calculator/test_rc14_amount_invariants.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/amount_calculator/test_model_led_working_time_leave_double_wage.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/case_file/test_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/case_file/test_delivery_plan.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/case_file/test_model.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/case_file/test_store.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/case_pipeline/__init__.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/"
+      ]
+    },
+    {
+      "path": "tests/case_pipeline/test_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/case_pipeline/test_compiler.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/case_pipeline/test_scaffold.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/"
+      ]
+    },
+    {
+      "path": "tests/claim_analysis/test_cli_error_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/amount_calculator/test_model_led_working_time_leave_double_wage.py"
+      ]
+    },
+    {
+      "path": "tests/claim_analysis/test_compensation_wage_components_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/amount_calculator/test_model_led_working_time_leave_double_wage.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/claim_analysis/test_composition.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/amount_calculator/test_model_led_working_time_leave_double_wage.py"
+      ]
+    },
+    {
+      "path": "tests/claim_analysis/test_scheme_comparison_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/amount_calculator/test_model_led_working_time_leave_double_wage.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/cli_orchestration/__init__.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/"
+      ]
+    },
+    {
+      "path": "tests/cli_orchestration/test_analysis_examples.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/"
+      ]
+    },
+    {
+      "path": "tests/cli_orchestration/test_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/cli_orchestration/test_test_suites_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/test_suites/test_cli.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/__init__.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/public_fixtures.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_agent_work_validator.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_managed_requests.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_public_deep_interface_rc11.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_public_intake_gates.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_public_runtime.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_public_runtime_without_external_state.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_public_termination_routing.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_rc11_semantic_dependencies.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_rc13_regressions.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_rc14_cli_atomicity.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_rc14_external_narrative.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_rc14_managed_request_atomicity.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_rc14_migration_compatibility.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_rc14_partial_month_policy.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_rc14_public_runtime_result_protocol.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_rc14_turn_transport_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_rc14_wage_floor_policy.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_service.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_v126_rc3_public_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_v126_rc4_package_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_v126_rc5_public_turn_v2.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_v126_rc6_regressions.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/core_workflow/test_v126_rc8_output_claim_scope.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_arbitration_application_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_arbitration_defense_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_composer_interface.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_delivery.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_demand_letter_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_document_dependency_setup_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_enforcement_application_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_evidence_catalog_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_forced_termination_notice_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_fraction_basis_formula.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_generation_v2_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_program_source_registry_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_property_preservation_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_public_document_examples.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_request_preparation_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_shanghai_cancellation_restriction_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/documents/test_workbuddy_third_round_regressions.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/fixtures/failure-injection/run_package_interrupted.py",
+      "reason": "旧协议可执行夹具不能保留备用入口；历史案情文本和发布报告不删除",
+      "replacement": [
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/agent_eval/test_model_led_harness.py"
+      ]
+    },
+    {
+      "path": "tests/fixtures/rc6_model_acceptance/run_model_acceptance.py",
+      "reason": "旧协议可执行夹具不能保留备用入口；历史案情文本和发布报告不删除",
+      "replacement": [
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/agent_eval/test_model_led_harness.py"
+      ]
+    },
+    {
+      "path": "tests/high_risk_action/__init__.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/high_risk_action/helpers.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/high_risk_action/test_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/high_risk_action/test_rc14_stale_recovery.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/high_risk_action/test_semantic_confirmation.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/high_risk_action/test_v126_rc8_authority_resilience.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/intake_orchestration/__init__.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/"
+      ]
+    },
+    {
+      "path": "tests/intake_orchestration/helpers.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/"
+      ]
+    },
+    {
+      "path": "tests/intake_orchestration/test_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/intake_orchestration/test_planner_interface.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/"
+      ]
+    },
+    {
+      "path": "tests/intake_orchestration/test_rights_scan_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/intake_orchestration/test_rights_scan_lifecycle_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/intake_orchestration/test_v125_rc7_regressions.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/release/test_failure_injection_runner.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/release/test_verification.py",
+        "tests/platform_adapters/test_two_batch_workbuddy_remediation.py",
+        "tests/runtime_identity/test_module.py"
+      ]
+    },
+    {
+      "path": "tests/release/test_release_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/release/test_verification.py",
+        "tests/platform_adapters/test_two_batch_workbuddy_remediation.py",
+        "tests/runtime_identity/test_module.py"
+      ]
+    },
+    {
+      "path": "tests/release/test_release_readiness.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/release/test_verification.py",
+        "tests/platform_adapters/test_two_batch_workbuddy_remediation.py",
+        "tests/runtime_identity/test_module.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/release/test_three_client_core_flow_gate.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/release/test_verification.py",
+        "tests/platform_adapters/test_two_batch_workbuddy_remediation.py",
+        "tests/runtime_identity/test_module.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/release/test_v126_rc6_release_gates.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/release/test_verification.py",
+        "tests/platform_adapters/test_two_batch_workbuddy_remediation.py",
+        "tests/runtime_identity/test_module.py"
+      ]
+    },
+    {
+      "path": "tests/release/test_workbuddy_state_recovery_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/release/test_verification.py",
+        "tests/platform_adapters/test_two_batch_workbuddy_remediation.py",
+        "tests/runtime_identity/test_module.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/release/test_workbuddy_wheelhouse_entrypoints.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "tests/release/test_verification.py",
+        "tests/platform_adapters/test_two_batch_workbuddy_remediation.py",
+        "tests/runtime_identity/test_module.py"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_annual_leave_pay.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_employment_relationship.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_forced_termination.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_other_paid_leave_routing.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_overtime_pay.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_social_insurance_and_complex_routing.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_structured_wage_claims_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_unlawful_termination.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_unsigned_contract_double_wage.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_variable_remuneration_claims_cli.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py"
+      ]
+    },
+    {
+      "path": "tests/scenarios/test_wage_analysis.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_agent_eval_docs.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_agent_eval_public_field_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_claude_execution_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_claude_second_round_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_codex_termination_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_legal_review_v2_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_legal_verification_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_public_turn_v2_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_rc25_ml03_skill_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_skill_structure.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_v126_rc8_baseline.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_workbuddy_eighth_round_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_workbuddy_eleventh_round_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_workbuddy_fifth_round_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_workbuddy_fourth_round_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_workbuddy_ninth_round_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_workbuddy_seventh_round_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_workbuddy_sixth_round_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py",
+        "tests/case_file/test_model_led_archive.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_workbuddy_tenth_round_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py",
+        "tests/amount_calculator/test_model_led_amount_contract.py",
+        "tests/amount_calculator/test_model_led_amount_boundary.py",
+        "tests/documents/test_model_led_document_render.py"
+      ]
+    },
+    {
+      "path": "tests/static/test_workbuddy_third_round_contract.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/static/test_contraction.py",
+        "tests/static/test_model_led_skill_contract.py"
+      ]
+    },
+    {
+      "path": "tests/three_client_acceptance/__init__.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/three_client_acceptance/test_post_rc13_contract_alignment.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    },
+    {
+      "path": "tests/three_client_acceptance/test_public_entry.py",
+      "reason": "不再执行旧状态/信封/私有CLI/固定模板断言；业务不变量由所列公共行为组和242项迁移记录承接，保留测试方法清单供双轴审查，不以旧测试数量作为功能证据",
+      "replacement": [
+        "docs/agents/domain-migration.md",
+        "tests/scenarios/",
+        "tests/documents/test_model_led_document_render.py",
+        "tests/documents/test_model_led_demand_forced_render.py",
+        "tests/documents/test_model_led_program_documents_render.py",
+        "tests/documents/test_rc14_delivery_transaction.py",
+        "tests/case_file/test_model_led_archive.py"
+      ]
+    }
+  ]
+}

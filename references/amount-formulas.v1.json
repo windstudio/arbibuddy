@@ -1,0 +1,108 @@
+{
+  "schema_version": "1.0.0",
+  "math_conventions": [
+    "所有数值输入必须是十进制定点字符串，禁止二进制浮点。",
+    "连续公式使用未舍入的 Decimal 中间值。",
+    "每个独立分项在最终展示点使用人民币分、ROUND_HALF_UP 舍入。",
+    "聚合只使用已展示的独立分项；互斥情景不得隐式相加或选最大值。",
+    "日期区间只校验 start_date 不晚于 end_date；期间数量由模型显式提供，计算器不从争议名称推导。"
+  ],
+  "units": {
+    "yuan": "金额，人民币元",
+    "yuan_per_month": "金额率，人民币元/完整月",
+    "yuan_per_day": "金额率，人民币元/日",
+    "yuan_per_hour": "金额率，人民币元/小时",
+    "month": "期间数量，完整月",
+    "day": "期间数量，日",
+    "hour": "期间数量，小时",
+    "ratio": "无量纲倍数",
+    "count": "无量纲件数"
+  },
+  "formulas": {
+    "wage_difference": {
+      "version": "1.0.0",
+      "kind": "linear_difference",
+      "description": "按模型已选期间、基数、倍数和已付金额计算工资差额。",
+      "line_formula": "max(0, basis × quantity × multiplier - paid)",
+      "basis_quantity_pairs": [
+        ["yuan_per_month", "month"],
+        ["yuan_per_day", "day"],
+        ["yuan_per_hour", "hour"]
+      ],
+      "period_semantics": ["completed_months", "calendar_days", "hours", "explicit_period"]
+    },
+    "overtime_pay": {
+      "version": "1.0.0",
+      "kind": "linear_difference",
+      "description": "按模型分别提供的小时或日工资基数、工作量、倍数和已付金额计算加班工资分项；不选择工时制度或加班倍数。",
+      "line_formula": "max(0, basis × quantity × multiplier - paid)",
+      "basis_quantity_pairs": [
+        ["yuan_per_hour", "hour"],
+        ["yuan_per_day", "day"]
+      ],
+      "period_semantics": ["calendar_days", "hours", "explicit_period"]
+    },
+    "annual_leave_pay": {
+      "version": "1.0.0",
+      "kind": "daily_rate_difference",
+      "description": "按模型已确认的剔除加班工资月平均工资、显式日工资折算除数、未休天数、应补倍数和已付补差计算逐年度金额；不判断资格、排除或时效。",
+      "line_formula": "max(0, (basis ÷ divisor) × quantity × multiplier - paid)",
+      "divisor_unit": "count",
+      "basis_quantity_pairs": [
+        ["yuan_per_month", "day"]
+      ],
+      "period_semantics": ["calendar_days", "explicit_period"]
+    },
+    "unsigned_contract_double_wage": {
+      "version": "1.0.0",
+      "kind": "linear_difference",
+      "description": "按模型已确认的未签合同成立期间、月或日工资基数、倍数和已付二倍工资差额计算金额；不判断劳动关系、成立期间或时效。",
+      "line_formula": "max(0, basis × quantity × multiplier - paid)",
+      "basis_quantity_pairs": [
+        ["yuan_per_month", "month"],
+        ["yuan_per_day", "day"]
+      ],
+      "period_semantics": ["completed_months", "calendar_days", "explicit_period"]
+    },
+    "variable_remuneration": {
+      "version": "1.0.0",
+      "kind": "linear_difference",
+      "description": "按模型已选奖金、提成或十三薪口径计算显式输入的差额情景。",
+      "line_formula": "max(0, basis × quantity × multiplier - paid)",
+      "basis_quantity_pairs": [["yuan", "count"]],
+      "period_semantics": ["event_count", "completed_months", "calendar_days"]
+    },
+    "economic_compensation": {
+      "version": "1.0.0",
+      "kind": "linear_difference",
+      "description": "按模型已选择的经济补偿工资基数、补偿月数、倍数和已付金额执行算术；不判断被迫解除是否成立。",
+      "line_formula": "max(0, basis × quantity × multiplier - paid)",
+      "basis_quantity_pairs": [["yuan_per_month", "month"]],
+      "period_semantics": ["completed_months", "explicit_period"]
+    },
+    "unlawful_termination_compensation": {
+      "version": "1.0.0",
+      "kind": "linear_difference",
+      "description": "按模型已选择的违法解除或终止赔偿金工资基数、工作年限、赔偿倍数和已付金额执行算术；不判断违法解除或救济竞合。",
+      "line_formula": "max(0, basis × quantity × multiplier - paid)",
+      "basis_quantity_pairs": [["yuan_per_month", "month"]],
+      "period_semantics": ["completed_months", "explicit_period"]
+    },
+    "wage_arrears_total": {
+      "version": "1.0.0",
+      "kind": "independent_amount_total",
+      "description": "把模型分别确认的工资欠付分项按独立金额舍入后汇总。",
+      "line_formula": "amount",
+      "basis_quantity_pairs": [],
+      "period_semantics": ["explicit_period"]
+    },
+    "independent_amount_total": {
+      "version": "1.0.0",
+      "kind": "independent_amount_total",
+      "description": "汇总模型明确列出的独立金额项目，不判断项目是否应当主张。",
+      "line_formula": "amount",
+      "basis_quantity_pairs": [],
+      "period_semantics": ["explicit_period"]
+    }
+  }
+}

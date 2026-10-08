@@ -1,0 +1,4 @@
+interface:
+  display_name: "打工人维权小帮手"
+  short_description: "劳动争议案情、证据、金额、话术与文书辅助"
+  default_prompt: "用自然语言描述劳动争议、欠薪、解除或文书需求，Skill 会按需逐步梳理事实、证据、金额与交付材料。"

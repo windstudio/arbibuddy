@@ -1,0 +1,71 @@
+{
+  "calculation_label": "公开合成输入：独立分项舍入",
+  "formula_id": "wage_difference",
+  "formula_version": "1.0.0",
+  "legal_basis_summary": "仅验证公开数学契约；不代表法律事实或请求成立。",
+  "source_refs": [
+    "SYNTHETIC-ARITHMETIC"
+  ],
+  "aggregation_policy": "single_scenario",
+  "scenarios": [
+    {
+      "scenario_id": "synthetic",
+      "assumptions": [
+        "全部数值和期间是新建测试输入，无对应真实当事人。"
+      ],
+      "period": {
+        "start_date": "2040-01-01",
+        "end_date": "2040-02-29",
+        "semantics": "completed_months"
+      },
+      "inputs": {
+        "line_items": [
+          {
+            "line_id": "synthetic-A",
+            "basis": {
+              "value": "431.235",
+              "unit": "yuan_per_month"
+            },
+            "quantity": {
+              "value": "1",
+              "unit": "month"
+            },
+            "multiplier": {
+              "value": "1",
+              "unit": "ratio"
+            },
+            "paid": {
+              "value": "0",
+              "unit": "yuan"
+            }
+          },
+          {
+            "line_id": "synthetic-B",
+            "basis": {
+              "value": "32.785",
+              "unit": "yuan_per_month"
+            },
+            "quantity": {
+              "value": "1",
+              "unit": "month"
+            },
+            "multiplier": {
+              "value": "1",
+              "unit": "ratio"
+            },
+            "paid": {
+              "value": "0",
+              "unit": "yuan"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "rounding_policy": {
+    "id": "money-independent-unit-half-up-v1",
+    "quantum": "0.01",
+    "mode": "ROUND_HALF_UP",
+    "aggregation": "round_each_line_item_then_sum"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "NAT-ANNUAL-LEAVE-001",
+      "version": "1.0.0",
+      "applicable_claims": ["未休年休假工资差额"],
+      "jurisdiction": "全国通用规则；上海程序与时效口径动态核验",
+      "effective_from": "2008-01-01",
+      "effective_to": null,
+      "summary": "连续工作满12个月后按累计工作时间确定年休假档位，逐公历年度核对应休、已休、排除与折算，并以剔除加班工资后的月平均工资除以21.75计算日工资；300%中包含正常工资，通常测算另行应补的200%差额",
+      "conditions": [
+        "连续工作满12个月包括同一或不同用人单位连续工作的可证明期间",
+        "累计工作满1年不满10年、满10年不满20年、满20年分别对应5天、10天、15天",
+        "逐公历年度核对应休、已休、法定排除、用人单位安排、本人书面提出不休及另行已付金额",
+        "离职当年按当年已过日历天数折算，折算后不足1整天的部分不支付",
+        "日工资按支付前12个月剔除加班工资后的月平均工资除以21.75折算"
+      ],
+      "exceptions": [
+        "寒暑假、事假和病假达到法定条件时可能不享受当年度或下一年度年休假",
+        "用人单位已安排年休假且劳动者因本人原因书面提出不休的，可以只支付正常工作期间工资",
+        "劳动合同、集体合同或规章制度高于法定标准的，从其较高标准",
+        "仲裁时效起算、跨年度安排、举证责任及地方处理口径必须结合履行地和案件日期动态核验"
+      ],
+      "source_ids": [
+        "SRC-NAT-ANNUAL-LEAVE-REGULATION",
+        "SRC-NAT-ANNUAL-LEAVE-MEASURES",
+        "SRC-NAT-ANNUAL-LEAVE-REPLY",
+        "SRC-NAT-ARBITRATION-027",
+        "SRC-SH-ANNUAL-LEAVE-ARBITRATION",
+        "SRC-SH-ANNUAL-LEAVE-2026-CASE"
+      ],
+      "verified_on": "2026-07-18",
+      "review_on": "2027-01-18"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-NAT-ANNUAL-LEAVE-REGULATION",
+      "title": "职工带薪年休假条例第二条至第五条",
+      "authority": "国务院（司法部国家行政法规库发布）",
+      "url": "https://xzfg.moj.gov.cn/front/law/detail?LawID=208",
+      "effective_from": "2008-01-01", "effective_to": null, "verified_on": "2026-09-22"
+    },
+    {
+      "source_id": "SRC-NAT-ANNUAL-LEAVE-MEASURES",
+      "title": "企业职工带薪年休假实施办法第三条至第十三条",
+      "authority": "人力资源和社会保障部（上海市人力资源和社会保障局发布）",
+      "url": "https://rsj.sh.gov.cn/trlzyhshbzbgz_17256/20200617/t0035_1388390.html",
+      "effective_from": "2008-09-18", "effective_to": null, "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-ANNUAL-LEAVE-REPLY",
+      "title": "人力资源和社会保障部办公厅关于《企业职工带薪年休假实施办法》有关问题的复函",
+      "authority": "人力资源和社会保障部办公厅（中山市人力资源和社会保障局发布）",
+      "url": "https://hrss.zs.gov.cn/ztzl/gzqx/zcfg/content/post_1822894.html",
+      "effective_from": "2009-04-15", "effective_to": null, "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-NAT-ARBITRATION-027",
+      "title": "中华人民共和国劳动争议调解仲裁法第二十七条",
+      "authority": "全国人民代表大会常务委员会（驻马店市中级人民法院公开）",
+      "url": "https://zmdzy.hncourt.gov.cn/upload/file/20250710/20250710121409_65235.pdf",
+      "effective_from": "2008-05-01", "effective_to": null, "verified_on": "2026-09-23"
+    },
+    {
+      "source_id": "SRC-SH-ANNUAL-LEAVE-ARBITRATION",
+      "title": "上海市人力资源和社会保障局关于未休年休假工资报酬仲裁受理范围的答复",
+      "authority": "上海市人力资源和社会保障局",
+      "url": "https://rsj.sh.gov.cn/tfkcx_17604/20240110/t0035_1420584.html",
+      "effective_from": "2024-01-09", "effective_to": null, "verified_on": "2026-07-18"
+    },
+    {
+      "source_id": "SRC-SH-ANNUAL-LEAVE-2026-CASE",
+      "title": "上海人社2026年案例分析：企业可以自行规定年休假天数吗",
+      "authority": "上海市人力资源和社会保障局",
+      "url": "https://rsj.sh.gov.cn/dzb/rsj/2026-04-02/pdf/02.pdf",
+      "effective_from": "2026-04-02", "effective_to": null, "verified_on": "2026-07-18"
+    }
+  ]
+}

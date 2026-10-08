@@ -1,0 +1,48 @@
+{
+  "scenario_id": "ML01-wage-bonus-overtime",
+  "capabilities": {
+    "complete_document_pipeline_available": true
+  },
+  "sent_fact_ids": [
+    "employment",
+    "wage_structure",
+    "termination_route",
+    "respondent_identity",
+    "wage_bonus_overtime",
+    "wage_amounts",
+    "performance_bonus",
+    "overtime",
+    "evidence",
+    "analysis_scope"
+  ],
+  "observed_milestones": ["archive_written"],
+  "restarted": false,
+  "observation": {
+    "case_archive": true,
+    "docx": false,
+    "checklist": false,
+    "invalid_docx_count": 0,
+    "invalid_delivery_count": 0,
+    "case_archives": [{"case_id": "case-0123456789abcdef01234567", "archive_revision": 10, "archive_path": ".arbibuddy/cases/case-0123456789abcdef01234567/案情档案.md"}],
+    "deliveries": []
+  },
+  "transcripts": [
+    {"turn": 1, "assistant_response": "已保存案情档案，接下来继续核对事实。", "selected_fact_ids": []},
+    {"turn": 2, "assistant_response": "目前有些信息待补，不能直接估算金额。", "selected_fact_ids": ["employment"]},
+    {"turn": 3, "assistant_response": "请继续提供证据和材料。", "selected_fact_ids": ["wage_structure"]},
+    {"turn": 4, "assistant_response": "现有信息仍不足以生成文书。", "selected_fact_ids": ["wage_bonus_overtime"]},
+    {"turn": 5, "assistant_response": "金额先保留待补。", "selected_fact_ids": ["wage_amounts"]},
+    {"turn": 6, "assistant_response": "规则和材料还需核对。", "selected_fact_ids": ["performance_bonus"]},
+    {"turn": 7, "assistant_response": "加班事实需要证据。", "selected_fact_ids": ["overtime"]},
+    {"turn": 8, "assistant_response": "证据已记录。", "selected_fact_ids": ["evidence"]},
+    {"turn": 9, "assistant_response": "继续核对主体。", "selected_fact_ids": ["respondent_identity"]},
+    {"turn": 10, "assistant_response": "离职方式仍待核实。", "selected_fact_ids": ["termination_route"]},
+    {"turn": 11, "assistant_response": "分析范围已明确。", "selected_fact_ids": ["analysis_scope"]},
+    {"turn": 12, "assistant_response": "请补充尚未提供的信息。", "selected_fact_ids": []},
+    {"turn": 13, "assistant_response": "现阶段先不作确定结论。", "selected_fact_ids": []},
+    {"turn": 14, "assistant_response": "仍未进入交付确认。", "selected_fact_ids": []},
+    {"turn": 15, "assistant_response": "可以继续核对。", "selected_fact_ids": []},
+    {"turn": 16, "assistant_response": "有些材料无法核验。", "selected_fact_ids": []},
+    {"turn": 17, "assistant_response": "本轮结束。", "selected_fact_ids": []}
+  ]
+}

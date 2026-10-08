@@ -1,0 +1,2 @@
+# Preserve the reviewed distribution bytes on every checkout.
+* -text

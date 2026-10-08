@@ -1,0 +1,160 @@
+schema_version: 2
+id: ML02-settlement-clarification-status-targeted-v3
+title: ML02 结算项目歧义澄清及交付后状态定向变体
+initial_user_message: 我从 2023 年 7 月入职，合同仍有效，月薪 15000 元。公司最近三个月只发了部分生活费，我一直正常出勤和工作，没有被安排待岗、停工或拒绝进场；逐月应发、实发及发薪日还要查合同和流水。今天公司在工作群里催我签一份文件，我没拿到完整正文，只听说可能写了欠薪结清或放弃；公司没发解除通知。我有合同、工资流水、群聊和考勤，也没发过催告或解除通知。公司所在地等具体信息我可以随后补充，社保和公积金的个人缴费记录也没核对，不能判断缴纳情况。这次只先处理欠薪、催签文件及被迫解除和继续协商的选择，想比较继续上班、协商、催告与被迫解除的风险。我还没决定留任还是离开，须先拿到文件全文并核对欠薪，也不准备现在签字、发通知或授权起草通知书。请先建档并讲清后果和待核项，再问我下一步。
+initial_fact_ids:
+- employment
+- scope_and_location
+- document_and_evidence
+- risk_comparison
+- decision_deferred
+- social_contribution_status_unknown
+simulator:
+  persona: 虚构劳动争议中的当事人
+  objective: '只依据已声明事实如实回答模型 A 当前问题。权益扫描后询问是否增加其他事项时，选择 rights_scan_scope；询问还有没有事实或材料补充时，选择 final_supplement_none。A 概述了在职欠薪、催签文件、待核项和本轮处理范围并请求确认，且没有明显误述这些核心事实时，选择
+    final_confirmation；不要求逐项重述证据或每个细节，也不替 A 确认法律分析。此时不要重复开场事实卡或回答 unavailable。案情确认不等于决定被迫解除，也不授权起草、签署或发送通知书；在 A 已解释路径与风险、转入下一步时，选择
+    candidate_request。即使 A 只问先细讲文件判断还是欠薪金额，当事人也可以自然提出先要候选稿；请求候选稿仍不表示已决定解除。发出 candidate_request 后，若 A 再次询问候选稿的事实范围、暂定理由、占位和不发送边界是否准确，选择
+    candidate_scope_confirmation；此回复只确认候选稿制作范围，不表示已决定解除或授权外发。candidate_scope_confirmation 只说明解除理由，未选择结算项目。首次询问结算项目时也先使用这条既有含糊回答；若 A 随后再次澄清具体结算项目，只回答 settlement_wages_only，不自行补答或在 A 已起草后追认。无法对应时使用 unavailable，不主动编造或扩展事实。
+
+
+    定向状态询问变体：只有在候选通知书和核对清单已经实际生成并完成一次受管交付后，下一轮才选择既有的 finalization_request 用户消息一次。该消息必须保持原文，不添加事实；候选交付前不得选择。 完成 finalization_request
+    的答复后，若没有新事实问题，选择 stop；不要仅因还能使用 unavailable 而继续发消息。'
+  max_facts_per_turn: 2
+  unavailable_message: 这个信息我目前没有，能否先根据已知信息继续？
+  max_unavailable_uses: null
+  confirmation_fact_id: final_confirmation
+  confirmation_prerequisite_fact_ids:
+  - employment
+  - document_and_evidence
+  - decision_deferred
+  prompt_version: scenario-responder-prompt-v16
+  schema_version: scenario-responder-schema-v3
+fact_pool:
+- id: employment
+  max_uses: 2
+  message: 我从 2023 年 7 月入职，合同还在有效期内，月薪 15000 元。最近三个月我一直正常出勤、照常工作，公司没让我待岗、停工或拒绝进场，但只发了部分生活费；具体每月应发、实发和发薪日期我还要查合同和流水。
+- id: scope_and_location
+  max_uses: 2
+  message: 这次主要想处理欠薪、今天公司催我签的那份文件，以及被迫解除和继续协商怎么选。其他问题暂时没有要一起处理；公司所在地可按需要另行补充。
+- id: location
+  max_uses: 1
+  message: 公司在上海市，我主要在上海市浦东新区工作；公司的注册地址、办公地址和送达地址还要核对。
+- id: document_and_evidence
+  max_uses: 2
+  message: 公司在工作群里催我签文件，但我还没拿到完整正文，只听说里面可能写了结清或放弃欠薪。公司没有发解除通知。我有劳动合同、工资流水、群聊和考勤，也还没发过催告或解除通知。
+- id: risk_comparison
+  max_uses: 2
+  message: 请先讲讲继续上班、协商、催告和被迫解除各有什么风险，我想弄清楚后再决定是否写通知书。
+- id: decision_deferred
+  max_uses: 2
+  message: 我现在还没有决定要留任还是离开，也不打算现在签署、发送或授权起草任何通知书。我需要先拿到公司催签文件的完整文本、核对欠薪情况，再判断。请继续把后果和待核事实讲清楚，不要替我做决定。
+- id: social_contribution_status_unknown
+  max_uses: 2
+  message: 我目前不清楚公司是否正常缴纳社保和公积金，也还没有核对个人缴费记录；请先把缴纳状态标为待核，不要推断正常或欠缴。
+- id: rights_scan_scope
+  max_uses: 1
+  message: 本次先处理欠薪和公司催签的文件，并比较继续上班、协商、催告与被迫解除几条路；其他权益请求暂不增加。被迫解除只是选项，我还没决定。
+- id: final_supplement_none
+  max_uses: 1
+  message: 目前没有别的事实或材料要补充；没核对清楚的文件和金额先记为待核。
+- id: final_confirmation
+  max_uses: 1
+  message: 确认，我提供的主要事实和本轮处理范围基本相符；未核实的事项继续标为待核。我还没决定解除，也不准备现在签署或发送通知书。
+- id: candidate_request
+  max_uses: 2
+  message: 我理解你说的风险，想先要一份 Word（DOCX）格式的被迫解除通知书候选稿和提交前核对清单。还没核实清楚的地方请标出来；现在不要帮我发送。
+- id: candidate_scope_confirmation
+  max_uses: 1
+  message: 确认，只先做以欠薪为暂定理由、保留待核占位的通知书候选稿和提交前清单；其他未核实事项暂不写入。我还没决定实际解除，不要替我签署或发送。
+- id: settlement_wages_only
+  max_uses: 1
+  requires_sent_facts:
+  - candidate_scope_confirmation
+  message: 这份候选稿的结算部分只请求结清欠付工资，经济补偿和其他项目本次不写；其他权利先保留。我还没决定实际解除，也不授权签署或发送。
+- id: finalization_request
+  message: 如果现在还不能做成可直接发送的版本，请告诉我缺什么，先保留候选稿。我不会让你代我签署、发送或上传。
+milestones:
+- id: risk_explained
+  response_any:
+  - 风险
+  - 后果
+  - 证据要求
+- id: candidate_delivery
+  response_any:
+  - 候选
+  - 通知书
+  - 核验清单
+expect:
+  required_artifacts:
+  - case_archive
+  - docx
+  - checklist
+  required_deliveries:
+  - document_type: forced_termination_notice
+    mode: candidate
+    require_case_archive: true
+    require_checklist: true
+    require_same_case_id: true
+    require_current_archive_revision: true
+  allow_extra_deliveries: false
+  min_turns: 2
+  allow_degraded_delivery: true
+  degradation_markers:
+  - 未提供
+  - 不能虚称
+  - 无法
+  - 不可用
+  response_markers:
+    risk:
+    - 风险
+    - 后果
+    - 确认
+    - 候选
+    delivery:
+    - DOCX
+    - 通知书
+    - 清单
+    finalization:
+    - 正式
+    - 定稿
+    - 候选
+    - 待核实
+    - 不能
+    delivery_degraded:
+    - 未生成 DOCX
+    - 不能交付合格 Word
+    - 安装兼容包
+    - 更换已支持环境
+  completion_paths:
+  - id: delivered
+    requires_sent_facts:
+    - candidate_request
+    - settlement_wages_only
+    - finalization_request
+    required_artifacts:
+    - case_archive
+    - docx
+    - checklist
+    required_deliveries:
+    - document_type: forced_termination_notice
+      mode: candidate
+      require_case_archive: true
+      require_checklist: true
+      require_same_case_id: true
+      require_current_archive_revision: true
+    required_response_groups:
+    - risk
+    - delivery
+  - id: delivery_degraded
+    requires_sent_facts:
+    - candidate_request
+    required_artifacts:
+    - case_archive
+    required_response_groups_after_trigger:
+    - delivery_degraded
+    requires_capabilities_unavailable:
+    - complete_document_pipeline_available
+    forbids_artifacts:
+    - docx
+    - checklist
+  max_turns: 16

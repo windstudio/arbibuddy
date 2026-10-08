@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "NAT-PAID-LEAVE-ROUTING-001",
+      "version": "1.0.0",
+      "applicable_claims": ["婚假", "产假", "陪产假", "育儿假", "病假", "其他法定带薪假"],
+      "jurisdiction": "全国基线；上海专项增强；其他地区须动态核验地方规则",
+      "effective_from": "2026-08-01",
+      "effective_to": null,
+      "summary": "先按假种、地区、劳动关系阶段和争议性质区分休假权、工资或待遇差额、行政路径与交叉救济，不建立未休假期统一折现规则",
+      "conditions": [
+        "必须核对具体假种、地区、争议期间、申请与安排、支付状态和用户目标",
+        "产假工资、生育津贴和用人单位工资差额必须分别识别",
+        "地方资格、待遇或程序无法核验时降级为待核验或专业复核"
+      ],
+      "exceptions": [
+        "未休年休假工资由独立专项处理，不适用本路由",
+        "企业自设福利假不得直接改写为全国法定现金补偿",
+        "本路由不输出精确金额或正式文书"
+      ],
+      "local_differences": [
+        "上海婚假、生育假、配偶陪产假、育儿假及其工资待遇按上海现行规则核验",
+        "北京婚假、延长生育假、陪产假与育儿假按北京现行规则核验",
+        "病假工资和医疗期须分别核对全国医疗期基线与地方工资支付口径"
+      ],
+      "source_ids": [
+        "SRC-NAT-FEMALE-WORKER", "SRC-NAT-MEDICAL-PERIOD", "SRC-SH-FAMILY-PLANNING",
+        "SRC-BJ-FAMILY-PLANNING", "SRC-SH-WAGE-PAYMENT"
+      ],
+      "verified_on": "2026-08-01",
+      "review_on": "2026-11-01"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-NAT-FEMALE-WORKER",
+      "title": "女职工劳动保护特别规定第七条、第八条",
+      "authority": "国务院（司法部国家行政法规库）",
+      "jurisdiction": "全国；产假天数与生育津贴/未参保工资支付基线",
+      "url": "https://xzfg.moj.gov.cn/law/download?LawID=343&type=pdf",
+      "effective_from": "2012-04-28", "effective_to": null,
+      "status": "current", "verified_on": "2026-08-01", "review_on": "2027-02-01"
+    },
+    {
+      "source_id": "SRC-NAT-MEDICAL-PERIOD",
+      "title": "企业职工患病或非因工负伤医疗期规定",
+      "authority": "原劳动部（深圳市人民政府门户公开）",
+      "jurisdiction": "全国；医疗期基线，病假工资仍须核对地方规则",
+      "url": "https://www.sz.gov.cn/cn/xxgk/zfxxgj/zcfg/content/post_8966051.html",
+      "effective_from": "1995-01-01", "effective_to": null,
+      "status": "current", "verified_on": "2026-09-23", "review_on": "2027-02-01"
+    },
+    {
+      "source_id": "SRC-SH-FAMILY-PLANNING",
+      "title": "上海市人口与计划生育条例第三十一条",
+      "authority": "上海市人民代表大会常务委员会",
+      "jurisdiction": "上海；婚假、生育假、配偶陪产假、育儿假及相应待遇",
+      "url": "https://www.shanghai.gov.cn/jcsfbrkcqjhfzzh/20230621/c440fb200a9b48da87aed931e369792f.html",
+      "effective_from": "2021-11-25", "effective_to": null,
+      "status": "current", "verified_on": "2026-08-01", "review_on": "2026-11-01"
+    },
+    {
+      "source_id": "SRC-BJ-FAMILY-PLANNING",
+      "title": "北京市人口与计划生育条例第十六条、第十九条",
+      "authority": "北京市人民代表大会常务委员会",
+      "jurisdiction": "北京；婚假、延长生育假、陪产假、育儿假及工资保护",
+      "url": "https://www.beijing.gov.cn/zhengce/dfxfg/202111/t20211126_2546761.html",
+      "effective_from": "2021-11-26", "effective_to": null,
+      "status": "current", "verified_on": "2026-08-01", "review_on": "2026-11-01"
+    },
+    {
+      "source_id": "SRC-SH-WAGE-PAYMENT",
+      "title": "上海市企业工资支付办法第九条",
+      "authority": "上海市人力资源和社会保障局",
+      "jurisdiction": "上海；婚假、丧假、探亲假、病假等假期工资支付口径",
+      "url": "https://rsj.sh.gov.cn/tgzfl_17732/20260731/t0035_1442850.html",
+      "effective_from": "2026-08-01", "effective_to": "2031-07-31",
+      "status": "current", "verified_on": "2026-09-22", "review_on": "2026-11-01"
+    }
+  ]
+}

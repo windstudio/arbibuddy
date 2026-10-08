@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "inputs": ["filesystem", "network", "scripts", "word", "structure_inspection"],
+  "outputs": ["platform", "capabilities"],
+  "purpose": "观察当前能力，不作为业务流程开关",
+  "evaluator": "python -m scripts.platform_adapters.cli evaluate"
+}

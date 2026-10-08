@@ -1,0 +1,137 @@
+{
+  "schema_version": "source-cleanup-v1",
+  "as_of": "2026-09-22",
+  "scope": "现有法律来源登记的分类账册；登记或处置状态不代表本案动态核验成功。收缩前历史账册保存在内部开发资料。",
+  "registrations": [
+    {
+      "legacy_file": "references/legal/annual-leave-pay-rules.v1.json",
+      "disposition": "valid",
+      "reason": "保留全国年休假规则的版本化参考；上海受理范围、时效和案件日期仍按触发条件动态核验。",
+      "successor": "references/legal/annual-leave-pay-rules.v1.json + references/legal-verification.md",
+      "evidence": [
+        "references/legal/annual-leave-pay-rules.v1.json#rules",
+        "references/model-led/annual-leave-pay.md"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/dispute-routing-rules.v1.json",
+      "disposition": "valid",
+      "reason": "保留社保、公积金和复杂争议的分层路由参考；具体受理机关与地方程序不由来源登记直接确定。",
+      "successor": "references/legal/dispute-routing-rules.v1.json + references/legal-verification.md",
+      "evidence": [
+        "references/legal/dispute-routing-rules.v1.json#rules",
+        "references/model-led/dispute-routing.md"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/employment-relationship-rules.v1.json",
+      "disposition": "merge",
+      "reason": "劳动关系基础法源与工资、解除分析共享全国基础法律元数据；不再把重复来源登记当作独立运行时能力。",
+      "successor": "references/legal/legal-baseline.v1.json + references/model-led/employment-relationship.md",
+      "evidence": [
+        "references/legal/employment-relationship-rules.v1.json#sources",
+        "references/legal/legal-baseline.v1.json#rules"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/enforcement-rules.v1.json",
+      "disposition": "valid",
+      "reason": "保留执行申请所需的全国程序参考；具体执行法院和当前办理要求仍需按案件目标核验。",
+      "successor": "references/legal/enforcement-rules.v1.json + references/legal-verification.md",
+      "evidence": [
+        "references/legal/enforcement-rules.v1.json#sources",
+        "references/model-led/deregistration-preservation-enforcement-documents.md"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/forced-termination-rules.v1.json",
+      "disposition": "merge",
+      "reason": "劳动合同法、劳动争议司法解释和仲裁时效来源与高风险动态核验共用；保留领域语义，不保留独立authority执行层。",
+      "successor": "references/legal/legal-baseline.v1.json + references/model-led/forced-termination.md",
+      "evidence": [
+        "references/legal/forced-termination-rules.v1.json#sources",
+        "references/legal-verification.md#高风险最终化"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/overtime-rules.v1.json",
+      "disposition": "valid",
+      "reason": "保留加班工资的全国规则和计算迁移来源；工时制度、节假日及时间敏感口径按需动态核验。",
+      "successor": "references/legal/overtime-rules.v1.json + references/legal-verification.md",
+      "evidence": [
+        "references/legal/overtime-rules.v1.json#rules",
+        "references/model-led/overtime-pay.md#动态核验"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/paid-leave-routing-rules.v1.json",
+      "disposition": "replace",
+      "reason": "婚假、生育假、陪产假和育儿假受地方修订及待遇口径影响，旧来源登记不能代替案件级现行核验。",
+      "successor": "references/model-led/paid-leave-routing.md + references/legal-verification.md#触发动态核验",
+      "evidence": [
+        "references/legal/paid-leave-routing-rules.v1.json#local_differences",
+        "references/model-led/paid-leave-routing.md"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/property-preservation-rules.v1.json",
+      "disposition": "valid",
+      "reason": "保留财产保全的全国程序法源参考；是否适用于本案及当前受理要求仍须结合高风险动作核验。",
+      "successor": "references/legal/property-preservation-rules.v1.json + references/legal-verification.md",
+      "evidence": [
+        "references/legal/property-preservation-rules.v1.json#sources",
+        "references/model-led/deregistration-preservation-enforcement-documents.md"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/shanghai-cancellation-restriction-rules.v1.json",
+      "disposition": "replace",
+      "reason": "上海注销协同机制是地方实务材料，现有公开证据明确有限，不能把旧摘要当作仲裁机构必然受理或普通注销必然停止。",
+      "successor": "references/model-led/deregistration-preservation-enforcement-documents.md",
+      "evidence": [
+        "references/legal/shanghai-cancellation-restriction-rules.v1.json#public_evidence_conclusion",
+        "references/model-led/deregistration-preservation-enforcement-documents.md"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/unlawful-termination-rules.v1.json",
+      "disposition": "merge",
+      "reason": "解除法源与被迫解除共享劳动合同法、司法解释和仲裁时效来源；保留不同事件主体和救济路径的领域参考。",
+      "successor": "references/legal/legal-baseline.v1.json + references/model-led/unlawful-termination.md",
+      "evidence": [
+        "references/legal/unlawful-termination-rules.v1.json#sources",
+        "references/model-led/unlawful-termination.md#动态核验"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/unsigned-contract-double-wage-rules.v1.json",
+      "disposition": "merge",
+      "reason": "未签合同二倍工资与劳动关系、劳动合同法和仲裁时效共享法源元数据；地方时效口径仍按触发条件核验。",
+      "successor": "references/legal/legal-baseline.v1.json + references/model-led/unsigned-contract-double-wage.md",
+      "evidence": [
+        "references/legal/unsigned-contract-double-wage-rules.v1.json#sources",
+        "references/model-led/unsigned-contract-double-wage.md#动态核验"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/wage-floor-rules.v1.json",
+      "disposition": "replace",
+      "reason": "最低工资是地方、年度和数值敏感规则；旧登记可作迁移来源，但案件使用必须由模型动态核验现行官方口径。",
+      "successor": "references/legal-verification.md#触发动态核验 + references/legal/wage-floor-rules.v1.json",
+      "evidence": [
+        "references/legal/wage-floor-rules.v1.json#rules",
+        "references/legal-verification.md#降级语义"
+      ]
+    },
+    {
+      "legacy_file": "references/legal/wage-rules.v1.json",
+      "disposition": "merge",
+      "reason": "工资支付全国基础法源与地方工资支付、最低工资数值拆分归属；重复source登记不再作为本案authority状态。",
+      "successor": "references/legal/legal-baseline.v1.json + references/model-led/wage-analysis.md + references/legal-verification.md",
+      "evidence": [
+        "references/legal/wage-rules.v1.json#sources",
+        "references/model-led/wage-analysis.md#动态核验"
+      ]
+    }
+  ]
+}

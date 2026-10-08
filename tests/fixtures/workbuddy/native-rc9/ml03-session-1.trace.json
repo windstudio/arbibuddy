@@ -1,0 +1,32 @@
+{
+  "trace": {
+    "traceId": "trace-ml03-1-redacted",
+    "sessionId": "ml03-session-1-redacted"
+  },
+  "spans": [
+    {
+      "traceId": "trace-ml03-1-redacted",
+      "spanId": "span-skill-ml03-1",
+      "sessionId": "ml03-session-1-redacted",
+      "kind": "function",
+      "toolName": "Skill",
+      "toolInput": "{\"skill\":\"arbibuddy\"}",
+      "toolOutput": "{\"ok\":true}",
+      "status": "success",
+      "startedAt": "2026-09-17T03:00:00.000Z",
+      "endedAt": "2026-09-17T03:00:00.100Z"
+    },
+    {
+      "traceId": "trace-ml03-1-redacted",
+      "spanId": "span-commit-ml03-1",
+      "sessionId": "ml03-session-1-redacted",
+      "kind": "function",
+      "toolName": "CaseArchive.commit",
+      "toolInput": "{\"operation\":\"commit\",\"case_id\":\"case-cccccccccccccccccccccccc\"}",
+      "toolOutput": "{\"ok\":true,\"result\":{\"revision\":3}}",
+      "status": "success",
+      "startedAt": "2026-09-17T03:01:00.000Z",
+      "endedAt": "2026-09-17T03:01:00.100Z"
+    }
+  ]
+}
