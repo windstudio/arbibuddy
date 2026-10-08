@@ -31,6 +31,8 @@ WORKBUDDY_TRUST_ANCHOR_DIR = ".arbibuddy-workbuddy-trust"
 WORKBUDDY_PORTABLE_RUNTIME_MARKER_SCHEMA_VERSION = 1
 WORKBUDDY_PORTABLE_RUNTIME_MARKER_NAME = "arbibuddy.runtime.json"
 WORKBUDDY_PORTABLE_RUNTIME_MARKER_TYPE = "native-upload-portable"
+DISTRIBUTION_MARKER_NAME = "arbibuddy.distribution.json"
+DISTRIBUTION_MARKER_SCHEMA_VERSION = 1
 _GIT_COMMAND = shutil.which("git") or "git"
 
 
@@ -333,6 +335,26 @@ def runtime_identity_digest(identity: dict[str, Any]) -> str:
             separators=(",", ":"),
         ).encode("utf-8")
     ).hexdigest()
+
+
+def build_distribution_marker(runtime_identity: dict[str, Any]) -> bytes:
+    """为第三方文件安装器生成与平台、路径无关的发布完整性清单。
+
+    清单用于检测安装漂移，不是签名或发布者认证；信任来源仍是用户选择的仓库。
+    """
+    commit = runtime_identity.get("source_commit")
+    if not isinstance(commit, str) or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+        raise RuntimeIdentityError("分发清单需要有效的源码提交")
+    if _contains_absolute_path(runtime_identity):
+        raise RuntimeIdentityError("分发清单不得包含绝对路径")
+    value = {
+        "schema_version": DISTRIBUTION_MARKER_SCHEMA_VERSION,
+        "skill": "arbibuddy",
+        "marker_type": "repository-distribution",
+        "runtime_identity": runtime_identity,
+        "runtime_identity_sha256": runtime_identity_digest(runtime_identity),
+    }
+    return (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
 
 def build_workbuddy_portable_runtime_marker(
@@ -739,6 +761,54 @@ class RuntimeIdentityModule:
             "failures": list(dict.fromkeys(failures)),
         }
 
+    def _verify_distribution_marker(
+        self, candidate: Path, current: dict[str, Any], marker_path: Path,
+    ) -> dict[str, Any]:
+        common = {
+            "schema_version": RUNTIME_IDENTITY_SCHEMA_VERSION,
+            "mode": "distribution", "identity": current,
+        }
+        try:
+            marker = path_for_io(marker_path)
+            if marker.is_symlink() or not marker.is_file():
+                raise RuntimeIdentityError("分发清单路径不安全")
+            value = json.loads(marker.read_text(encoding="utf-8"),
+                               object_pairs_hook=_reject_duplicate_json_keys)
+            if (
+                not isinstance(value, dict)
+                or set(value) != {"schema_version", "skill", "marker_type",
+                                  "runtime_identity", "runtime_identity_sha256"}
+                or type(value["schema_version"]) is not int
+                or value["schema_version"] != DISTRIBUTION_MARKER_SCHEMA_VERSION
+                or value["skill"] != "arbibuddy"
+                or value["marker_type"] != "repository-distribution"
+                or not isinstance(value["runtime_identity"], dict)
+                or _contains_absolute_path(value)
+            ):
+                raise RuntimeIdentityError("分发清单格式非法")
+            expected = value["runtime_identity"]
+            commit = expected.get("source_commit")
+            if (
+                not isinstance(commit, str)
+                or re.fullmatch(r"[0-9a-f]{40}", commit) is None
+                or value["runtime_identity_sha256"] != runtime_identity_digest(expected)
+            ):
+                raise RuntimeIdentityError("分发清单身份摘要非法")
+        except (OSError, UnicodeError, ValueError, TypeError, KeyError):
+            return {**common, "verified": False,
+                    "failures": ["distribution_marker_invalid"]}
+        comparison = self.compare(expected, candidate)
+        # 即使有人在安装树内 git init，也不能借源码身份绕过精确资源集合。
+        failures = list(comparison.get("failures", []))
+        failures.extend(installed_resource_failures(candidate))
+        if failures:
+            failures.append("distribution_marker_mismatch")
+        return {
+            **common, "verified": not failures, "expected": expected,
+            "identity": comparison.get("observed", current),
+            "failures": list(dict.fromkeys(failures)),
+        }
+
     def preflight(self, skill_root: str | Path | None = None) -> dict[str, Any]:
         """验证当前执行树；已发现安装身份失败时不切换标记或源码根。"""
         candidate = path_for_io(skill_root) if skill_root is not None else path_for_io(Path(__file__).absolute().parents[1])
@@ -762,6 +832,9 @@ class RuntimeIdentityModule:
         sibling_receipt = candidate.parent / "arbibuddy.install.json"
         if _marker_present(sibling_receipt):
             return self._verify_install_marker(candidate, current, sibling_receipt)
+        distribution_marker = candidate / DISTRIBUTION_MARKER_NAME
+        if _marker_present(distribution_marker):
+            return self._verify_distribution_marker(candidate, current, distribution_marker)
         # 只有没有安装标记的真实源码 checkout 才使用源码身份。
         if _valid_source_checkout(candidate):
             return {"schema_version": RUNTIME_IDENTITY_SCHEMA_VERSION,
@@ -831,6 +904,8 @@ __all__ = [
     "RuntimeIdentityError",
     "RuntimeIdentityModule",
     "build_runtime_identity",
+    "build_distribution_marker",
+    "DISTRIBUTION_MARKER_NAME",
     "build_workbuddy_portable_runtime_marker",
     "compare_runtime_identity",
     "measure_runtime_identity",

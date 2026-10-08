@@ -20,6 +20,12 @@
 
 WorkBuddy 文书包携带 `requirements-documents.txt` 和锁定目标 Python 的 vendor 层。安装前须验签，目标解释器在禁用用户 site 后须能生成 DOCX 并检查 OOXML。原生上传通过包内便携身份标记核对；受管安装通过绑定回执与外部信任锚核对，不能混用恢复方法。宿主原生注册、触发和显示分别观察；热重载不等于注册成功。
 
+## skills CLI 安装
+
+Codex、Claude Code 可以通过 `npx skills add windstudio/arbibuddy` 安装。分发树只含运行资源与 `arbibuddy.distribution.json`，不依赖平台专用安装回执或安装后 Hook；通用清单绑定版本、源码提交和完整资源摘要，公共工具在使用前验证。清单用于检测资源缺失、修改和额外执行文件，不是发布者数字签名。安装器创建的 Skill 根目录链接允许使用，Skill 树内部的资源链接仍拒绝。
+
+Node.js 和 Git 用于安装；Python 3.11+ 用于受管工具。此安装方式不包含 WorkBuddy 的 Windows vendor 层，生成 DOCX 需要宿主 Python 已安装 `requirements-documents.txt` 中的依赖。缺少依赖时说明环境准备方法，等待用户完成后重试，不在案件工具运行中安装依赖。通用清单损坏或资源漂移时，重新从同一可信仓库安装；已有平台受管安装回执失败时不能回退到通用清单。开发维护和生成流程见源码分支的 `docs/agents/skills-distribution.md`，不进入案件回复。
+
 ## 降级与恢复
 
 - 文件系统不可用：提供可由用户保存的案情内容，说明不能持久化；不宣称档案已保存。

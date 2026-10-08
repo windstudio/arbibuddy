@@ -18,10 +18,6 @@
 
 特别感谢青年律师付国峰在仲裁过程以及 Skill 法律专业审核方面提供的帮助。如需专业法律咨询服务，可联系小红书“付国峰律师”，也可以通过我转发联系方式。
 
-## 最近更新
-
-补充 Codex 与 Claude Code 的标准安装、更新、发现、版本识别、卸载和能力降级支持；文书交付继续提供 DOCX 与独立核验清单，平台能力不足时会明确说明限制。
-
 ## 能做什么
 
 - 以风险优先、每轮单问和可追溯的 Markdown 案情档案采集事实；
@@ -40,57 +36,37 @@
 
 ## 安装
 
-核心 Skill、案情档案、分析、计算和平台打包使用 Python 标准库。Python 3.11+ 环境可在仓库根目录执行：
+### Codex / Claude Code
 
-```powershell
-git clone https://github.com/windstudio/arbibuddy.git
-cd arbibuddy
-python -B -X utf8 -m scripts.platform_adapters.cli inspect-source --platform codex --source .
+需要 Node.js（含 `npx`）、Git 和 Python 3.11+。在终端运行：
+
+```bash
+npx skills add windstudio/arbibuddy
 ```
 
-Codex 项目级安装：
+按提示选择使用的平台和安装范围。日常使用建议全局安装，也可以直接运行对应命令：
 
-```powershell
-python -B -X utf8 -m scripts.platform_adapters.cli install --platform codex --scope project --target-root <项目目录> --source . --mode copy
+```bash
+# Codex
+npx skills add windstudio/arbibuddy --agent codex --global
+
+# Claude Code
+npx skills add windstudio/arbibuddy --agent claude-code --global
 ```
 
-Claude Code 项目级安装：
+安装后新建会话。生成 Word 文书还需要 Python 环境中的 `python-docx` 及其依赖；若缺少，按助手提示完成环境准备后重试。
 
-```powershell
-python -B -X utf8 -m scripts.platform_adapters.cli install --platform claude-code --scope project --target-root <项目目录> --source . --mode copy
-```
+### WorkBuddy
 
-更新使用相同平台和项目目录执行 `update`；卸载执行：
-
-```powershell
-python -B -X utf8 -m scripts.platform_adapters.cli uninstall --platform codex --scope project --target-root <项目目录>
-```
-
-Claude Code 只需将平台参数替换为 `claude-code`。安装后的能力与降级说明见[平台能力边界](references/platform-capabilities.md)。
-
-WorkBuddy 安装：从 [1.2.7 发布页](https://github.com/windstudio/arbibuddy/releases/tag/v1.2.7) 下载 `arbibuddy-workbuddy.zip`，在客户端选择“上传技能”，安装后完全重启客户端或新建会话。安装包已带所需文书依赖，普通使用不需要自行构建或安装编译工具。
-
-需要自行构建或修改依赖的开发者，请查看[WorkBuddy构建说明](docs/platforms/workbuddy.md)和发布页提供的配套源码、构建及替换说明。
-
-原生上传只依赖包内 `arbibuddy/arbibuddy.runtime.json` 便携标记，不会生成受管安装回执；出现便携标记缺失或陈旧时，重新上传已验签 ZIP 并完全重启客户端，不要手工创建 `arbibuddy.install.json`。
-
-目前支持 Codex、Claude Code 和 WorkBuddy；实际能力以当前环境的探测与使用结果为准。
-
-独立运行统一 Word 生成器时安装直接依赖：
-
-```powershell
-python -m pip install -r requirements-documents.txt
-```
-
-文书请求由 Skill 的统一 `document.render-v1` 能力处理，普通使用不需要直接运行仓库内部文书脚本。
+从 [1.2.7 发布页](https://github.com/windstudio/arbibuddy/releases/tag/v1.2.7) 下载 `arbibuddy-workbuddy.zip`，在客户端选择“上传技能”，安装后完全重启客户端或新建会话。安装包已包含文书依赖。
 
 ## 能力与降级
 
-平台会实际探测文件系统、联网、脚本、Word 生成和 OOXML 结构检查能力，同时验证 UTF-8 路径及读写权限。缺少文件系统、脚本或 Word 生成器时，不能声称已生成正式 DOCX；缺少联网时，会降低动态规则核验强度并标明待核实事项。详细规则见[平台能力与降级契约](references/platform-capabilities.md)。
+目前支持 Codex、Claude Code 和 WorkBuddy。案情保存和文书生成取决于当前环境的文件读写、Python 和文书依赖是否可用；能力不足时，助手会说明限制。缺少联网时，会标明需要进一步核验的现行规则。
 
 ## 文书生成轻量化设计
 
-DOCX 根据模型起草的全文生成，并通过字段、内容和结构检查；运行时不依赖 LibreOffice、Poppler 或视觉复核。普通用户仍应在 Word/WPS 中复核字段、金额、分页和落款。
+Word 文书根据助手起草的全文生成，并检查字段、内容和文件结构。使用前请在 Word/WPS 中复核姓名、日期、金额、分页和落款。
 
 ## 免责声明
 

@@ -162,7 +162,9 @@ def installed_resource_failures(
     回执和 vendor，额外文件只随旧树移走，不会导入或执行。
     """
     source = path_for_io(root).resolve()
-    allowed = set(RUNTIME_FILES) | {"arbibuddy.install.json", "arbibuddy.runtime.json"}
+    allowed = set(RUNTIME_FILES) | {
+        "arbibuddy.install.json", "arbibuddy.runtime.json", "arbibuddy.distribution.json",
+    }
     cached_modules = {
         (str(Path(p).parent / "__pycache__").replace("\\", "/"), Path(p).stem)
         for p in RUNTIME_FILES if p.endswith(".py")
