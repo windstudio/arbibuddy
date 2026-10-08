@@ -54,7 +54,13 @@ npx skills add windstudio/arbibuddy --agent codex --global
 npx skills add windstudio/arbibuddy --agent claude-code --global
 ```
 
-安装后新建会话。生成 Word 文书还需要 Python 环境中的 `python-docx` 及其依赖；若缺少，按助手提示完成环境准备后重试。
+更新全局安装的 ArbiBuddy（Codex / Claude Code 通用）：
+
+```bash
+npx skills update arbibuddy --global
+```
+
+安装或更新后新建会话。生成 Word 文书还需要 Python 环境中的 `python-docx` 及其依赖；若缺少，按助手提示完成环境准备后重试。
 
 ### WorkBuddy
 
