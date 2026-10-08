@@ -5,7 +5,6 @@ import argparse
 import json
 from pathlib import Path
 import shutil
-from tempfile import TemporaryDirectory
 from typing import Sequence
 
 from scripts.cli_encoding import configure_utf8_stdio
@@ -14,6 +13,7 @@ from scripts.runtime_identity import (
     build_distribution_marker, build_runtime_identity,
 )
 from scripts.runtime_resources import runtime_paths
+from scripts.runtime_temp import runtime_temporary_directory
 
 
 def build_skills_repository(source: Path, destination: Path) -> dict[str, object]:
@@ -33,8 +33,10 @@ def build_skills_repository(source: Path, destination: Path) -> dict[str, object
     identity = build_runtime_identity(source)
     marker = build_distribution_marker(identity)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with TemporaryDirectory(prefix="arbibuddy-skills-", dir=destination.parent) as temp:
-        repository = Path(temp) / "repository"
+    with runtime_temporary_directory(
+        destination.parent, prefix="arbibuddy-skills-", use_configured_root=False,
+    ) as temp:
+        repository = temp / "repository"
         skill = repository / "skills" / "arbibuddy"
         skill.mkdir(parents=True)
         for path in paths:
