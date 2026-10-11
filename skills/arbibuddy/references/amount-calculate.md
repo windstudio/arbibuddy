@@ -35,12 +35,52 @@ python -B -X utf8 -m scripts.amount_calculator.runtime_cli --workspace "<workspa
 | `legal_basis_summary` | 模型选择的法律口径说明；计算器只回显，不作法律判断 |
 | `source_refs` | 案情事实、证据或法律来源引用数组；计算器不读取或验证档案 |
 | `aggregation_policy` | `single_scenario`、`sum_scenarios` 或 `mutually_exclusive`；由模型明确选择 |
-| `scenarios` | 一个或多个条件情景；每个情景有 `scenario_id`、`assumptions`、`period`、`inputs` |
-| `rounding_policy` | `money-independent-unit-half-up-v1`、`0.01`、`ROUND_HALF_UP` 及“独立分项先舍入再汇总” |
+| `scenarios` | 非空数组；每个情景为下表规定的对象 |
+| `rounding_policy` | 四个必填键：`id: "money-independent-unit-half-up-v1"`、`quantum: "0.01"`、`mode: "ROUND_HALF_UP"`、`aggregation: "round_each_line_item_then_sum"` |
+
+每个情景的嵌套字段全部显式提供：
+
+| 字段 | 类型与要求 |
+| --- | --- |
+| `scenario_id` | 非空单行字符串，请求内唯一 |
+| `assumptions` | 字符串数组；没有假设时用 `[]` |
+| `period` | 对象，含 `start_date`、`end_date`、`semantics` 三个键 |
+| `inputs` | 对象，含非空的 `line_items` 数组；每项使用 `describe.input.line_item_shapes` 中当前公式种类对应的字段 |
 
 每个量纲输入是 `{ "value": "十进制定点字符串", "unit": "公开单位" }`。允许单位为：`yuan`、`yuan_per_month`、`yuan_per_day`、`yuan_per_hour`、`month`、`day`、`hour`、`ratio`、`count`。禁止 JSON 数字、二进制浮点、负值、未知单位和单位错配。
 
-`period` 必须显式提供 `start_date`、`end_date` 和数学约定（如 `completed_months`、`calendar_days`、`hours`、`event_count`、`explicit_period`）。计算器只校验日期顺序，不从“欠薪”“奖金”“加班”或“年休假”等名称推断期间数量。模型选择的跨月、跨年或分段要在情景的 `line_items` 中分别列出。
+`period.start_date` 和 `period.end_date` 使用 `YYYY-MM-DD`，起始日期不得晚于结束日期；`period.semantics` 从 `describe.formulas[formula_id].period_semantics` 选择（如 `completed_months`、`calendar_days`、`hours`、`event_count`、`explicit_period`）。计算器只校验日期顺序，不从“欠薪”“奖金”“加班”或“年休假”等名称推断期间数量。模型选择的跨月、跨年或分段要在 `scenarios[*].inputs.line_items` 中分别列出。
+
+### 完整请求示例
+
+这是虚构工资差额请求，成功结果为10000.00元。`describe.examples.calculate_request` 提供同一可运行对象；实际案件需替换事实引用、期间、公式、量纲输入与法律口径。
+
+```json
+{
+  "calculation_label": "虚构工资差额示例",
+  "formula_id": "wage_difference",
+  "formula_version": "1.0.0",
+  "legal_basis_summary": "模型已选择工资差额口径；此示例只展示数学输入。",
+  "source_refs": ["F-001"],
+  "aggregation_policy": "single_scenario",
+  "scenarios": [{
+    "scenario_id": "primary",
+    "assumptions": ["一个月应发15000元，已付5000元。"],
+    "period": {"start_date": "2026-03-01", "end_date": "2026-03-31", "semantics": "completed_months"},
+    "inputs": {"line_items": [{
+      "line_id": "2026-03",
+      "basis": {"value": "15000", "unit": "yuan_per_month"},
+      "quantity": {"value": "1", "unit": "month"},
+      "multiplier": {"value": "1", "unit": "ratio"},
+      "paid": {"value": "5000", "unit": "yuan"}
+    }]}
+  }],
+  "rounding_policy": {
+    "id": "money-independent-unit-half-up-v1", "quantum": "0.01",
+    "mode": "ROUND_HALF_UP", "aggregation": "round_each_line_item_then_sum"
+  }
+}
+```
 
 ## 数学与舍入
 
@@ -98,7 +138,7 @@ max(0, (basis ÷ divisor) × quantity × multiplier − paid)
     "scenario_totals": [{"scenario_id": "primary", "total": "6000.00"}],
     "grand_total": "6000.00",
     "grand_total_status": "calculated",
-    "rounding_policy": {"id": "money-independent-unit-half-up-v1", "mode": "ROUND_HALF_UP"}
+    "rounding_policy": {"id": "money-independent-unit-half-up-v1", "quantum": "0.01", "mode": "ROUND_HALF_UP", "aggregation": "round_each_line_item_then_sum"}
   },
   "errors": [],
   "warnings": []

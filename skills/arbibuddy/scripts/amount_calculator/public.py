@@ -41,6 +41,12 @@ REQUIRED_FIELDS = (
     "rounding_policy",
 )
 ROUNDING_FIELDS = ("id", "quantum", "mode", "aggregation")
+ROUNDING_POLICY = {
+    "id": "money-independent-unit-half-up-v1",
+    "quantum": "0.01",
+    "mode": "ROUND_HALF_UP",
+    "aggregation": "round_each_line_item_then_sum",
+}
 SCENARIO_FIELDS = ("scenario_id", "assumptions", "period", "inputs")
 PERIOD_FIELDS = ("start_date", "end_date", "semantics")
 MEASURE_FIELDS = ("value", "unit")
@@ -322,13 +328,7 @@ def _validate_rounding_policy(value: Any, errors: list[dict[str, Any]]) -> dict[
         key: _text(value.get(key), f"{path}.{key}", errors) or ""
         for key in ROUNDING_FIELDS
     }
-    expected = {
-        "id": "money-independent-unit-half-up-v1",
-        "quantum": "0.01",
-        "mode": "ROUND_HALF_UP",
-        "aggregation": "round_each_line_item_then_sum",
-    }
-    for key, expected_value in expected.items():
+    for key, expected_value in ROUNDING_POLICY.items():
         if normalized[key] != expected_value:
             errors.append(
                 _error(
@@ -757,6 +757,21 @@ class AmountCalculator:
                 "aggregation_policy": sorted(AGGREGATION_POLICIES),
                 "units": sorted(registry.get("units", {})),
                 "measure": "{value: decimal string, unit: explicit unit}",
+                "nested_fields": {
+                    "scenario": {
+                        "scenario_id": "non-empty single-line string; unique within request",
+                        "assumptions": "array[string]; empty array allowed",
+                        "period": "object with all period fields",
+                        "inputs": "object with line_items",
+                    },
+                    "period": {
+                        "start_date": "YYYY-MM-DD; start_date <= end_date",
+                        "end_date": "YYYY-MM-DD",
+                        "semantics": "enum from formulas[formula_id].period_semantics",
+                    },
+                    "inputs": {"line_items": "non-empty array; fields selected by formula kind in line_item_shapes"},
+                    "rounding_policy": deepcopy(ROUNDING_POLICY),
+                },
                 "line_item_shapes": {
                     "linear_difference": [
                         "line_id",
@@ -825,6 +840,27 @@ class AmountCalculator:
                 "recoverable": "每项错误都带 path、expected、received；修正一次请求后重试",
             },
             "examples": {
+                "calculate_request": {
+                    "calculation_label": "虚构工资差额示例",
+                    "formula_id": "wage_difference",
+                    "formula_version": "1.0.0",
+                    "legal_basis_summary": "模型已选择工资差额口径；此示例只展示数学输入。",
+                    "source_refs": ["F-001"],
+                    "aggregation_policy": "single_scenario",
+                    "scenarios": [{
+                        "scenario_id": "primary",
+                        "assumptions": ["一个月应发15000元，已付5000元。"],
+                        "period": {"start_date": "2026-03-01", "end_date": "2026-03-31", "semantics": "completed_months"},
+                        "inputs": {"line_items": [{
+                            "line_id": "2026-03",
+                            "basis": {"value": "15000", "unit": "yuan_per_month"},
+                            "quantity": {"value": "1", "unit": "month"},
+                            "multiplier": {"value": "1", "unit": "ratio"},
+                            "paid": {"value": "5000", "unit": "yuan"},
+                        }]},
+                    }],
+                    "rounding_policy": deepcopy(ROUNDING_POLICY),
+                },
                 "success": "见 references/amount-calculate.md 的成功示例",
                 "aggregate_failure": "见 references/amount-calculate.md 的聚合失败示例",
             },
