@@ -4,7 +4,7 @@
   "marker_type": "repository-distribution",
   "runtime_identity": {
     "schema_version": 2,
-    "source_commit": "617a80e677eb9f79cec6076a367be63b23ac2fd6",
+    "source_commit": "81efe8e03ddbd043fc5bdbe6bb26d3e5d346694d",
     "skill_version": "v1.2.9",
     "core_contract_version": 7,
     "version_sha256": "c8d83c2672c5e397ce16a2ee275ac45917002b9b36765f77d99f31bdf81ee828",
@@ -95,10 +95,10 @@
         "scripts/runtime_temp.py",
         "scripts/version.py"
       ],
-      "sha256": "2d7b5775c00c25f221d882cffac4ce913bf0f4bcc26b495efc8645f357be8264"
+      "sha256": "b4c4fffd114a48ec05821776e881d579b110e4f5b916f1fce66cf16ac78c345d"
     },
-    "installation_manifest_sha256": "2d7b5775c00c25f221d882cffac4ce913bf0f4bcc26b495efc8645f357be8264",
-    "artifact_manifest_sha256": "044be3dd0f75a67efff26b31c82c63e34a25e230715eda4320aae25490317134",
+    "installation_manifest_sha256": "b4c4fffd114a48ec05821776e881d579b110e4f5b916f1fce66cf16ac78c345d",
+    "artifact_manifest_sha256": "9a2807ff6ae0e500c023df4f0108317c90dd96b0f97bb44e5b0170e5f0c928d6",
     "core_manifest_sha256": "d71228d735ccf560c9d8502511dc0d62df8f7d82b1ac04c33e97939a35faa274",
     "resource_sha256": {
       "SKILL.md": "a5c9b5b8fe110f5750037d31ceb59771f28e475881748334decd367b80299c13",
@@ -131,5 +131,5 @@
       "scripts/runtime_context.py": "6eb100fe60841a578e6bc5bd1931cac3b451e71e7541b3cb096b04cd72a0eb5f"
     }
   },
-  "runtime_identity_sha256": "ff15daf1408af3664e25c0eb4833364f995ba8e053632d3a6de09aebba14312d"
+  "runtime_identity_sha256": "1975a0e628af4df384b66cfcd69c0397c07ba67099711711216c7acc938aacb9"
 }
