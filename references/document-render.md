@@ -26,12 +26,17 @@ Codex、Claude Code、WorkBuddy 均从当前安装 Skill 根目录通过同一�
 
 ```text
 python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" describe
+python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" runtime-check
 python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" delivery-set --input "<workspace_root>/.arbibuddy/runtime-input/<nonce>.json"
 python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" render --input "<workspace_root>/.arbibuddy/runtime-input/<nonce>.json"
 python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" view --json '{"case_id":"<case_id>","delivery_set_id":"<delivery_set_id>"}'
 ```
 
 按 `delivery-set → 各成员 render → view` 完成本轮工具调用；全部 render 成功后直接调用上述 `view`，再处理宿主附件展示。`view` 返回受管完整列表后，宿主存在 `present_files` 时原样传给一次该工具；宿主没有附件工具时，说明文件已生成及受管交付状态，逐个提供列表内文件的完整绝对路径或可打开的文件链接，保留完整工作区前缀和文件名，不用省略号、目录树片段或仅文件名代替。明确宿主附件展示尚未验证；不能把没有展示通道说成没有生成文件。文书生成、受管交付与宿主展示分别按实际回执报告。
+
+首次建立文书集合前执行一次 `runtime-check`。这是 `document.runtime-check-v1` 只读准备操作：先核对安装身份，再实测当前解释器的文书依赖；当前环境不可用且Skill位于WorkBuddy安装根时，按顺序检查该根下已有的 `arbibuddy`、`default` 受管环境。成功回执的 `result.python_executable` 是后续 `delivery-set`、`render`、`view` 使用的解释器；当前解释器已经可用时直接复用。解释器或安装发生变化后重新检查。同一已检查环境失败时按原业务错误处理，不重复枚举环境或猜测wheel目录。
+
+没有可用环境时，回执返回 `next_action=prepare_document_environment` 和 `requirements_file`；说明尚未生成DOCX，并请用户先完成环境准备。用户可在选定Python的环境中安装该requirements文件所列依赖，再重试检查。此操作不安装依赖、不创建虚拟环境、不读取案件或创建交付文件；随包vendor继续按清单校验，vendor失败不回退宿主依赖。内部路径和检查细节只用于工具调用，对用户只说明文书能力是否可用及所需准备。
 
 `--input` 只接受 `.arbibuddy/runtime-input/` 的直接 JSON 子文件；transport 在解析业务请求前先消费并删除该文件，删除失败则不执行文书操作。它不改变 `document.delivery-set-v1` 或 `document.render-v1` 的业务信封。短请求也可用 `--json`。`view` 是只读受管出口，只有集合完整且 `delivery_set_id` 一致才返回展示列表；失败或集合不完整时文件列表为空。运行结束后不得留下 `runtime-input` 文件，也不得建立 `render-requests`、工作区根 JSON 或其他事实副本。字段和示例只读本参考与 `describe` 结果，不读取、反射或搜索 `scripts/*.py`。
 

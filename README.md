@@ -66,7 +66,7 @@ npx skills update arbibuddy --global
 
 从 [1.2.7 发布页](https://github.com/windstudio/arbibuddy/releases/tag/v1.2.7) 下载 `arbibuddy-workbuddy.zip`，在客户端选择“上传技能”，安装后完全重启客户端或新建会话。安装包已包含文书依赖。
 
-也可以从 [SkillHub](https://skillhub.cn/skills/user_eabd9039/arbibuddy) 安装或更新。SkillHub 通道从 1.2.8 起适配平台分发规则；生成 Word 文书需要宿主 Python 环境已具备文书依赖，缺少时按助手提示完成环境准备。更新后完全重启客户端并新建会话。
+也可以从 [SkillHub](https://skillhub.cn/skills/indiv-xiaopang/arbibuddy) 安装或更新。SkillHub 通道从 1.2.8 起适配平台分发规则；1.2.9 起会在生成 Word 文书前检查并复用已有的可用环境，缺少文书依赖时按助手提示完成环境准备。更新后完全重启客户端并新建会话。
 
 ## 能力与降级
 

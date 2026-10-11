@@ -17,7 +17,7 @@ import sys
 from typing import Any, Mapping, Sequence
 
 MAX_RUNTIME_INPUT_BYTES = 2 * 1024 * 1024
-_OPERATIONS = ("describe", "delivery-set", "render", "view")
+_OPERATIONS = ("describe", "runtime-check", "delivery-set", "render", "view")
 RUNTIME_BOOTSTRAP_ENV = "ARBIBUDDY_DOCUMENT_RUNTIME_BOOTSTRAPPED"
 _RUNTIME_ROOT_NAME = "workbuddy-runtime"
 _RUNTIME_MANIFEST_NAME = "runtime-manifest.json"
@@ -73,7 +73,9 @@ def _workbuddy_root(skill_root: Path) -> Path:
     return (Path.home() / ".workbuddy").resolve()
 
 
-def _discover_workbuddy_python(skill_root: Path) -> Path | None:
+def _workbuddy_python_candidates(skill_root: Path, *, require_owned_skill: bool = False) -> tuple[Path, ...]:
+    if require_owned_skill and not any(p.name.casefold() == ".workbuddy" for p in (skill_root, *skill_root.parents)):
+        return ()
     workbuddy_root = _workbuddy_root(skill_root)
     candidates = (
         workbuddy_root
@@ -91,16 +93,94 @@ def _discover_workbuddy_python(skill_root: Path) -> Path | None:
         / "Scripts"
         / "python.exe",
     )
+    available = []
     for candidate in candidates:
         try:
             if candidate.is_symlink() or not candidate.is_file():
                 continue
             resolved = candidate.resolve()
             if resolved.is_relative_to(workbuddy_root):
-                return resolved
+                available.append(resolved)
         except (OSError, RuntimeError, ValueError):
             continue
+    return tuple(available)
+
+
+def _discover_workbuddy_python(skill_root: Path) -> Path | None:
+    return next(iter(_workbuddy_python_candidates(skill_root)), None)
+
+
+def _probe_document_python(python: Path, skill_root: Path) -> dict[str, Any] | None:
+    """Check the real document dependency boundary in a fresh interpreter."""
+    probe = (
+        "import json, sys; "
+        "from scripts.documents.runtime_dependencies import ensure_document_runtime; "
+        "sys.exit(2) if sys.version_info < (3, 11) else None; "
+        "r = ensure_document_runtime(); "
+        "print(json.dumps({k:r[k] for k in ('verified','mode','python_abi','platform_tag')}))"
+    )
+    environment = os.environ.copy()
+    environment.pop("PYTHONPATH", None)
+    environment.pop("PYTHONHOME", None)
+    try:
+        completed = subprocess.run(
+            [str(python), "-B", "-X", "utf8", "-c", probe], cwd=skill_root,
+            capture_output=True, text=True, encoding="utf-8", timeout=10, env=environment,
+        )
+        if completed.returncode != 0:
+            return None
+        result = json.loads(completed.stdout)
+        if isinstance(result, dict) and result.get("verified") is True and result.get("mode") in {"host", "packaged"}:
+            return result
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
     return None
+
+
+def check_document_runtime(*, skill_root: str | Path | None = None) -> dict[str, Any]:
+    """Read-only preparation: select an existing environment, without case I/O."""
+    from scripts.runtime_identity import RuntimeIdentityModule, runtime_identity_failure_message
+
+    root = _skill_root(skill_root)
+    response: dict[str, Any] = {
+        "contract_version": "document.runtime-check-v1", "operation": "document.runtime-check",
+        "ok": False, "result": None, "errors": [], "warnings": [],
+    }
+    try:
+        identity = RuntimeIdentityModule().preflight(root)
+    except (OSError, RuntimeError, ValueError, KeyError) as error:
+        identity = {"verified": False, "failures": [type(error).__name__]}
+    if identity.get("verified") is not True:
+        response["errors"] = [{
+            "code": "installed_skill_modified", "path": "runtime",
+            "message": runtime_identity_failure_message(identity),
+            "expected": "verified installed Skill identity", "received": identity.get("failures", []),
+            "recoverable": False,
+        }]
+        return response
+    current = Path(sys.executable).resolve()
+    candidates = (current, *_workbuddy_python_candidates(root, require_owned_skill=True))
+    for python in dict.fromkeys(candidates):
+        runtime = _probe_document_python(python, root)
+        if runtime is not None:
+            response.update(ok=True, result={
+                "python_executable": str(python), "runtime_mode": runtime["mode"],
+                "selection": "current" if python == current else "workbuddy_managed",
+                "next_action": "use_selected_python_for_document_transport",
+                "recheck_when": "interpreter_or_installation_changes",
+            })
+            return response
+    response["result"] = {
+        "python_executable": None, "next_action": "prepare_document_environment",
+        "requirements_file": str(root / "requirements-documents.txt"), "python_requirement": "Python 3.11+",
+    }
+    response["errors"] = [{
+        "code": "document_runtime_unavailable", "path": "runtime",
+        "message": "未找到可用的文书环境；请先准备 Python 和文书依赖，再重试环境检查。未生成 DOCX。",
+        "expected": "existing Python 3.11+ with usable document dependencies",
+        "received": "no usable current or owned WorkBuddy managed environment", "recoverable": False,
+    }]
+    return response
 
 
 def _probe_workbuddy_python(python: Path) -> dict[str, str] | None:
@@ -182,6 +262,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--workspace", type=Path, required=True)
     commands = parser.add_subparsers(dest="operation", required=True)
     commands.add_parser("describe", help="读取公开文书契约")
+    commands.add_parser("runtime-check", help="只读检查并选择已有文书环境")
     for operation in ("delivery-set", "render", "view"):
         command = commands.add_parser(operation)
         source = command.add_mutually_exclusive_group(required=True)
@@ -260,24 +341,37 @@ def _request(args: argparse.Namespace, workspace: Path) -> Mapping[str, Any]:
 
 def main(argv: Sequence[str] | None = None) -> int:
     raw_argv = list(sys.argv[1:] if argv is None else argv)
-    if bootstrap_document_runtime(raw_argv):
+    try:
+        args = _parser().parse_args(raw_argv)
+    except SystemExit as error:
+        return int(error.code) if isinstance(error.code, int) else 2
+    if args.operation != "runtime-check" and bootstrap_document_runtime(raw_argv):
         return 0
     from scripts.cli_encoding import configure_utf8_stdio
     from scripts.documents.public import create_delivery_set, describe_contract, render
 
     configure_utf8_stdio()
     try:
-        args = _parser().parse_args(raw_argv)
         workspace = _workspace_root(args.workspace)
         if args.operation == "describe":
+            contract = describe_contract()
+            contract["runtime_preparation"] = {
+                "operation": "document.runtime-check", "contract_version": "document.runtime-check-v1",
+                "command": "python -B -X utf8 -m scripts.documents.runtime_cli --workspace <workspace_root> runtime-check",
+                "when": "before the first document delivery-set; recheck after interpreter or installation changes",
+                "selection": "use result.python_executable for delivery-set, render and view",
+                "unavailable": "prepare the environment before retrying; this operation does not install dependencies",
+            }
             result: dict[str, Any] = {
                 "contract_version": "document.runtime-transport-v1",
                 "operation": "document.runtime-transport.describe",
                 "ok": True,
-                "result": describe_contract(),
+                "result": contract,
                 "errors": [],
                 "warnings": [],
             }
+        elif args.operation == "runtime-check":
+            result = check_document_runtime()
         elif args.operation in {"delivery-set", "render"}:
             request = _request(args, workspace)
             result = (
@@ -360,5 +454,6 @@ __all__ = [
     "MAX_RUNTIME_INPUT_BYTES",
     "RUNTIME_BOOTSTRAP_ENV",
     "bootstrap_document_runtime",
+    "check_document_runtime",
     "main",
 ]

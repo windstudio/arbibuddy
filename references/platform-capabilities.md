@@ -32,7 +32,7 @@ Codex 在 Windows 上可用原生命令工具指定 `workdir=<installed_skill_ro
 
 ### SkillHub 安装
 
-WorkBuddy 从 SkillHub 安装的通用仓库分发包采用相同的完整性清单，不包含验签 WorkBuddy ZIP 的 vendor 层。文书能力依赖宿主 Python 和 `requirements-documents.txt` 中的依赖；按实际能力观察结果处理。SkillHub 的发布、安装元数据与图标只作为宿主附加文件，不是版本或案件事实来源。
+WorkBuddy 从 SkillHub 安装的通用仓库分发包采用相同的完整性清单，不包含验签 WorkBuddy ZIP 的 vendor 层。文书能力依赖宿主 Python 和 `requirements-documents.txt` 中的依赖；生成前按[文书契约](document-render.md)的 `runtime-check` 选择已经准备好的环境，没有可用环境时先提示用户准备依赖。SkillHub 的发布、安装元数据与图标只作为宿主附加文件，不是版本或案件事实来源。
 
 此通道完整性失败时，提示从同一可信 SkillHub 来源安装适配后的更新包并完全重启客户端；旧包缺少运行资源时，重复安装同一旧包不能恢复。安装维护在源码和分发流程中完成，案件对话不补写版本文件、不删除宿主元数据、不修改校验清单，也不将通用分发安装引导到原生上传验签包的恢复流程。
 

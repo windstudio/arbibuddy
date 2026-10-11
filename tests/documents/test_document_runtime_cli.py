@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import redirect_stdout
 from io import StringIO
 import json
+import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -20,6 +21,99 @@ from tests.documents.test_model_led_document_render import (
 
 
 class DocumentRuntimeCliTests(unittest.TestCase):
+    def test_runtime_check_reuses_current_environment_without_probing_other_python(self):
+        with patch("scripts.runtime_identity.RuntimeIdentityModule.preflight", return_value={"verified": True}), \
+             patch.object(runtime_cli, "_probe_document_python", return_value={"verified": True, "mode": "host"}) as probe:
+            result = runtime_cli.check_document_runtime()
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["result"]["selection"], "current")
+        probe.assert_called_once()
+
+    def test_runtime_check_unavailable_returns_preparation_without_cross_platform_fallback(self):
+        with TemporaryDirectory() as temp:
+            root = Path(temp) / "codex/arbibuddy"
+            root.mkdir(parents=True)
+            with patch("scripts.runtime_identity.RuntimeIdentityModule.preflight", return_value={"verified": True}), \
+                 patch.object(runtime_cli, "_workbuddy_root") as discovery, \
+                 patch.object(runtime_cli, "_probe_document_python", return_value=None) as probe:
+                result = runtime_cli.check_document_runtime(skill_root=root)
+            self.assertFalse(result["ok"])
+            self.assertEqual(result["errors"][0]["code"], "document_runtime_unavailable")
+            self.assertEqual(result["result"]["next_action"], "prepare_document_environment")
+            self.assertEqual(result["result"]["requirements_file"], str(root / "requirements-documents.txt"))
+            discovery.assert_not_called()
+            probe.assert_called_once()
+            self.assertEqual(list(root.iterdir()), [])
+
+    def test_managed_environment_paths_cannot_escape_workbuddy_root_through_parent_link(self):
+        with TemporaryDirectory() as temp:
+            root = Path(temp) / ".workbuddy/skills/arbibuddy"
+            root.mkdir(parents=True)
+            outside = Path(temp) / "outside"
+            (outside / "Scripts").mkdir(parents=True)
+            (outside / "Scripts/python.exe").write_bytes(b"placeholder")
+            link = Path(temp) / ".workbuddy/binaries/python/envs/arbibuddy"
+            link.parent.mkdir(parents=True)
+            try:
+                link.symlink_to(outside, target_is_directory=True)
+            except OSError as error:
+                self.skipTest(f"environment cannot create symlink: {type(error).__name__}")
+            self.assertEqual(runtime_cli._workbuddy_python_candidates(root, require_owned_skill=True), ())
+
+    def test_dependency_probe_scrubs_python_paths_and_rejects_invalid_or_timed_out_receipt(self):
+        with patch.object(runtime_cli.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout='{"verified":true,"mode":"unknown"}')) as run:
+            self.assertIsNone(runtime_cli._probe_document_python(Path("python.exe"), Path.cwd()))
+        command = run.call_args.args[0]
+        self.assertEqual(command[1:5], ["-B", "-X", "utf8", "-c"])
+        self.assertNotIn("PYTHONPATH", run.call_args.kwargs["env"])
+        self.assertNotIn("PYTHONHOME", run.call_args.kwargs["env"])
+        with patch.object(runtime_cli.subprocess, "run", side_effect=subprocess.TimeoutExpired("probe", 10)):
+            self.assertIsNone(runtime_cli._probe_document_python(Path("python.exe"), Path.cwd()))
+
+    def test_runtime_check_cli_and_describe_expose_preparation_without_creating_case(self):
+        with TemporaryDirectory() as temp:
+            workspace = Path(temp)
+            output = StringIO()
+            checked = {"contract_version": "document.runtime-check-v1", "operation": "document.runtime-check", "ok": False,
+                       "result": {"next_action": "prepare_document_environment"}, "errors": [], "warnings": []}
+            with redirect_stdout(output), patch.object(runtime_cli, "check_document_runtime", return_value=checked), \
+                 patch.object(runtime_cli, "bootstrap_document_runtime") as bootstrap:
+                code = main(["--workspace", str(workspace), "runtime-check"])
+            bootstrap.assert_not_called()
+            self.assertEqual(code, 2)
+            self.assertEqual(json.loads(output.getvalue()), checked)
+            described = StringIO()
+            with redirect_stdout(described):
+                self.assertEqual(main(["--workspace", str(workspace), "describe"]), 0)
+            self.assertEqual(json.loads(described.getvalue())["result"]["runtime_preparation"]["operation"], "document.runtime-check")
+            self.assertEqual(list(workspace.iterdir()), [])
+
+    def test_runtime_check_selects_second_prepared_managed_environment_without_case_writes(self):
+        with TemporaryDirectory() as temp:
+            root = Path(temp) / ".workbuddy/skills/arbibuddy"
+            root.mkdir(parents=True)
+            candidates = []
+            for name in ("arbibuddy", "default"):
+                python = Path(temp) / f".workbuddy/binaries/python/envs/{name}/Scripts/python.exe"
+                python.parent.mkdir(parents=True)
+                python.write_bytes(b"controlled placeholder")
+                candidates.append(python)
+            with patch("scripts.runtime_identity.RuntimeIdentityModule.preflight", return_value={"verified": True}), \
+                 patch.object(runtime_cli, "_probe_document_python", side_effect=[None, None, {"verified": True, "mode": "host"}]) as probe:
+                result = runtime_cli.check_document_runtime(skill_root=root)
+            self.assertTrue(result["ok"], result)
+            self.assertEqual(result["result"]["python_executable"], str(candidates[1].resolve()))
+            self.assertEqual(probe.call_count, 3)
+            self.assertFalse((root / ".arbibuddy").exists())
+
+    def test_runtime_check_stops_before_probing_a_modified_installation(self):
+        with patch("scripts.runtime_identity.RuntimeIdentityModule.preflight", return_value={"verified": False, "failures": ["distribution_marker_mismatch"]}), \
+             patch.object(runtime_cli, "_probe_document_python") as probe:
+            result = runtime_cli.check_document_runtime()
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["errors"][0]["code"], "installed_skill_modified")
+        probe.assert_not_called()
+
     def test_probe_uses_stdlib_mode_without_host_python_paths(self):
         completed = SimpleNamespace(
             returncode=0,

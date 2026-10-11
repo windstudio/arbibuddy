@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import unittest
+import json
+import re
+from pathlib import Path
 
 from scripts.amount_calculator.public import AmountCalculator
 
@@ -109,6 +112,36 @@ class ModelLedAmountContractTests(unittest.TestCase):
             }
             <= set(contract["errors"]["codes"])
         )
+
+    def test_public_request_examples_run_without_guessing_nested_fields(self):
+        contract = self.calculator.describe()
+        request = contract["examples"]["calculate_request"]
+        nested = contract["input"]["nested_fields"]
+        self.assertEqual(nested["scenario"]["assumptions"], "array[string]; empty array allowed")
+        self.assertEqual(set(nested["period"]), {"start_date", "end_date", "semantics"})
+        self.assertEqual(request["rounding_policy"], nested["rounding_policy"])
+        self.assertEqual(self.calculator.calculate(request)["result"]["grand_total"], "10000.00")
+        reference = Path(__file__).resolve().parents[2] / "references/amount-calculate.md"
+        example = re.search(r"^### 完整请求示例\s*$.*?^```json\s*(.*?)\s*^```", reference.read_text(encoding="utf-8"), re.S | re.M)
+        self.assertIsNotNone(example)
+        documented = json.loads(example.group(1))
+        self.assertEqual(documented, request)
+        result = self.calculator.calculate(documented)
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["result"]["grand_total"], "10000.00")
+
+    def test_contract_example_retains_rejection_of_original_nested_request_errors(self):
+        from copy import deepcopy
+        request = deepcopy(self.calculator.describe()["examples"]["calculate_request"])
+        request["rounding_policy"].pop("quantum")
+        request["rounding_policy"].pop("aggregation")
+        request["scenarios"][0]["assumptions"] = "not an array"
+        request["scenarios"][0]["period"]["convention"] = request["scenarios"][0]["period"].pop("semantics")
+        result = self.calculator.calculate(request)
+        self.assertFalse(result["ok"])
+        paths = {error["path"] for error in result["errors"]}
+        self.assertTrue({"rounding_policy.quantum", "rounding_policy.aggregation", "scenarios[0].assumptions",
+                         "scenarios[0].period.convention", "scenarios[0].period.semantics"} <= paths)
 
     def test_wage_difference_rounds_each_line_item_before_summing(self):
         result = self.calculator.calculate(self._request())
