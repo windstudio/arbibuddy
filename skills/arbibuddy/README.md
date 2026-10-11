@@ -66,6 +66,8 @@ npx skills update arbibuddy --global
 
 从 [1.2.7 发布页](https://github.com/windstudio/arbibuddy/releases/tag/v1.2.7) 下载 `arbibuddy-workbuddy.zip`，在客户端选择“上传技能”，安装后完全重启客户端或新建会话。安装包已包含文书依赖。
 
+也可以从 [SkillHub](https://skillhub.cn/skills/user_eabd9039/arbibuddy) 安装或更新。SkillHub 通道从 1.2.8 起适配平台分发规则；生成 Word 文书需要宿主 Python 环境已具备文书依赖，缺少时按助手提示完成环境准备。更新后完全重启客户端并新建会话。
+
 ## 能力与降级
 
 目前支持 Codex、Claude Code 和 WorkBuddy。案情保存和文书生成取决于当前环境的文件读写、Python 和文书依赖是否可用；能力不足时，助手会说明限制。缺少联网时，会标明需要进一步核验的现行规则。
@@ -80,4 +82,4 @@ ArbiBuddy 只提供信息整理和材料准备辅助，不提供法律服务。�
 
 ## 许可证
 
-[MIT License](LICENSE)
+[MIT License](LICENSE.txt)

@@ -4,17 +4,17 @@
   "marker_type": "repository-distribution",
   "runtime_identity": {
     "schema_version": 2,
-    "source_commit": "26a376d86d0e338bf0676ca2e5374d36e1b2e03a",
-    "skill_version": "v1.2.7",
+    "source_commit": "d80a02cea57988bd7c099a85eef2a686a3683d4d",
+    "skill_version": "v1.2.8",
     "core_contract_version": 7,
-    "version_sha256": "d9e8e8429c6a7d0b965e4fac26a5efff7103f055faa98cceb5bd4731fd24603a",
+    "version_sha256": "d2d31534641da01801512a3ec793bc8d57132d4cefa19a5fb503e8995f39eb8f",
     "installation_manifest": {
       "file_count": 83,
       "files": [
-        "LICENSE",
+        "LICENSE.txt",
         "README.md",
         "SKILL.md",
-        "VERSION",
+        "VERSION.txt",
         "adapters/capability-contract.json",
         "adapters/claude-code/adapter.json",
         "adapters/codex/adapter.json",
@@ -95,21 +95,21 @@
         "scripts/runtime_temp.py",
         "scripts/version.py"
       ],
-      "sha256": "988182fc8802c3e5ec7e6c0f766180c06014756c87493bd32668aa129ce2abae"
+      "sha256": "8d18f9acb1590cc1ff150d2819f68ac99908290a8ab482f0bccddb5c3788a206"
     },
-    "installation_manifest_sha256": "988182fc8802c3e5ec7e6c0f766180c06014756c87493bd32668aa129ce2abae",
-    "artifact_manifest_sha256": "2b92b8edcf0150ccac346c26845003038eb268c3dfd1cd8204c99be612527cd9",
-    "core_manifest_sha256": "5fb588533ccc453e0290cdcf61bb7a8c667374cf4979b40061a1d6689f864f0e",
+    "installation_manifest_sha256": "8d18f9acb1590cc1ff150d2819f68ac99908290a8ab482f0bccddb5c3788a206",
+    "artifact_manifest_sha256": "306e5939c6a8e3f73b40e450f25660aef5fad281888e068eee99fbb06df9c65d",
+    "core_manifest_sha256": "145b8ce263f5bb70bc5eea481d5265964483f2297372acac433ebe6205c2576a",
     "resource_sha256": {
       "SKILL.md": "a5c9b5b8fe110f5750037d31ceb59771f28e475881748334decd367b80299c13",
-      "VERSION": "d9e8e8429c6a7d0b965e4fac26a5efff7103f055faa98cceb5bd4731fd24603a",
-      "scripts/runtime_resources.py": "b065317455414d3793957c1dbdd7aac1848f0a6e1c7da834146f7598ebdcbaca",
+      "VERSION.txt": "d2d31534641da01801512a3ec793bc8d57132d4cefa19a5fb503e8995f39eb8f",
+      "scripts/runtime_resources.py": "1ba6d45e560570cfd67b1d147b7a8b6b922898f1376c2877780b3791002aa273",
       "scripts/case_archive/service.py": "02128afea5d735efbb44f88bec06d1e6a87869d00ed07b5bd87e507ded493d3c",
       "scripts/amount_calculator/public.py": "4b7cd51a8d3b2b0e193c71e6c29c2f60be5b420b54a0dffb74c4b609908a335e",
       "scripts/documents/public.py": "85940ccf09408ed414bc69cc6622bba05b136db36da775a33a89e463b06c70e8",
       "scripts/documents/receipts.py": "d6374ade3ff85ee361b8e8694c4ab5e96f5c859b0f761ddb30268c47e4edcfc9",
       "scripts/documents/delivery.py": "1bb45c34e4b5b926b0a075d2fe5db9f31b29af45dcded5ed46ba2a8e88138c53",
-      "scripts/runtime_identity.py": "a4cf00240bcc3faac1403be14d5bd0339528892b0d3eaac105c0d24a83e4c446",
+      "scripts/runtime_identity.py": "147a5fd6510b2b1c2a5e79d36bb697df3e165215d5e3c50066ababe4ed36ef3a",
       "scripts/runtime_manifest.py": "274c82ec491583a08e110a76f0abfec03e0e8b8df40455a185e831ab07dd607d",
       "scripts/documents/runtime_cli.py": "3b42a7de7b34d0315c65b1de24364e68047398cfc1803b795bb821f354acc9b5",
       "scripts/documents/view.py": "5fb60df421e154e22514a12e35cdbf57348567e93bc3065e0bc5f6181fec0f34",
@@ -117,19 +117,19 @@
     },
     "critical_resource_sha256": {
       "SKILL.md": "a5c9b5b8fe110f5750037d31ceb59771f28e475881748334decd367b80299c13",
-      "VERSION": "d9e8e8429c6a7d0b965e4fac26a5efff7103f055faa98cceb5bd4731fd24603a",
-      "scripts/runtime_resources.py": "b065317455414d3793957c1dbdd7aac1848f0a6e1c7da834146f7598ebdcbaca",
+      "VERSION.txt": "d2d31534641da01801512a3ec793bc8d57132d4cefa19a5fb503e8995f39eb8f",
+      "scripts/runtime_resources.py": "1ba6d45e560570cfd67b1d147b7a8b6b922898f1376c2877780b3791002aa273",
       "scripts/case_archive/service.py": "02128afea5d735efbb44f88bec06d1e6a87869d00ed07b5bd87e507ded493d3c",
       "scripts/amount_calculator/public.py": "4b7cd51a8d3b2b0e193c71e6c29c2f60be5b420b54a0dffb74c4b609908a335e",
       "scripts/documents/public.py": "85940ccf09408ed414bc69cc6622bba05b136db36da775a33a89e463b06c70e8",
       "scripts/documents/receipts.py": "d6374ade3ff85ee361b8e8694c4ab5e96f5c859b0f761ddb30268c47e4edcfc9",
       "scripts/documents/delivery.py": "1bb45c34e4b5b926b0a075d2fe5db9f31b29af45dcded5ed46ba2a8e88138c53",
-      "scripts/runtime_identity.py": "a4cf00240bcc3faac1403be14d5bd0339528892b0d3eaac105c0d24a83e4c446",
+      "scripts/runtime_identity.py": "147a5fd6510b2b1c2a5e79d36bb697df3e165215d5e3c50066ababe4ed36ef3a",
       "scripts/runtime_manifest.py": "274c82ec491583a08e110a76f0abfec03e0e8b8df40455a185e831ab07dd607d",
       "scripts/documents/runtime_cli.py": "3b42a7de7b34d0315c65b1de24364e68047398cfc1803b795bb821f354acc9b5",
       "scripts/documents/view.py": "5fb60df421e154e22514a12e35cdbf57348567e93bc3065e0bc5f6181fec0f34",
       "scripts/runtime_context.py": "6eb100fe60841a578e6bc5bd1931cac3b451e71e7541b3cb096b04cd72a0eb5f"
     }
   },
-  "runtime_identity_sha256": "4f510e4cf05f630e45a5be3cab487c28781944f9e9fe2db73a5a9eb5dbb6e545"
+  "runtime_identity_sha256": "db928a33eba448abf5d8913a650f7129ffe71e96604fdea3946de7524a277d3b"
 }

@@ -7,6 +7,10 @@ import os
 import re
 
 from scripts.platform_paths import path_for_io, public_path
+from scripts.version import read_version, version_path
+
+
+DISTRIBUTION_RESOURCE_RENAMES = {"VERSION": "VERSION.txt", "LICENSE": "LICENSE.txt"}
 
 # 身份契约修订；Skill VERSION 不随本次架构收缩变更。
 CONTRACT_VERSION = 7
@@ -101,10 +105,16 @@ class RuntimeResourceError(ValueError):
     """白名单资源缺失、不安全或不属于当前运行期。"""
 
 
+def runtime_resource_names(root: Path) -> tuple[str, ...]:
+    portable = version_path(root).name == "VERSION.txt"
+    return tuple(DISTRIBUTION_RESOURCE_RENAMES.get(name, name) if portable else name
+                 for name in RUNTIME_FILES)
+
+
 def runtime_paths(root: Path) -> tuple[Path, ...]:
     source = public_path(path_for_io(root).resolve())
     paths = []
-    for relative in RUNTIME_FILES:
+    for relative in runtime_resource_names(source):
         candidate = source / relative
         io_path = path_for_io(candidate)
         # 祖先符号链接同样拒绝，不能将外部文件带入安装包。
@@ -153,8 +163,79 @@ def _valid_workbuddy_import_metadata(path: Path) -> bool:
         return False
 
 
+def _skillhub_metadata_files(root: Path) -> set[str]:
+    """只允许已知宿主非执行文件；内容不参与身份来源或资源摘要。"""
+    def unique_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate host metadata key")
+            result[key] = value
+        return result
+
+    def load(name: str) -> dict:
+        path = root / name
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 16 * 1024:
+            raise ValueError("invalid host metadata file")
+        value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_keys)
+        if not isinstance(value, dict):
+            raise ValueError("invalid host metadata object")
+        return value
+
+    def timestamp(value: object) -> bool:
+        return type(value) is int and value >= 0
+
+    allowed: set[str] = set()
+    try:
+        published = load("_meta.json")
+        if not (
+            set(published) == {"ownerId", "publishedAt", "slug", "version"}
+            and isinstance(published["ownerId"], str)
+            and re.fullmatch(r"\d{1,32}", published["ownerId"])
+            and timestamp(published["publishedAt"])
+            and published["slug"] == "arbibuddy"
+            and published["version"] == read_version(root)
+        ):
+            return allowed
+        allowed.add("_meta.json")
+        if not (root / "_skillhub_meta.json").exists():
+            return allowed
+        installed = load("_skillhub_meta.json")
+        required = {"slug", "name", "version", "installedAt", "source", "namespace", "canonicalName"}
+        optional = {"iconSource", "labels", "iconLocalPath", "iconDownloadedFrom"}
+        namespace = installed.get("namespace")
+        if not (
+            required <= set(installed) <= required | optional
+            and installed["slug"] == "arbibuddy"
+            and isinstance(installed["name"], str) and 0 < len(installed["name"]) <= 256
+            and installed["version"] == read_version(root)
+            and timestamp(installed["installedAt"])
+            and installed["source"] == "skillhub"
+            and isinstance(namespace, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,128}", namespace)
+            and installed["canonicalName"] == f"@{namespace}/arbibuddy"
+            and all(isinstance(installed[key], str) and len(installed[key]) <= 4096
+                    for key in optional - {"labels"} if key in installed)
+            and ("labels" not in installed or (
+                isinstance(installed["labels"], dict) and len(installed["labels"]) <= 64
+                and all(isinstance(k, str) and isinstance(v, str) and len(k) <= 128 and len(v) <= 512
+                        for k, v in installed["labels"].items())
+            ))
+        ):
+            return allowed
+        allowed.add("_skillhub_meta.json")
+        icon = root / "_icon.png"
+        if icon.is_file() and not icon.is_symlink() and icon.stat().st_size <= 1024 * 1024:
+            payload = icon.read_bytes()
+            if payload.startswith(b"\x89PNG\r\n\x1a\n") and payload.endswith(b"\x00\x00\x00\x00IEND\xaeB`\x82"):
+                allowed.add("_icon.png")
+    except (OSError, UnicodeError, ValueError, RecursionError):
+        pass
+    return allowed
+
+
 def installed_resource_failures(
-    root: Path, *, allow_vendor: bool = False, allow_extra_files: bool = False
+    root: Path, *, allow_vendor: bool = False, allow_extra_files: bool = False,
+    allow_skillhub_metadata: bool = False,
 ) -> list[str]:
     """检查安装集合；仅维护换树时可允许额外普通文件，链接仍拒绝。
 
@@ -162,13 +243,14 @@ def installed_resource_failures(
     回执和 vendor，额外文件只随旧树移走，不会导入或执行。
     """
     source = path_for_io(root).resolve()
-    allowed = set(RUNTIME_FILES) | {
+    allowed = set(runtime_resource_names(source)) | {
         "arbibuddy.install.json", "arbibuddy.runtime.json", "arbibuddy.distribution.json",
     }
     cached_modules = {
         (str(Path(p).parent / "__pycache__").replace("\\", "/"), Path(p).stem)
         for p in RUNTIME_FILES if p.endswith(".py")
     }
+    host_metadata = _skillhub_metadata_files(source) if allow_skillhub_metadata else set()
     def raise_walk_error(error: OSError) -> None:
         raise error
 
@@ -179,7 +261,9 @@ def installed_resource_failures(
                 child = current / name
                 if child.is_symlink() or getattr(child, "is_junction", lambda: False)():
                     return ["installed_resource_set_mismatch"]
-                if child == source / "_user_meta.json":
+                if child.parent == source and child.name in {
+                    "_user_meta.json", "_meta.json", "_skillhub_meta.json", "_icon.png",
+                }:
                     return ["installed_resource_set_mismatch"]
                 if allow_vendor and child == source / "workbuddy-runtime":
                     # vendor 的完整集合、摘要及链接另由 runtime_manifest 验证。
@@ -190,6 +274,8 @@ def installed_resource_failures(
                 if child.is_symlink() or not child.is_file():
                     return ["installed_resource_set_mismatch"]
                 if relative in allowed:
+                    continue
+                if relative in host_metadata:
                     continue
                 if (
                     allow_vendor
