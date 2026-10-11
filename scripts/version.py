@@ -9,9 +9,19 @@ import re
 VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+(?:-rc\d+)?$")
 
 
-def read_version(source: str | Path) -> str:
+def version_path(source: str | Path) -> Path:
     root = Path(source)
-    path = root if root.name == "VERSION" else root / "VERSION"
+    if root.name in {"VERSION", "VERSION.txt"}:
+        return root
+    # 源码/受管包保留 VERSION；通用分发视图派生为带扩展名文件。
+    legacy, portable = root / "VERSION", root / "VERSION.txt"
+    if (legacy.exists() or legacy.is_symlink()) and (portable.exists() or portable.is_symlink()):
+        raise ValueError("存在两个版本文件，安装布局不一致")
+    return portable if portable.exists() else legacy
+
+
+def read_version(source: str | Path) -> str:
+    path = version_path(source)
     try:
         value = path.read_text(encoding="utf-8").strip()
     except OSError as error:

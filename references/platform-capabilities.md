@@ -26,6 +26,16 @@ Codex、Claude Code 可以通过 `npx skills add windstudio/arbibuddy` 安装。
 
 Node.js 和 Git 用于安装；Python 3.11+ 用于受管工具。此安装方式不包含 WorkBuddy 的 Windows vendor 层，生成 DOCX 需要宿主 Python 已安装 `requirements-documents.txt` 中的依赖。缺少依赖时说明环境准备方法，等待用户完成后重试，不在案件工具运行中安装依赖。通用清单损坏或资源漂移时，重新从同一可信仓库安装；已有平台受管安装回执失败时不能回退到通用清单。开发维护和生成流程见源码分支的 `docs/agents/skills-distribution.md`，不进入案件回复。
 
+从旧受管安装切换到 skills CLI 时，安装器可能保留 Skill 目录旁的旧 `arbibuddy.install.json`。工具只有在新分发包完整校验通过、旁置回执仍失败时才报告“安装通道冲突”，案件操作继续停止。向用户说明需要安装维护核验来源、备份移走旧回执并重启；重复 `skills add` 不会清理旁置回执。该处理由维护流程执行，案件对话不修改安装树或回执；skills CLI 使用完整性清单，恢复指引不要求 WorkBuddy 验签包。
+
+Codex 在 Windows 上可用原生命令工具指定 `workdir=<installed_skill_root>`，单独执行契约中的 `python -B -X utf8 -m ... --root <workspace_root>`。该方式与固定 `cd ... && python ...` 前缀具有相同的执行目录和工作区绑定，不依赖 WSL；Bash 启动失败时可使用原生 PowerShell 的单条 Python transport，仍以公开 JSON 回执判断成功。
+
+### SkillHub 安装
+
+WorkBuddy 从 SkillHub 安装的通用仓库分发包采用相同的完整性清单，不包含验签 WorkBuddy ZIP 的 vendor 层。文书能力依赖宿主 Python 和 `requirements-documents.txt` 中的依赖；按实际能力观察结果处理。SkillHub 的发布、安装元数据与图标只作为宿主附加文件，不是版本或案件事实来源。
+
+此通道完整性失败时，提示从同一可信 SkillHub 来源安装适配后的更新包并完全重启客户端；旧包缺少运行资源时，重复安装同一旧包不能恢复。安装维护在源码和分发流程中完成，案件对话不补写版本文件、不删除宿主元数据、不修改校验清单，也不将通用分发安装引导到原生上传验签包的恢复流程。
+
 ## 降级与恢复
 
 - 文件系统不可用：提供可由用户保存的案情内容，说明不能持久化；不宣称档案已保存。

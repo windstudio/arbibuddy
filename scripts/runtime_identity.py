@@ -16,13 +16,16 @@ import shutil
 import subprocess
 from typing import Any, Mapping
 
-from scripts.runtime_resources import CONTRACT_VERSION, installed_resource_failures, runtime_paths
+from scripts.runtime_resources import (
+    CONTRACT_VERSION, installed_resource_failures, runtime_paths,
+    DISTRIBUTION_RESOURCE_RENAMES,
+)
 from scripts.platform_paths import path_for_io
 from scripts.runtime_manifest import (
     RuntimeManifestError,
     read_and_validate_runtime_manifest,
 )
-from scripts.version import display_version
+from scripts.version import display_version, version_path
 
 
 RUNTIME_IDENTITY_SCHEMA_VERSION = 2
@@ -208,9 +211,11 @@ def _artifact_manifest_sha256(root: Path) -> str:
 
 def _identity_from_root(root: Path, *, source_commit: str | None = None) -> dict[str, Any]:
     root = path_for_io(root).resolve()
+    portable = version_path(root).name == "VERSION.txt"
+    keys = [DISTRIBUTION_RESOURCE_RENAMES.get(name, name) if portable else name for name in _KEY_RESOURCES]
     resources = {
         relative: _canonical_digest(root, relative)
-        for relative in _KEY_RESOURCES
+        for relative in keys
     }
     resource_bytes = json.dumps(
         resources,
@@ -226,7 +231,7 @@ def _identity_from_root(root: Path, *, source_commit: str | None = None) -> dict
         ),
         "skill_version": display_version(root),
         "core_contract_version": CONTRACT_VERSION,
-        "version_sha256": _digest(root / "VERSION"),
+        "version_sha256": _digest(version_path(root)),
         "installation_manifest": installation_manifest,
         "installation_manifest_sha256": installation_manifest["sha256"],
         "artifact_manifest_sha256": _artifact_manifest_sha256(root),
@@ -407,6 +412,14 @@ def runtime_identity_failure_message(preflight: Mapping[str, Any]) -> str:
     if not isinstance(failures, list):
         failures = []
     failure_set = {item for item in failures if isinstance(item, str)}
+    if "installation_channel_conflict" in failure_set:
+        return (
+            "安装通道冲突：旧受管安装回执与已通过完整性核验的 skills CLI 分发包不一致；"
+            "请由安装维护流程核验分发来源、备份移走旧回执并重启客户端。"
+            "重复安装分发包不会清理旁置回执。"
+        )
+    if preflight.get("mode") == "distribution":
+        return "SkillHub / skills CLI 分发清单或运行资源不一致；请从同一可信来源重新安装适配后的 Skill 并重启客户端"
     if "external_trust_anchor_missing" in failure_set:
         return (
             "受管 WorkBuddy 安装缺少外部信任锚；请通过受管安装或更新恢复信任锚并重启客户端。"
@@ -438,6 +451,8 @@ def runtime_identity_failure_next_action(preflight: Mapping[str, Any]) -> str:
     if not isinstance(failures, list):
         failures = []
     failure_set = {item for item in failures if isinstance(item, str)}
+    if "installation_channel_conflict" in failure_set:
+        return "resolve-installation-channel-conflict-and-restart"
     if any(item.startswith("native_upload_") for item in failure_set):
         return "reupload-workbuddy-skill-and-restart"
     if any(
@@ -552,6 +567,7 @@ class RuntimeIdentityModule:
         self,
         expected: dict[str, Any],
         installed: str | Path,
+        *, allow_skillhub_metadata: bool = False,
     ) -> dict[str, Any]:
         if not isinstance(expected, dict):
             raise RuntimeIdentityError("期望运行身份必须是对象")
@@ -578,7 +594,9 @@ class RuntimeIdentityModule:
             if key not in {"source_commit"} and expected.get(key) != observed.get(key)
         )
         if not _valid_source_checkout(path_for_io(installed)):
-            failures.extend(installed_resource_failures(Path(installed), allow_vendor=True))
+            failures.extend(installed_resource_failures(
+                Path(installed), allow_vendor=True, allow_skillhub_metadata=allow_skillhub_metadata,
+            ))
         return {
             "schema_version": RUNTIME_IDENTITY_SCHEMA_VERSION,
             "verified": not failures,
@@ -797,10 +815,10 @@ class RuntimeIdentityModule:
         except (OSError, UnicodeError, ValueError, TypeError, KeyError):
             return {**common, "verified": False,
                     "failures": ["distribution_marker_invalid"]}
-        comparison = self.compare(expected, candidate)
+        comparison = self.compare(expected, candidate, allow_skillhub_metadata=True)
         # 即使有人在安装树内 git init，也不能借源码身份绕过精确资源集合。
         failures = list(comparison.get("failures", []))
-        failures.extend(installed_resource_failures(candidate))
+        failures.extend(installed_resource_failures(candidate, allow_skillhub_metadata=True))
         if failures:
             failures.append("distribution_marker_mismatch")
         return {
@@ -815,7 +833,17 @@ class RuntimeIdentityModule:
         try:
             current = self.generate(candidate)
         except (OSError, RuntimeIdentityError, ValueError) as error:
+            distribution_only = (
+                _marker_present(candidate / DISTRIBUTION_MARKER_NAME)
+                and not any(_marker_present(marker) for marker in (
+                    candidate / "arbibuddy.install.json",
+                    candidate / WORKBUDDY_PORTABLE_RUNTIME_MARKER_NAME,
+                    candidate / "workbuddy-runtime",
+                    candidate.parent / "arbibuddy.install.json",
+                ))
+            )
             return {"schema_version": RUNTIME_IDENTITY_SCHEMA_VERSION,
+                    **({"mode": "distribution"} if distribution_only else {}),
                     "verified": False,
                     "failures": [f"runtime_identity_unreadable:{type(error).__name__}"]}
 
@@ -831,7 +859,16 @@ class RuntimeIdentityModule:
                     "verified": False, "failures": ["native_upload_marker_missing"]}
         sibling_receipt = candidate.parent / "arbibuddy.install.json"
         if _marker_present(sibling_receipt):
-            return self._verify_install_marker(candidate, current, sibling_receipt)
+            result = self._verify_install_marker(candidate, current, sibling_receipt)
+            distribution_marker = candidate / DISTRIBUTION_MARKER_NAME
+            if not result["verified"] and _marker_present(distribution_marker):
+                # Only diagnose a channel conflict after checking the complete new
+                # distribution. The failing receipt still blocks runtime operations;
+                # retiring it belongs to explicit installation maintenance.
+                distribution = self._verify_distribution_marker(candidate, current, distribution_marker)
+                if distribution["verified"]:
+                    result["failures"].append("installation_channel_conflict")
+            return result
         distribution_marker = candidate / DISTRIBUTION_MARKER_NAME
         if _marker_present(distribution_marker):
             return self._verify_distribution_marker(candidate, current, distribution_marker)

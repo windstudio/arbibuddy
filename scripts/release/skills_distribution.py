@@ -11,9 +11,25 @@ from scripts.cli_encoding import configure_utf8_stdio
 from scripts.runtime_identity import (
     DISTRIBUTION_MARKER_NAME, RuntimeIdentityModule,
     build_distribution_marker, build_runtime_identity,
+    measure_runtime_identity,
 )
-from scripts.runtime_resources import runtime_paths
+from scripts.runtime_resources import runtime_paths, DISTRIBUTION_RESOURCE_RENAMES
 from scripts.runtime_temp import runtime_temporary_directory
+
+
+SKILLHUB_MAX_FILES = 200
+# 按更保守的十进制 MB，确保也满足按 MiB 计量的平台。
+SKILLHUB_MAX_BYTES = 10_000_000
+
+
+def validate_distribution_limits(skill: Path) -> dict[str, int]:
+    if not (skill / "SKILL.md").is_file():
+        raise ValueError("分发包缺少 SKILL.md")
+    files = [path for path in skill.rglob("*") if path.is_file()]
+    total = sum(path.stat().st_size for path in files)
+    if len(files) > SKILLHUB_MAX_FILES or total > SKILLHUB_MAX_BYTES:
+        raise ValueError("分发包超过 SkillHub 200 文件或 10 MB 上限")
+    return {"distribution_file_count": len(files), "distribution_total_bytes": total}
 
 
 def build_skills_repository(source: Path, destination: Path) -> dict[str, object]:
@@ -31,7 +47,6 @@ def build_skills_repository(source: Path, destination: Path) -> dict[str, object
         raise ValueError("分发目标不得位于工单、测试或 Git 目录")
     paths = runtime_paths(source)
     identity = build_runtime_identity(source)
-    marker = build_distribution_marker(identity)
     destination.parent.mkdir(parents=True, exist_ok=True)
     with runtime_temporary_directory(
         destination.parent, prefix="arbibuddy-skills-", use_configured_root=False,
@@ -40,10 +55,17 @@ def build_skills_repository(source: Path, destination: Path) -> dict[str, object
         skill = repository / "skills" / "arbibuddy"
         skill.mkdir(parents=True)
         for path in paths:
-            target = skill / path.relative_to(source)
+            relative = path.relative_to(source).as_posix()
+            target = skill / DISTRIBUTION_RESOURCE_RENAMES.get(relative, relative)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(path, target)
+        readme = skill / "README.md"
+        readme.write_text(readme.read_text(encoding="utf-8").replace("](LICENSE)", "](LICENSE.txt)"), encoding="utf-8")
+        # 源码 VERSION 是唯一版本源；分发文件名变化必须重新测量完整载荷。
+        identity = measure_runtime_identity(skill, source_commit=identity["source_commit"])
+        marker = build_distribution_marker(identity)
         (skill / DISTRIBUTION_MARKER_NAME).write_bytes(marker)
+        limits = validate_distribution_limits(skill)
         verification = RuntimeIdentityModule().preflight(skill)
         if not verification["verified"]:
             raise ValueError(f"分发资源校验失败：{verification['failures']}")
@@ -66,7 +88,7 @@ def build_skills_repository(source: Path, destination: Path) -> dict[str, object
         "skill_version": identity["skill_version"],
         "source_commit": identity["source_commit"],
         "runtime_file_count": len(paths),
-        "distribution_file_count": len(paths) + 1,
+        **limits,
         "installation_manifest_sha256": identity["installation_manifest_sha256"],
         "repository_root": str(destination),
     }
