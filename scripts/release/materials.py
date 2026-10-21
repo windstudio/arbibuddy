@@ -11,6 +11,7 @@ import subprocess
 import zipfile
 
 from scripts.release.skills_distribution import validate_distribution_limits
+from scripts.release.verification import REQUIRED_CHECKS, verify_evidence
 from scripts.runtime_identity import RuntimeIdentityModule
 from scripts.runtime_resources import RUNTIME_FILES
 from scripts.version import read_version, display_version
@@ -104,6 +105,22 @@ def verify_materials(path: Path) -> dict[str, object]:
         record = json.loads(files[name])
         if record["version"] != provenance["version"] or record["source_commit"] != provenance["source_commit"]:
             raise ValueError("Source materials provenance mismatch")
+    record = json.loads(files["release-evidence.json"])
+    identity = record["runtime_identity"]
+    if (record["contract_version"] != "model-led-release-evidence-v1"
+            or identity["source_commit"] != provenance["source_commit"]
+            or identity["skill_version"] != "v" + provenance["version"]
+            or set(record["checks"]) != REQUIRED_CHECKS):
+        raise ValueError("Source materials evidence identity mismatch")
+    for check in record["checks"].values():
+        name = check["report"]
+        safe_name(name)
+        if (check["status"] not in {"passed", "accepted_with_notes"}
+                or (check["status"] == "accepted_with_notes" and not check.get("notes"))
+                or digest(files[name]) != check["sha256"]):
+            raise ValueError("Source materials evidence report mismatch")
+    if json.loads(files["release-gate.json"]).get("status") not in {"passed", "accepted_with_notes"}:
+        raise ValueError("Source materials gate has not accepted this source")
     return {"verified": True, "version": provenance["version"],
             "source_commit": provenance["source_commit"], "members": len(files),
             "sha256": digest(path.read_bytes())}
@@ -117,6 +134,7 @@ def build_materials(source: Path, workbuddy: Path, dependency_sources: Path,
     if any(part in {".scratch", ".git", "tests"} for part in output.parts):
         raise ValueError("Invalid release output directory")
     commit, files = fixed_source(source)
+    verify_evidence(source, evidence / "release-evidence.json")
     version = read_version(source)
     package = archive_files(workbuddy)
     descriptor = json.loads(package["arbibuddy.package.json"])
@@ -174,6 +192,17 @@ def build_materials(source: Path, workbuddy: Path, dependency_sources: Path,
 
 
 def build_skillhub(skill: Path, output: Path) -> dict[str, object]:
+    skill = skill.resolve()
+    output = output.absolute()
+    source_roots = [Path(__file__).resolve().parents[2], skill]
+    if skill.parent.name == "skills":
+        source_roots.append(skill.parent.parent)
+    source_roots.extend(parent for parent in skill.parents if (parent / ".git").exists())
+    if (any(part.lower() in {".scratch", ".git", "tests"} for part in output.parts)
+            or any(output.resolve().is_relative_to(root) for root in source_roots)
+            or any(parent.is_symlink() or getattr(parent, "is_junction", lambda: False)()
+                   for parent in (output, *output.parents))):
+        raise ValueError("SkillHub output must be outside source and prohibited directories")
     limits = validate_distribution_limits(skill)
     if not RuntimeIdentityModule().preflight(skill)["verified"]:
         raise ValueError("SkillHub distribution identity failed verification")
