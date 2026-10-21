@@ -39,9 +39,10 @@ from scripts.runtime_identity import (
     measure_runtime_identity,
     runtime_identity_digest,
     write_workbuddy_trust_anchor,
+    workbuddy_trust_anchor_path,
     _workbuddy_external_anchor_failures,
 )
-from scripts.platform_paths import path_for_io, public_path
+from scripts.platform_paths import path_for_io, public_path, assert_no_path_links
 from scripts.version import display_version
 from scripts.runtime_manifest import (
     RUNTIME_MANIFEST_NAME,
@@ -807,6 +808,14 @@ def _update_workbuddy(
     new_tree_committed = False
     committed = False
     try:
+        # Save the verified external identity before exchanging either tree.
+        path_for_io(transaction_root).mkdir(parents=True, exist_ok=False)
+        anchor = workbuddy_trust_anchor_path(target_root, destination)
+        snapshot = path_for_io(transaction_root / "previous-anchor.json")
+        with snapshot.open("xb") as stream:
+            stream.write(path_for_io(anchor).read_bytes())
+            stream.flush()
+            os.fsync(stream.fileno())
         path_for_io(staged_destination).mkdir(parents=True, exist_ok=False)
         _write_package_payload(staged_destination, payload)
         _verify_staged_workbuddy_install(
@@ -856,6 +865,7 @@ def _update_workbuddy(
                     rollback_destination=rollback_destination,
                     old_tree_moved=old_tree_moved,
                     new_tree_committed=new_tree_committed,
+                    target_root=target_root,
                 )
             except PlatformAdapterError as rollback_error:
                 public_error = _workbuddy_exception("update", error)
@@ -1072,12 +1082,18 @@ def _recover_workbuddy_transaction(
         if _workbuddy_install_is_verified(destination):
             return
         if not path_for_io(rollback_destination).is_dir():
+            if path_for_io(destination).is_dir() and path_for_io(transaction_root / "previous-anchor.json").is_file():
+                _restore_workbuddy_anchor(transaction_root, target_root=target_root, destination=destination)
+                if _workbuddy_install_is_verified(destination):
+                    return
             raise PlatformAdapterError(
                 "workbuddy_recovery_pending:更新事务缺少完整的旧安装回滚材料"
             )
+        _read_workbuddy_anchor_snapshot(transaction_root)
         if path_for_io(destination).exists() or path_for_io(destination).is_symlink():
             _remove_update_path(destination)
         _replace_workbuddy_path(rollback_destination, destination)
+        _restore_workbuddy_anchor(transaction_root, target_root=target_root, destination=destination)
         if not _workbuddy_install_is_verified(destination):
             raise PlatformAdapterError(
                 "workbuddy_recovery_failed:旧安装恢复后身份验证失败"
@@ -1373,18 +1389,60 @@ def _rollback_workbuddy_update(
     rollback_destination: Path,
     old_tree_moved: bool,
     new_tree_committed: bool,
+    target_root: Path,
 ) -> None:
     try:
+        if old_tree_moved:
+            _read_workbuddy_anchor_snapshot(rollback_destination.parent)
         if new_tree_committed and (
             path_for_io(destination).exists() or path_for_io(destination).is_symlink()
         ):
             _remove_update_path(destination)
         if old_tree_moved and path_for_io(rollback_destination).exists():
             _replace_workbuddy_path(rollback_destination, destination)
+        if old_tree_moved:
+            _restore_workbuddy_anchor(rollback_destination.parent, target_root=target_root, destination=destination)
     except (OSError, PlatformAdapterError) as error:
         raise PlatformAdapterError(
             "workbuddy_rollback_failed:更新失败且旧安装回滚失败"
         ) from error
+
+
+def _read_workbuddy_anchor_snapshot(transaction_root: Path) -> bytes:
+    snapshot = path_for_io(transaction_root / "previous-anchor.json")
+    try:
+        assert_no_path_links(snapshot)
+    except ValueError as error:
+        raise PlatformAdapterError("workbuddy_recovery_pending:信任锚恢复路径含链接") from error
+    if not snapshot.is_file() or snapshot.is_symlink():
+        raise PlatformAdapterError("workbuddy_recovery_pending:缺少旧信任锚快照，保留事务材料")
+    with snapshot.open("rb") as stream:
+        raw = stream.read(64 * 1024 + 1)
+    try:
+        if len(raw) > 64 * 1024 or not isinstance(json.loads(raw), dict):
+            raise ValueError("invalid anchor snapshot")
+    except (ValueError, UnicodeError) as error:
+        raise PlatformAdapterError("workbuddy_recovery_pending:旧信任锚快照无效") from error
+    return raw
+
+
+def _restore_workbuddy_anchor(transaction_root: Path, *, target_root: Path, destination: Path) -> None:
+    raw = _read_workbuddy_anchor_snapshot(transaction_root)
+    anchor = workbuddy_trust_anchor_path(target_root, destination)
+    try:
+        assert_no_path_links(anchor)
+    except ValueError as error:
+        raise PlatformAdapterError("workbuddy_recovery_pending:信任锚恢复路径含链接") from error
+    anchor.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path_for_io(anchor.with_name(anchor.name + ".rollback-" + uuid.uuid4().hex))
+    try:
+        with temporary.open("xb") as stream:
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.replace(path_for_io(anchor))
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _workbuddy_exception(operation: str, error: BaseException) -> PlatformAdapterError:
@@ -2007,6 +2065,7 @@ def probe_capabilities(
         not verification["discovery_contract_valid"]
         or not verification["resources_complete"]
         or not verification["renderer_dependencies_verified"]
+        or not verification["runtime_identity_verified"]
     ):
         raise PlatformAdapterError("平台安装回执或资源发现契约验证失败")
     process_environment = _platform_environment_for(platform)
@@ -2211,24 +2270,19 @@ def _probe_filesystem(workspace: Path) -> dict[str, Any]:
 
 
 def _probe_attachment_presentation(workspace: Path) -> dict[str, Any]:
-    probe = workspace / "附件展示探测-中文.txt"
     try:
-        path_for_io(probe).write_text(
-            "attachment-presentation-probe", encoding="utf-8"
-        )
-        manifest = present_files(files=(probe,))
-        report = {
+        with runtime_temporary_directory(workspace, prefix="attachment-presentation-", use_configured_root=False) as temporary:
+            probe = temporary / "附件展示探测-中文.txt"
+            with path_for_io(probe).open("x", encoding="utf-8") as stream:
+                stream.write("attachment-presentation-probe")
+            manifest = present_files(files=(probe,))
+        return {
             "available": False,
             "state": "宿主展示未验证",
             "method": "本地文件清单可读不代表宿主已展示附件；当前 CLI 未连接宿主原生展示通道",
             "file_manifest_readable": manifest["displayable"],
             "host_presentation_verified": False,
         }
-        try:
-            path_for_io(probe).unlink()
-        except OSError as error:
-            report["cleanup_warning"] = error.__class__.__name__
-        return report
     except OSError as error:
         return {
             "available": False,

@@ -197,6 +197,7 @@ class Journey:
     initial_fact_ids: tuple[str, ...] = ()
     scenario_as_of_date: str | None = None
     resolved_dates: tuple[tuple[str, str], ...] = ()
+    postdelivery_phone_correction: Mapping[str, str] | None = None
 
 
 @dataclass(frozen=True)
@@ -1035,6 +1036,7 @@ def load_journey(path: str | Path, *, as_of_date: date | None = None) -> Journey
             "allow_extra_deliveries",
             "response_markers",
             "completion_paths",
+            "postdelivery_phone_correction",
         }
     )
     if expect_unknown:
@@ -1137,6 +1139,22 @@ def load_journey(path: str | Path, *, as_of_date: date | None = None) -> Journey
     path_ids: set[str] = set()
     valid_fact_ids = {fact.id for fact in facts}
     valid_milestone_ids = {milestone.id for milestone in milestones}
+    phone_correction = expect.get("postdelivery_phone_correction")
+    if phone_correction is not None:
+        if (not isinstance(phone_correction, Mapping)
+            or set(phone_correction) != {"fact_id", "old_phone", "new_phone"}
+            or not isinstance(phone_correction.get("fact_id"), str)
+            or phone_correction.get("fact_id") not in valid_fact_ids
+            or phone_correction.get("fact_id") in initial_fact_ids
+            or any(not isinstance(phone_correction.get(key), str) or re.fullmatch(r"1[0-9]{10}", phone_correction[key]) is None
+                   for key in ("old_phone", "new_phone"))
+            or phone_correction["old_phone"] == phone_correction["new_phone"]):
+            raise JourneyError("postdelivery_phone_correction 必须绑定非初始事实卡和两个不同的虚构手机号")
+        if phone_correction["old_phone"] not in initial or phone_correction["new_phone"] not in next(fact.text for fact in facts if fact.id == phone_correction["fact_id"]):
+            raise JourneyError("postdelivery_phone_correction 号码必须来自初始消息与指定更正卡")
+        if any(phone_correction["fact_id"] in fact.requires_sent_facts for fact in facts):
+            raise JourneyError("电话更正观察只适用于终段更正卡，其他事实不能依赖该卡")
+        phone_correction = dict(phone_correction)
     for index, item in enumerate(raw_paths, start=1):
         if not isinstance(item, Mapping):
             raise JourneyError(f"completion_paths[{index}] 必须是对象")
@@ -1233,6 +1251,7 @@ def load_journey(path: str | Path, *, as_of_date: date | None = None) -> Journey
         initial_fact_ids=initial_fact_ids,
         scenario_as_of_date=calendar_date.isoformat() if resolved_dates else None,
         resolved_dates=tuple(sorted(resolved_dates.items())),
+        postdelivery_phone_correction=phone_correction,
     )
 
 
@@ -1641,6 +1660,9 @@ def run_journey(
                 }
             )
             observation = _observe_workspace(workspace)
+            if journey.postdelivery_phone_correction is not None:
+                from .postdelivery import capture_delivery_snapshot
+                transcripts[-1]["public_artifact_snapshot"] = capture_delivery_snapshot(workspace)
             if managed_view_receipts:
                 observation["managed_view_receipts"] = list(managed_view_receipts)
             if managed_view_status is not None:
@@ -1852,7 +1874,9 @@ def run_journey(
         retain_deliveries
         and failure_category is None
         and assessment.passed
-        and assessment.completion_path == "delivered"
+        and (assessment.completion_path == "delivered" or (
+            journey.postdelivery_phone_correction is not None
+            and assessment.completion_path == "postdelivery_phone_corrected"))
     ):
         try:
             retained_deliveries = _retain_verified_deliveries(
@@ -1884,6 +1908,8 @@ def run_journey(
         "title": journey.title,
         "scenario_as_of_date": journey.scenario_as_of_date,
         "resolved_dates": dict(journey.resolved_dates),
+        **({"postdelivery_phone_correction": dict(journey.postdelivery_phone_correction)}
+           if journey.postdelivery_phone_correction is not None else {}),
         "platform": platform,
         "started_at": started_at.isoformat(timespec="seconds"),
         "finished_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -2179,6 +2205,16 @@ def _build_scenario_response_request(
         if used_facts.get(fact_id, 0) > 0
     ) or "无"
     required_next_fact_id = None
+    phone_spec = journey.postdelivery_phone_correction
+    phone_ready = False
+    public_delivery_observation = None
+    if phone_spec is not None:
+        snapshot = transcripts[-1].get("public_artifact_snapshot", {}) if transcripts else {}
+        delivery_verified = snapshot.get("verified") is True
+        correction_fact = next(fact for fact in journey.fact_pool if fact.id == phone_spec["fact_id"])
+        phone_ready = delivery_verified and all(used_facts.get(ref, 0) > 0 for ref in correction_fact.requires_sent_facts)
+        public_delivery_observation = {"verified": delivery_verified,
+                                       "document_types": sorted(snapshot.get("ordered_blocks", {})) if delivery_verified else []}
     if transcripts:
         last = transcripts[-1]
         if (
@@ -2193,6 +2229,11 @@ def _build_scenario_response_request(
                 if fact.immediately_after in last_sent
                 and used_facts.get(fact.id, 0) < fact.max_uses
             ), None)
+    if phone_spec is not None and used_facts.get(phone_spec["fact_id"], 0) == 0:
+        if phone_ready:
+            required_next_fact_id = phone_spec["fact_id"]
+        elif required_next_fact_id == phone_spec["fact_id"]:
+            required_next_fact_id = None
     return ScenarioResponseRequest(
         scenario_id=journey.id,
         turn=turn,
@@ -2210,6 +2251,7 @@ def _build_scenario_response_request(
                 requires_sent_facts=fact.requires_sent_facts,
             )
             for fact in journey.fact_pool
+            if phone_spec is None or fact.id != phone_spec["fact_id"] or phone_ready
         ),
         max_facts_per_turn=journey.simulator.max_facts_per_turn,
         remaining_unavailable_uses=(
@@ -2235,6 +2277,7 @@ def _build_scenario_response_request(
         ),
         prompt_version=journey.simulator.prompt_version,
         schema_version=journey.simulator.schema_version,
+        public_delivery_observation=public_delivery_observation,
     )
 
 

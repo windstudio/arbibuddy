@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from scripts.platform_paths import consume_runtime_input, runtime_input_path, validated_workspace_root, validated_workspace_path, RuntimeInputCleanupError
 import re
 import sys
 from typing import Sequence
@@ -54,39 +55,11 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _runtime_input_path(value: Path, workspace_root: Path) -> Path:
-    runtime_input_root_raw = workspace_root / ".arbibuddy" / "runtime-input"
-    if runtime_input_root_raw.is_symlink() or not runtime_input_root_raw.is_dir():
-        raise ValueError("invalid_runtime_input_path")
-    runtime_input_root = runtime_input_root_raw.resolve()
-    if not runtime_input_root.is_relative_to(workspace_root.resolve()):
-        raise ValueError("invalid_runtime_input_path")
-    raw_text = str(value)
-    if any(part == ".." for part in Path(raw_text).parts):
-        raise ValueError("invalid_runtime_input_path")
-    candidate = value.expanduser()
-    if not candidate.is_absolute():
-        candidate = workspace_root / candidate
-    if candidate.is_symlink():
-        raise ValueError("invalid_runtime_input_path")
-    resolved = candidate.resolve()
-    if (
-        resolved.parent != runtime_input_root
-        or resolved.suffix.casefold() != ".json"
-        or not resolved.is_file()
-        or not resolved.is_relative_to(workspace_root.resolve())
-    ):
-        raise ValueError("invalid_runtime_input_path")
-    return resolved
+    return runtime_input_path(value, workspace_root)
 
 
 def _consume_runtime_input(value: Path, workspace_root: Path) -> str:
-    candidate = _runtime_input_path(value, workspace_root)
-    size = candidate.stat().st_size
-    if size > MAX_RUNTIME_INPUT_BYTES:
-        raise OverflowError("runtime_input_too_large")
-    payload = candidate.read_text(encoding="utf-8-sig")
-    candidate.unlink()
-    return payload
+    return consume_runtime_input(value, workspace_root, MAX_RUNTIME_INPUT_BYTES)
 
 
 def _commit_request(args: argparse.Namespace, workspace_root: Path) -> dict:
@@ -96,13 +69,7 @@ def _commit_request(args: argparse.Namespace, workspace_root: Path) -> dict:
 
 
 def _validate_workspace_root(root: Path) -> Path:
-    resolved = root.expanduser().resolve()
-    if not resolved.is_dir():
-        raise ValueError("--root 必须是已存在的工作区目录")
-    installed_skill_root = Path(__file__).resolve().parents[2]
-    if resolved == installed_skill_root or resolved.is_relative_to(installed_skill_root):
-        raise ValueError("--root 不得位于 Skill 安装目录内")
-    return resolved
+    return validated_workspace_root(root)
 
 
 def _operation_hint(argv: Sequence[str]) -> str | None:
@@ -131,7 +98,10 @@ def _operation_hint(argv: Sequence[str]) -> str | None:
 
 def _input_error(operation: str, error: Exception) -> dict:
     error_text = str(error)
-    if error_text == "invalid_runtime_input_path":
+    if isinstance(error, RuntimeInputCleanupError):
+        code = "runtime_input_cleanup_failed"
+        message = str(error)
+    elif error_text == "invalid_runtime_input_path":
         code = "invalid_runtime_input_path"
         message = "commit 输入必须是当前工作区 runtime-input 下的直接 JSON 文件"
     elif error_text == "runtime_input_too_large":
@@ -154,18 +124,20 @@ def _input_error(operation: str, error: Exception) -> dict:
                 "recoverable": True,
             }
         ],
-        "warnings": [],
+        "warnings": ([{"code": "temporary_cleanup_failed", "message": str(error), "recoverable": True}]
+                     if isinstance(error, RuntimeInputCleanupError) else []),
     }
 
 
 def _read_current(tool: CaseArchive, root: Path) -> dict:
-    cases_root = (root / ".arbibuddy" / "cases").resolve()
+    cases_root = validated_workspace_path(root, root / ".arbibuddy" / "cases")
     candidates: list[str] = []
     if cases_root.is_dir():
         for path in cases_root.iterdir():
             if (
                 path.is_dir()
                 and not path.is_symlink()
+                and not getattr(path, "is_junction", lambda: False)()
                 and re.fullmatch(r"case-[0-9a-f]{24}", path.name)
                 and (path / "案情档案.md").is_file()
             ):
@@ -233,7 +205,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = _input_error(operation, error)
         print(json.dumps(result, ensure_ascii=False, sort_keys=True))
         return 2
-    except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
+    except (OSError, ValueError, TypeError, OverflowError, json.JSONDecodeError) as error:
         if operation is None:
             return 2
         result = _input_error(operation, error)

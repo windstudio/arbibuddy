@@ -1,6 +1,6 @@
 # Codex 与 Claude Code 模型主导 Agent Eval
 
-该 Eval 是独立真实模型验证入口，不进入 `fast`、`slow` 或 `full` 测试套件，也不调用旧的结构化状态 Runtime。
+该 Eval 是 issue 10 的独立真实验证入口，不进入 `fast`、`slow` 或 `full` 测试套件，也不调用旧的结构化状态 Runtime。
 
 以下完成路径与 PASS/FAIL 是严格 Scenario 指标。产品验收按[模型主导产品验收](model-led-product-acceptance.md)另列核心结果、实质风险与非阻断质量项；不要求所有对话完全符合预设轨迹，也不改写原始失败记录。候选准备有条件接受不等于可外发定稿或正式发布。
 
@@ -49,6 +49,16 @@ python -B -X utf8 -m scripts.model_led_agent_eval.cli suite evals/suites/model-l
 运行目录保留 `evidence.json`，记录平台、版本/共享核心身份、A/B 隔离边界、自然语言轮次、B 决定摘要、耗时、观察到的文件和失败归因。CLI 默认在失败后重跑同一 Journey 一次，并把每次结果写入 `retries`；一致的 Runtime Adapter/SUT 失败保留原归因，结果不一致或一次重跑通过时标记环境/模型波动或通过，不把一次失败直接当作 Skill 缺陷。默认只保留证据并清理两个 Workspace；需要失败诊断时才使用 `--keep-workspace-on-failure`。
 
 场景编写以当事人自然表述为准：事实卡提供事实、未知信息、用户目标和必要的明确选择，不向模型 A 提示内部命令、预期计算或 Oracle 判据。原始用户消息、模型 B 的事实选择、公开文件观察和失败归因分别保留；词句标记只作有限的过程线索，正式交付必须核验真实 DOCX 与独立清单。Harness 修复不得改写既有原始 evidence；场景内容变更后旧 Journey 通过记录只作历史基线。
+
+### 交付后更正电话的独立场景
+
+canonical ML01 继续只验证首次交付。显式变体在 `expect.postdelivery_phone_correction` 声明 `fact_id`、`old_phone`、`new_phone`：旧号码必须出现在初始虚构用户消息，新号码必须在对应非初始更正卡中，其他事实不得依赖该终段卡。此场景要求完整申请书和证据目录，不能以降级路径替代改稿。
+
+仅启用此配置时，runner 在每轮完成后保存 `public_artifact_snapshot`。独立 artifact observer 校验当前档案、两成员清单和文件 SHA，Harness 另核对公共 view；正文比较由标准库独立解包 OOXML，保留段落、表格单元格顺序、样式和编号属性，不复用 SUT 的 edit-context 提取逻辑。首交完整校验成功前，B 看不到更正卡；成功后 B 获得仅含验证结果和文书类型的公开观察，并须在下一轮选择更正卡。B 仍通过真实 responder 执行决定，未由 runner 伪造用户消息。
+
+Oracle 要求更正卡前一轮有有效首交快照，最终快照同案、新 revision、新集合，两成员及四文件均绑定当前版本。仅允许指定旧号码替换为新号码，其余有序正文、表格和编号须保持一致；清单可随版本更新，未变目录 DOCX 的 SHA 不强制变化。外部写入导致 SHA 不符、只改一份、旧集合或“已改好”文字均不能放行。快照只进入源外虚构测试证据，不进入安装白名单、不成为案情事实源。此结果仍不能替代 WorkBuddy 原生 Office 路由及附件展示验证。
+
+重新生成时保留的旧 generation 属于非交付材料。独立观察器仅排除符合受管备份命名、同案件/类型及完整三文件形状、且当前 canonical 已另行完整验证的旧备份；未提交 regeneration 另须与当前 render identity 一致。旧文件可能已被外部改写，因此不将其旧 SHA 校验结果当作当前文书结果，也不读取其正文；未知隐藏目录、错案/错类型或多余文件仍拒绝。当前 canonical 的 SHA、清单、版本和集合检查不变。
 
 ## 轮次与报告优化（2026-09-25）
 

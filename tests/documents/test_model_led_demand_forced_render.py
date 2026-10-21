@@ -65,6 +65,7 @@ class ModelLedDemandAndForcedRenderTests(unittest.TestCase):
             )
 
             forced_workspace = workspace / "forced"
+            forced_workspace.mkdir()
             _archive, forced_case_id, forced_revision, confirmation_id = _create_case(
                 forced_workspace,
                 with_confirmation=True,
@@ -374,7 +375,7 @@ class ModelLedDemandAndForcedRenderTests(unittest.TestCase):
                             else {"authority_refs": []}
                         ),
                     )
-                    request["sections"][0]["full_text"] += " 联系方式：【待补：联系电话】。"
+                    request["sections"][0]["full_text"] += "，联系方式：【待补：联系电话】。"
                     request["placeholders"] = [
                         {"placeholder_id": "phone", "text": "【待补：联系电话】"}
                     ]

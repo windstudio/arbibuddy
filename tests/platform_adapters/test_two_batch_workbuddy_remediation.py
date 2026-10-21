@@ -350,6 +350,7 @@ class TwoBatchWorkBuddyRemediationTests(unittest.TestCase):
             self.assertEqual(preflight["mode"], "portable")
 
             workspace = root / "workspace"
+            workspace.mkdir()
             archive = CaseArchive(workspace)
             with patch.object(
                 case_archive_service._RUNTIME_IDENTITY,
@@ -374,6 +375,7 @@ class TwoBatchWorkBuddyRemediationTests(unittest.TestCase):
             )
 
             failure_workspace = root / "failure-workspace"
+            failure_workspace.mkdir()
             failed_archive = CaseArchive(failure_workspace)
             with patch.object(
                 case_archive_service._RUNTIME_IDENTITY,
@@ -385,7 +387,8 @@ class TwoBatchWorkBuddyRemediationTests(unittest.TestCase):
             self.assertFalse(failed["ok"])
             self.assertEqual(failed["errors"][0]["code"], "installed_skill_modified")
             self.assertFalse(failed["errors"][0]["recoverable"])
-            self.assertFalse(failure_workspace.exists())
+            self.assertTrue(failure_workspace.is_dir())
+            self.assertFalse((failure_workspace / ".arbibuddy").exists())
 
     def test_verify_install_accepts_native_upload_identity_without_managed_receipt(self):
         with TemporaryDirectory() as temp:

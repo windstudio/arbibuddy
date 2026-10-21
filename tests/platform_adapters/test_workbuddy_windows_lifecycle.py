@@ -454,7 +454,10 @@ class WorkBuddyWindowsLifecycleTests(unittest.TestCase):
                 target, "update"
             )
             rollback_skill = transaction / "previous"
+            anchor = public_path(workbuddy_trust_anchor_path(target, skill_root))
+            previous_anchor = transaction / "previous-anchor.json"
             transaction.mkdir(parents=True)
+            previous_anchor.write_bytes(anchor.read_bytes())
             platform_service._replace_workbuddy_path(skill_root, rollback_skill)
 
             recovered = reap_workbuddy_cleanup(

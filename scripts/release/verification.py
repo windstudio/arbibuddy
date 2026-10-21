@@ -9,11 +9,12 @@ from typing import Any, Mapping
 from scripts.runtime_identity import compare_runtime_identity
 from scripts.version import read_version
 
+FORMAL_PROJECT_ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_CHECKS = frozenset({"tools", "documents", "platforms", "migration", "review"})
 
 
 def release_root(source: Path) -> Path:
-    return source.expanduser().resolve() / "dist" / read_version(source)
+    return FORMAL_PROJECT_ROOT / "dist" / read_version(source)
 
 
 def validate_release_destination(source: Path, destination: Path) -> Path:

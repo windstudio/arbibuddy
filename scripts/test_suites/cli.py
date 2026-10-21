@@ -41,6 +41,10 @@ FAST_GROUPS = (
     TestGroup("scenarios", 300, pattern="test_model_led*.py"),
     TestGroup("static", 300, pattern="test_model_led*.py"),
     TestGroup("contraction", 300, test_modules=("tests.static.test_contraction",)),
+    TestGroup("skill_static_review", 300, test_modules=(
+        "tests.test_skill_static_review_regressions",
+        "tests.test_skill_static_review_completion",
+    )),
     TestGroup("test_suites", 300),
     TestGroup("network", 300, test_modules=("tests.test_network_diagnostics",)),
     TestGroup("model_led_agent_eval", 300, test_modules=(
@@ -54,6 +58,7 @@ FAST_GROUPS = (
         "tests.agent_eval.test_model_led_harness",
         "tests.agent_eval.test_model_led_journey_remediation",
         "tests.agent_eval.test_model_led_oracle_fixtures",
+        "tests.agent_eval.test_postdelivery_phone",
         "tests.agent_eval.test_scenario_responder",
         "tests.agent_eval.test_two_batch_remediation",
     )),
@@ -67,6 +72,11 @@ SLOW_GROUPS = (
     )),
     TestGroup("documents_support", 900, test_modules=(
         "tests.documents.test_delivery_set", "tests.documents.test_candidate_dependency_reuse",
+        "tests.documents.test_edit_context",
+        "tests.documents.test_render_type_contract",
+        "tests.documents.test_render_request_repair",
+        "tests.documents.test_identity_field_boundaries",
+        "tests.documents.test_confirmation_and_fact_amount_recovery",
         "tests.documents.test_document_runtime_cli", "tests.documents.test_document_runtime_vendor_paths",
         "tests.documents.test_codex_ml01_render_recovery", "tests.documents.test_public_docx_layout",
         "tests.documents.test_public_layout_feedback",

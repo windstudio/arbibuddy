@@ -8,4 +8,4 @@
 
 恢复-only回合遵守Skill的读取后停止边界。平台memory注入与自动写入是宿主诊断问题，不作为案件事实来源，也不能据此改写案件档案。
 
-实际能力不足时按 [平台能力边界](../../references/platform-capabilities.md) 说明限制并提供可保存内容；无联网不等于已核验新规。历史安装与兼容探测仅为 历史证据（原始报告私有保留，公开边界见 [验收摘要](../acceptance-summary.md)），不代表当前版本验收通过。
+实际能力不足时按 [平台能力边界](../../references/platform-capabilities.md) 说明限制并提供可保存内容；无联网不等于已核验新规。历史安装与兼容探测仅为 [历史证据](../acceptance/historical-platform-probes/)，不代表当前版本验收通过。

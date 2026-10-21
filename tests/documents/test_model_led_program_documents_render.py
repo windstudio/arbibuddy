@@ -286,8 +286,10 @@ class ModelLedProgramDocumentsRenderTests(unittest.TestCase):
                     {error["code"] for error in stale_authority["errors"]},
                 )
 
+                conflict_workspace = workspace / "revision-conflict"
+                conflict_workspace.mkdir()
                 current_archive, current_case_id, current_revision, current_confirmation_id = create_case(
-                    workspace / "revision-conflict",
+                    conflict_workspace,
                     confirmation_document_type=document_type,
                 )
                 self.assertIsNotNone(current_archive)
@@ -297,7 +299,7 @@ class ModelLedProgramDocumentsRenderTests(unittest.TestCase):
                     document_type,
                     mode="candidate",
                 )
-                conflict = DocumentRenderer(workspace / "revision-conflict").render(conflict_request)
+                conflict = DocumentRenderer(conflict_workspace).render(conflict_request)
                 self.assertFalse(conflict["ok"], conflict)
                 self.assertIn(
                     "archive_revision_conflict",

@@ -78,7 +78,7 @@ fact_pool:
   - id: initial_summary_confirmation
     max_uses: 10
     requires_sent_facts: [wage_dispute, performance_bonus, overtime, evidence]
-    message: 上述已知事实和本轮工资差额、这期季度绩效奖金、加班费三项范围基本准确，具体金额、材料及法律口径未核清的仍待核。可以继续收集和核对其他权益方向；最终补充后，再给我完整摘要确认后准备候选材料。
+    message: 上述已知事实和本轮工资差额、这期季度绩效奖金、加班费三项范围基本准确，具体金额、材料及法律口径未核清的仍待核。已明确的本轮处理范围保持不变；请继续尚未完成的范围选择或最终补充，最终补充后，再给我完整摘要确认后准备候选材料。
   - id: final_confirmation
     max_uses: 10
     message: 事实和本轮三项处理范围确认；法律时效和金额口径中没核清的仍按待核处理。请按当前档案准备仲裁申请候选稿、证据目录和提交前核对清单，暂不定稿。

@@ -71,6 +71,7 @@ class CandidateDependencyReuseTests(unittest.TestCase):
         with TemporaryDirectory() as temp:
             root = Path(temp)
             seed = root / "seed"
+            seed.mkdir()
             _, case_id, revision = self._bundle(seed)
             for record_type in ("fact", "claim", "evidence", "analysis", "calculation",
                                 "authority", "risk", "confirmation"):

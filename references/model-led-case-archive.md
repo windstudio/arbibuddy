@@ -115,6 +115,10 @@ archive.commit({
 
 ## 单问与记录分类
 
+选择本轮问题前，先复用当前会话和档案中每项原陈述的答复状态：已给出值、明确待核、暂不披露、尚未回答。已明确待核或暂不披露的事项保留原状态和补证方式，转向其他尚未回答且会改变当前交付的信息；用户主动补充、新材料或目标实质变化时，再核对受影响事项。状态由模型阅读原陈述判断，沿用唯一案情档案。
+
+用户已说明“到账金额、工时制度、奖金季度都要查，先准备带待核项的候选稿”时，这三项进入待核与补证清单；下一问推进尚未完成的权益范围选择，随后分别完成最终补充和完整摘要确认。候选稿保留金额、期间或管辖等未核事项，不猜值、不推定没有争议。若关键缺失确实使当前目标无法继续，例如外发定稿尚无必要主体或适用地区，则说明影响，选择必要的一项澄清或可行的候选降级；重复询问仍未知的同一值不能代替降级。用户提供同一事项的新值时正常更正、更新受影响判断。
+
 每轮选择一个能改变下一步判断的信息点，等待回答后再问下一个。回复前核对所有要求用户作答的句子，只保留本轮选定的信息点；“顺带确认”“有错请改”及“有的话请一并……”等条件补问也计入待答点。同一事件的是否发生、形式和时间分轮采集。工资拖欠时，可只问“涉及哪些工资月份？”；支付日期、已付金额另轮采集。地区未确认时，可只问“劳动合同实际履行地是哪里？”；单位注册地、摘要确认另轮核对。“月份、到账日期和金额分别是什么？”或“工作城市区县是否与单位注册地相同？”均包含多个信息点，即使只有一个问号也须拆开。本轮询问地区时，事实摘要只作已记录情况说明，下一轮再请求摘要确认。已知事实直接复用，不借“最后一个问题”的示例追加追问。
 
 新增或更正案情事实、主张、材料、分析、金额、依据、风险与确认分别进入对应记录类型。重复已知信息无需再次提交；仅保留候选稿、安排核对顺序或重申已明确的不代签、不代发、不上传边界，如确有保存价值，使用 `next_step`。实际改变主张范围、高风险授权、法律判断或文书字段的内容仍进入业务记录，不能放入 `next_step` 来保留旧稿。记录分类由模型判断，提交器不解释业务含义。
@@ -140,6 +144,14 @@ archive.commit({
 整理须忠实呈现原意，无法辨认处如实标注；实质删改关键内容、拼接造成误导或伪造不能因标为“节录”而被允许。提交形式及证明力按具体程序、受理机构要求和质证情况判断；未查看或核对的用户所述材料仍保留为待核线索。
 
 ## 公共结果信封
+
+### 文件边界与容量
+
+Python 公共类和 transport 共用当前工作区边界：工作区必须已存在且不位于 Skill 安装树；工作区、`.arbibuddy`、案件目录、档案及单次输入的路径组件均不得含符号链接或 junction。公共类路径检查失败返回 `invalid_workspace_path`，transport 单次输入路径失败返回 `invalid_runtime_input_path`；工作区初始化错误仍返回其公开输入失败信封。不读取、写入或消费外部文件。
+
+容量按 UTF-8 字节计：create 每个字段最多 1024 字节；单条记录最多 16 KiB；commit 整个 JSON 最多 64 KiB、最多 64 条变更；权威 Markdown 最多 128 KiB（含更新记录）。Python、`--json` 与 `--input` 共用业务预算，transport 的 2 MiB 限制只保护文件读取。超限返回 `capacity_exceeded`，本批不写入；在接近容量前通过受管 `replace` 合并冗余描述，保留必要事实、来源等级、稳定引用、确认依据及审计信息。不能自动截断事实或创建另一份精简记忆。既有超限档案返回 `archive_too_large`，不返回片段并冒充完整恢复，原件保留。
+
+安全路径内的单次 JSON 在超限、解码或读取失败后也尝试消费清理。`runtime_input_cleanup_failed`/`temporary_cleanup_failed` 表示原输入仍需受管回收；先用原 `--input` 重试，不创建新 nonce 副本、不另写临时清理脚本。档案锁等待和旧锁回收共用 10 秒预算；超时返回可恢复错误，重新读取后提交，不能手工删除锁。
 
 每次操作返回：
 
@@ -216,20 +228,54 @@ archive.commit({
 }
 ```
 
-`operation` 只能是 `append`、`replace`、`remove`；`record_type` 只能是 `fact`、`claim`、`evidence`、`analysis`、`calculation`、`authority`、`risk`、`confirmation`、`next_step`。
+每项变更都必须提供 `operation` 和 `record_type`，包括 `replace` 和 `remove`。`operation` 只能是 `append`、`replace`、`remove`；`record_type` 只能是 `fact`、`claim`、`evidence`、`analysis`、`calculation`、`authority`、`risk`、`confirmation`、`next_step`。
+
+| operation | 必填字段（除 operation、record_type） | 不提供 |
+| --- | --- | --- |
+| append | content_markdown | record_id |
+| replace | record_id、content_markdown、非空单行 reason | — |
+| remove | record_id、非空单行 reason | content_markdown |
 
 事实采集或纠正阶段的 commit 只保存本轮用户事实、证据线索、由这些事实直接产生的即时风险和一个下一步；通用风险清单不自动进入当前案件。法律时效、请求性质或救济判断应在读取对应领域参考和全国基线后再写入分析或风险记录。仅缺少具体欠薪月份时，把它记录为请求期间、金额和证据对应的待核实项；在职欠薪的时效边界按[工资、奖金与工资差额](model-led/wage-analysis.md)处理。用户没有提供企业注销、经营异常或财产转移迹象时，这些主题不进入事实、风险或下一步。
 
 - `append` 不提供 `record_id`，工具按类型生成稳定编号；
-- `replace` 必须提供现有 `record_id`、新 `content_markdown` 和 `reason`；
-- `remove` 必须提供现有 `record_id` 和 `reason`，不得提供 `content_markdown`；
+- `replace` 必须提供与原记录一致的 `record_type`、现有 `record_id`、新 `content_markdown` 和 `reason`；
+- `remove` 必须提供与原记录一致的 `record_type`、现有 `record_id` 和 `reason`，不得提供 `content_markdown`；
 - 删除仍被其他记录引用的记录会返回 `dangling_reference`；先移除或改写引用后才能删除；
-- `content_markdown` 不能破坏档案的顶层章节锚点；
+- `content_markdown` 使用段落、列表或加粗标签，不含 `#`、`##`、`###` 章节标题；档案章节与记录标题由工具生成；
 - 一个 commit 是一个 revision：整批成功或整批不写入；
 - `expected_revision` 不匹配时返回 `revision_conflict` 和 `current_revision`，不覆盖并发更新。恢复方法是重新 `read`，基于新 revision 重新生成变更；
 - 同一请求安全重放返回原提交结果，不重复记录、不再次升版；
 - 已删除记录的编号不会被后续 append 复用；
 - 提交成功后临时清理失败只返回 warning，不能把已经写入的事实报告成失败。
+
+完整局部更正示例：假设当前 revision 为 1，F-001 为用户完整主体记录、CONF-001 为真实完整摘要确认，用户仅明确更正电话且其他范围不变。实际调用保留原记录的全部未变化内容，版本按本批成功后的 revision 填写，不能把此虚构确认复制成真实授权：
+
+```json
+{
+  "case_id": "case-0123456789abcdef01234567",
+  "expected_revision": 1,
+  "change_summary": "按用户明确指示更正电话，保留原确认范围",
+  "changes": [
+    {
+      "operation": "replace",
+      "record_type": "fact",
+      "record_id": "F-001",
+      "reason": "用户明确更正联系电话",
+      "content_markdown": "事实状态：用户陈述\n姓名：张三；联系电话：13900000000。"
+    },
+    {
+      "operation": "replace",
+      "record_type": "confirmation",
+      "record_id": "CONF-001",
+      "reason": "用户仅更正电话，原事实和处理范围的确认继续适用",
+      "content_markdown": "用户自然语言确认摘要：原事实、请求和交付范围不变，用户明确更正电话。\n绑定档案修订版本：2\n关键事实：保留原已确认内容，仅电话更正。\n权益范围：保留原已选择请求。\n主要口径：保留原确认口径。\n重要假设：保留原未核事项。\n拟交付内容：仲裁申请书和证据目录。"
+    }
+  ]
+}
+```
+
+`remove` 的完整单项变更为 `{"operation":"remove","record_type":"next_step","record_id":"N-001","reason":"本项安排已完成，用户要求移除"}`；与完整 commit 外层一起使用，且原记录必须真实存在、没有悬空引用。字段缺失（例如 replace/remove 无 reason）按 `commit.changes[i].reason` 聚合报错，整批不写入；补齐后基于当前 read 结果重试。确认的业务有效性按[统一确认](rights-scan-and-unified-confirmation.md#一次自然语言确认)判断。
 
 成功的 `commit.result` 固定包含：
 

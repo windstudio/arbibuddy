@@ -1,0 +1,125 @@
+schema_version: 2
+id: ML01-postdelivery-phone-correction
+title: 仲裁材料首次交付后更正联系电话
+initial_user_message: >-
+  我叫林安（虚构当事人），身份证号码是 310000199001010000；身份证、本人签署的劳动合同和工资流水户名都能核对同一身份。我的联系电话是 13800000000，由我直接提供用于本次申请材料。我现住上海市浦东新区示例路 1 号。2025 年 3 月 1 日我入职上海样例云科有限公司（虚构单位），岗位是产品经理，月工资 12000 元；2026 年 9 月 30 日离职。公司尚未支付 2026 年 9 月工资，我目前只考虑主张该月工资 12000 元。工资条列明应发 12000 元，银行流水截至 2026 年 10 月 15 日未见该笔工资，公司工作群也说仍在核算。现有材料包括身份证、劳动合同、2026 年 9 月工资条、银行流水、离职证明及工作群记录。单位送达地址是上海市浦东新区示例路 88 号，法定代表人姓名还不知道。请帮我整理劳动争议并看看是否遗漏其他可处理事项，问我是否扩大本轮范围、是否还有事实材料补充，再给我事实摘要确认。确认后，准备劳动仲裁申请书和证据目录候选稿及核对清单，不要代我提交。
+initial_fact_ids:
+  - core_case_facts
+  - candidate_request
+simulator:
+  persona: 虚构劳动争议中的当事人
+  objective: >-
+    只依据当前 Scenario 事实回答模型 A。A 询问是否增加权益事项时选择 rights_scan_scope；询问是否还有事实或材料要补充时选择 final_supplement_none。只有 rights_scan_scope 和 final_supplement_none 都在更早轮次送达、且 A 概述身份、联系电话、2026 年 9 月工资未付 12000 元及本轮工资请求范围并请求最终确认时，才选择 final_confirmation。首轮两份候选文书通过公开产物检查和受管查看后，下一轮必须选择 phone_correction 一次。未观察到有效首轮交付时不得发送电话更正卡；不要把电话更正升级为其他身份或事实变化。无法匹配的问题只答已声明事实或未知，不编造。
+  max_facts_per_turn: 2
+  unavailable_message: 这个具体信息我现在没有核实，请先保留为待核项。
+  max_unavailable_uses: null
+  confirmation_fact_id: final_confirmation
+  confirmation_prerequisite_fact_ids:
+    - core_case_facts
+    - rights_scan_scope
+    - final_supplement_none
+  confirmation_summary_required_groups:
+    identity:
+      - 林安
+      - 身份证号码
+      - 劳动合同
+    contact_phone:
+      - "13800000000"
+      - 联系电话
+    wage_claim:
+      - 2026 年 9 月
+      - 12000 元
+    scope:
+      - 工资差额
+      - 本轮
+  prompt_version: scenario-responder-prompt-v16
+  schema_version: scenario-responder-schema-v4
+fact_pool:
+  - id: core_case_facts
+    max_uses: 5
+    message: 我叫林安，身份证号码是 310000199001010000；我的联系电话是 13800000000，由我直接提供用于本次申请材料。我现住上海市浦东新区示例路 1 号。2025 年 3 月 1 日入职上海样例云科有限公司，2026 年 9 月 30 日离职，产品经理，月工资 12000 元。公司尚未支付 2026 年 9 月工资，工资条列应发 12000 元，银行流水截至 2026 年 10 月 15 日没有该笔工资。材料有身份证、劳动合同、工资条、流水、离职证明和工作群记录；单位地址为上海市浦东新区示例路 88 号，法定代表人姓名未知。
+  - id: candidate_request
+    max_uses: 1
+    message: 事实摘要确认后，请基于已提供材料准备劳动仲裁申请书和证据目录候选稿及核对清单，不要代我提交。
+  - id: rights_scan_scope
+    max_uses: 1
+    message: 这次只处理 2026 年 9 月工资差额；权益扫描提到的其他方向暂不纳入，之后发现新材料再决定是否增加。
+  - id: final_supplement_none
+    max_uses: 1
+    message: 目前没有其他事实或材料要补充；法定代表人姓名仍待核，其他没有说清的地方也保留待核。
+  - id: final_confirmation
+    max_uses: 10
+    requires_sent_facts:
+      - core_case_facts
+      - rights_scan_scope
+      - final_supplement_none
+    message: 确认，身份、我直接提供的联系电话、2026 年 9 月工资未付 12000 元及本轮只处理工资差额的摘要准确。法定代表人姓名仍待核。请按该范围准备申请书和证据目录候选稿及核对清单，不要代我提交。
+  - id: phone_correction
+    max_uses: 1
+    requires_sent_facts:
+      - candidate_request
+      - final_confirmation
+    message: 请将申请书中的联系电话从 13800000000 更正为 13900000000。姓名、身份证信息、联系地址、单位、欠薪事实、12000 元请求和证据目录都保持不变；请只改申请人联系电话，并重新生成完整候选交付。
+milestones:
+  - id: candidate_delivery_claimed
+    response_any:
+      - 劳动人事争议仲裁申请书
+      - 证据目录
+      - 核对清单
+expect:
+  required_artifacts:
+    - case_archive
+    - docx
+    - checklist
+  required_deliveries:
+    - document_type: arbitration_application
+      mode: candidate
+      require_case_archive: true
+      require_checklist: true
+      require_same_case_id: true
+      require_current_archive_revision: true
+    - document_type: evidence_catalog
+      mode: candidate
+      require_case_archive: true
+      require_checklist: true
+      require_same_case_id: true
+      require_current_archive_revision: true
+  allow_extra_deliveries: false
+  min_turns: 2
+  max_turns: 6
+  allow_degraded_delivery: false
+  response_markers:
+    delivery:
+      - 候选稿
+      - 证据目录
+      - 核对清单
+    phone_correction:
+      - "13900000000"
+      - 联系电话
+  completion_paths:
+    - id: postdelivery_phone_corrected
+      requires_sent_facts:
+        - phone_correction
+      required_artifacts:
+        - case_archive
+        - docx
+        - checklist
+      required_deliveries:
+        - document_type: arbitration_application
+          mode: candidate
+          require_case_archive: true
+          require_checklist: true
+          require_same_case_id: true
+          require_current_archive_revision: true
+        - document_type: evidence_catalog
+          mode: candidate
+          require_case_archive: true
+          require_checklist: true
+          require_same_case_id: true
+          require_current_archive_revision: true
+      required_response_groups_after_trigger:
+        - phone_correction
+  postdelivery_phone_correction:
+    fact_id: phone_correction
+    old_phone: "13800000000"
+    new_phone: "13900000000"

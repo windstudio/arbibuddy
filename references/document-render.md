@@ -26,39 +26,83 @@ Codex、Claude Code、WorkBuddy 均从当前安装 Skill 根目录通过同一�
 
 ```text
 python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" describe
+python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" describe --operation delivery-set
+python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" describe --operation render
 python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" runtime-check
-python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" delivery-set --input "<workspace_root>/.arbibuddy/runtime-input/<nonce>.json"
-python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" render --input "<workspace_root>/.arbibuddy/runtime-input/<nonce>.json"
-python -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" view --json '{"case_id":"<case_id>","delivery_set_id":"<delivery_set_id>"}'
+"<document_python>" -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" delivery-set --input "<workspace_root>/.arbibuddy/runtime-input/<nonce>.json"
+"<document_python>" -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" render --input "<workspace_root>/.arbibuddy/runtime-input/<nonce>.json"
+"<document_python>" -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" view --json '{"case_id":"<case_id>","delivery_set_id":"<delivery_set_id>"}'
+"<document_python>" -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" edit-context --json '{"case_id":"<case_id>"}'
 ```
 
 按 `delivery-set → 各成员 render → view` 完成本轮工具调用；全部 render 成功后直接调用上述 `view`，再处理宿主附件展示。`view` 返回受管完整列表后，宿主存在 `present_files` 时原样传给一次该工具；宿主没有附件工具时，说明文件已生成及受管交付状态，逐个提供列表内文件的完整绝对路径或可打开的文件链接，保留完整工作区前缀和文件名，不用省略号、目录树片段或仅文件名代替。明确宿主附件展示尚未验证；不能把没有展示通道说成没有生成文件。文书生成、受管交付与宿主展示分别按实际回执报告。
 
-首次建立文书集合前执行一次 `runtime-check`。这是 `document.runtime-check-v1` 只读准备操作：先核对安装身份，再实测当前解释器的文书依赖；当前环境不可用且Skill位于WorkBuddy安装根时，按顺序检查该根下已有的 `arbibuddy`、`default` 受管环境。成功回执的 `result.python_executable` 是后续 `delivery-set`、`render`、`view` 使用的解释器；当前解释器已经可用时直接复用。解释器或安装发生变化后重新检查。同一已检查环境失败时按原业务错误处理，不重复枚举环境或猜测wheel目录。
+首次建立文书集合前执行一次 `runtime-check`。这是 `document.runtime-check-v1` 只读准备操作：先核对安装身份，再实测当前解释器的文书依赖；当前环境不可用且Skill位于WorkBuddy安装根时，按顺序检查该根下已有的 `arbibuddy`、`default` 受管环境。成功后把 `result.python_executable` 作为本轮 `<document_python>`，替换此前命令里的解释器，后续 `delivery-set`、`render`、`view` 都使用同一个值。例如回执选择受管环境时，不再调用先前的基础Python。解释器或安装发生变化后重新检查；业务输入错误按原契约修正，环境不变时沿用已成功的选择。
+
+```text
+cd "<installed_skill_root>" && "<document_python>" -B -X utf8 -m scripts.documents.runtime_cli --workspace "<workspace_root>" render --input "<workspace_root>/.arbibuddy/runtime-input/<nonce>.json"
+```
+
+宿主工具支持 `workdir` 时，将它设为此前成功调用的完整已安装 Skill 根目录，原样复用；它与 `--workspace` 的案件工作区、`<document_python>` 的解释器路径分别保存。不要从工作区重新拼接 `.agents/skills/arbibuddy`，也不要截掉嵌套目录。后续更正沿用同一组已成功的值。若宿主明确报目录无效且进程未启动（如 Windows `os error 267`），原输入尚未消费，使用已知正确的完整 `workdir` 重试原命令；不因此重新提交档案或重建集合。
 
 没有可用环境时，回执返回 `next_action=prepare_document_environment` 和 `requirements_file`；说明尚未生成DOCX，并请用户先完成环境准备。用户可在选定Python的环境中安装该requirements文件所列依赖，再重试检查。此操作不安装依赖、不创建虚拟环境、不读取案件或创建交付文件；随包vendor继续按清单校验，vendor失败不回退宿主依赖。内部路径和检查细节只用于工具调用，对用户只说明文书能力是否可用及所需准备。
 
-`--input` 只接受 `.arbibuddy/runtime-input/` 的直接 JSON 子文件；transport 在解析业务请求前先消费并删除该文件，删除失败则不执行文书操作。它不改变 `document.delivery-set-v1` 或 `document.render-v1` 的业务信封。短请求也可用 `--json`。`view` 是只读受管出口，只有集合完整且 `delivery_set_id` 一致才返回展示列表；失败或集合不完整时文件列表为空。运行结束后不得留下 `runtime-input` 文件，也不得建立 `render-requests`、工作区根 JSON 或其他事实副本。字段和示例只读本参考与 `describe` 结果，不读取、反射或搜索 `scripts/*.py`。
+`--input` 只接受 `.arbibuddy/runtime-input/` 的直接 JSON 子文件；transport 在解析业务请求前先消费并删除该文件，删除失败则不执行文书操作。成功或业务失败后，该输入都已消费；修正请求或更换解释器重试时，先用宿主 `Write` 写入完整的单次JSON，再调用transport，不直接重跑旧 `--input` 路径。它不改变 `document.delivery-set-v1` 或 `document.render-v1` 的业务信封。短请求也可用 `--json`。`view` 是只读受管出口，只有集合完整且 `delivery_set_id` 一致才返回展示列表；失败或集合不完整时文件列表为空。运行结束后不得留下 `runtime-input` 文件，也不得建立 `render-requests`、工作区根 JSON 或其他事实副本。字段和示例只读本参考与 `describe` 结果，不读取、反射或搜索 `scripts/*.py`。
 
 若 render 已成功而 view 返回 `next_action=retry_managed_view_with_access`，保留现有 DOCX、清单和机器交付清单；先在同一工作区按已获授权的文件访问权限重试一次原 view 请求。读取仍失败时如实报告候选文件已生成但受管交付尚未验证，停止展示；无需重新 render 或改动档案 revision。
 
 完整文书正文和核验清单只放在单次 `render` 输入中；案情档案只保存必要的持久化分析摘要、事实变化和下一步，不重复存储整篇正文或清单。先完成会改变档案 revision 的提交，再创建绑定最终 revision 的 delivery set，避免中途改档案后重复建 set。每个 render 请求使用单次 `runtime-input` 文件；transport 会消费并删除它。
 
-WorkBuddy 推荐以已安装 Skill 根目录为 cwd，通过 Bash 执行每一条精确 transport；PowerShell
-不是公共业务 transport 的推荐入口，不得用分号、管道、重定向、输出文件或串联清理命令包裹
-`delivery-set`、`render` 或 `view`。若随包 `runtime-manifest.json` 的 ABI 与当前解释器不一致，
+WorkBuddy 以已安装 Skill 根目录为 cwd，通过 Bash 原样执行每条 transport，完整读取公开 JSON 的 `ok`、`result`、`errors` 和 `warnings` 后决定下一步；对用户的摘要在回复时组织。沿用单条公开操作，不用 `head -c` 等管道或重定向裁剪 `describe`、`edit-context`、`delivery-set`、`render`、`view` 的回执，管道末端退出0不能证明业务成功。宿主转存大结果时继续读取该次完整结果；回执仍缺失或截断时说明结果尚不能确认，按公开恢复契约处理。具体错误按本参考的恢复规则集中修正。
+
+若随包 `runtime-manifest.json` 的 ABI 与当前解释器不一致，
 `runtime_cli` 会在加载文书业务模块前，只从当前用户 `.workbuddy\\binaries\\python\\envs\\` 下按
 `arbibuddy`、`default` 顺序探测受管 Python，使用 `-S` 验证实际 ABI/platform 后最多自举一次，
 并以原始参数和退出码重新执行；不存在、路径越界、ABI 不匹配或循环自举时保持稳定的
 `document_runtime_unavailable`，不联网、不 pip、不建 venv，也不使用宿主 site-packages。
 
-`document.delivery-set-v1.requested_templates` 可以直接使用下文列出的 `document_type` 值；仲裁申请书需要配套证据目录时也可使用 `labor-arbitration-application`，由工具规范化为两份文书。
+字段尚不明确时使用 `describe --operation delivery-set|render|view|edit-context` 读取对应完整契约；无参数 `describe` 保留兼容的完整渲染描述。无需通过截取输出查字段。
+
+`document.delivery-set-v1` 只接受 `case_id`、`archive_revision`、`mode`、`confirmation_refs` 以及二选一的 `requested_templates` / `requested_document_types`。两个选择字段均接受文书类型或注册别名，不能同时提供；`authority_refs` 属于 render，不放入集合请求。选择 `arbitration_application` 或 `labor-arbitration-application` 都自动包含 `evidence_catalog`，以成功回执的 `expected_document_types` 为准，顺序生成全部成员；不再另建“仅申请书”集合。
+
+最小候选集合请求（须已有真实摘要确认及相应档案）：
+
+```json
+{"case_id":"case-0123456789abcdef01234567","archive_revision":1,"mode":"candidate","requested_templates":["labor-arbitration-application"],"confirmation_refs":[]}
+```
+
+### 起草前准备
+
+在写长正文前，模型完成本次交付的来源准备：
+
+需要字段说明时，用 `describe --operation render --document-type <document_type>` 取得共享字段、该类型必需区块、candidate / external_final 条件和可执行虚构示例；已掌握契约时不增加调用。`--document-type` 仅与 `--operation render` 配合，使用上文完整文书类型名；不带筛选仍保留原完整契约。render 请求通常省略 `title`，工具按文书类型派生注册标题，并由 `mode` 统一添加候选标识；显式提供的 title 仍须与注册标题相同，标题来源绑定继续使用该注册标题。`examples.worked_example` 连贯展示 create、合批 commit、set、各成员 render、view，申请书示例包含配套证据目录；其身份、事实、计算和确认只供虚构演示，不得复制到真实案件。
+
+1. 确定文书类型、成熟度及必要主体、主张、金额、日期、落款与证据来源；已有档案信息直接复用。主体与落款引用记录须以“姓名/单位名称/角色：完整身份”字段支持完整值，不能靠更长姓名的子串或自由叙述支持。已有来源只用叙述时，在同一事实记录中补充明确字段，保留原陈述、来源与事实等级，不推断身份、不提升确认状态；与其他必要变化合批落档。先按下一节补齐尚缺的摘要确认，再依据已确认口径调用必要计算。
+2. 请求分项及正文合计分别取成功计算结果；合同工资标准等原始事实金额按下文 `fact_amount` 绑定，不为一个已知数额补做恒等算术。按[金额 transport](amount-calculate.md#公共金额工具)优先用安全可表达的短 `--json` 请求，逐项取得成功结果；存在真实依赖时先取得前项结果再构造后项，不把预填常量冒充工具结果。落档后以成功回执分配的 CAL 编号逐项核对“项目、结果、引用”，不按计算调用顺序猜编号；计算记录保留结果标签。标题引用含同一标题的记录；主张锁定值使用 `CL-*` 已支持的短语，例如“支付拖欠工资”，完整请求句由模型另外起草。
+3. 同一轮准备正文、来源和绑定：新建或确需整理来源时，完整身份优先单独成行（例如 `申请人：张三`），电话、证件与括号说明另行。已有来源包含完整姓名/单位名称或对应角色字段时直接复用；除了换行、分号、逗号，明确字段之间的中文句号也可使用，例如 `申请人：张三。身份证号码：……`，下一字段枚举见 describe 的 `party_source_field_boundaries`。不为这种格式差异改档案或升版；姓名与单位全称逐字匹配，来源括注、主体不明或引用错误仍按来源核对处理。主张绑定使用来源中实际存在的原样短语，不为匹配而新增请求。文书标题作为模型的排版准备信息记录，注明并非新增用户陈述。逐处从最终正文复制金额、完整日期和签名的原样单行片段作为 `occurrences`；同一来源、同一含义的数值重复出现时在同一绑定中列全，每个定位片段在对应区块内唯一。金额片段只含当前绑定的金额；同一行有多个金额时，分别取各自唯一的原样短语，不将整行同时用作多个金额的定位。计算结果用 CAL，原始事实金额用 F / fact_amount；数值相同但业务含义不同的事实与计算结果分别绑定，不能按数值合并。申请书公开示例展示同一工资事实两处定位、已付事实金额与请求结果分别绑定。正文保留必要事实和请求结论，公式展开与重复核算说明优先放独立核验清单；正文保留的每处金额仍须完整绑定，不为规避定位而删减必要事实。
+4. 集合含证据目录时，先准备全部目录行，再核对各行“证据名称｜证据内容｜证明目的”与对应 `E-*` 来源。分组证据记录可以支持多行，名称的展开和证明目的仍需有该记录及已知材料依据；必要整理与其他来源一并提交，保留“用户陈述持有、尚未查看、证明力待核”等事实等级，不把拟证明内容写成已证实事实。不要先生成申请书，再为配套目录补来源而使整套升版返工。
+5. 本次必要分析、计算、整个集合的交付来源与真实确认记录按[统一确认](rights-scan-and-unified-confirmation.md#一次自然语言确认)合批落档，以成功回执的最终 revision 建立完整集合，再提交已准备的正文和绑定。文字、数值展示或定位问题只修正输入，无事实与口径变化时不再改档案。一次返回的全部错误集中修正，不逐错试渲染；真实新事实、并发或必要确认仍按对应恢复处理。
+
+正文和锁定要素由模型组织，工具不生成法律叙事、不推断确认范围。已有参考和 `describe` 已提供所需字段时直接使用；出现新的字段问题再按返回的聚合错误查对应契约，不重复读取整个契约或枚举源码。
+
+正常首次交付在准备齐全后集中一次 commit、一次 delivery-set、每成员一次 render，再 view 和展示；出现真实新事实或门禁错误才走对应恢复。起草时同时核对主体与落款完整角色、证据名称和正文每处日期/金额定位，沿用下文绑定契约，避免用试渲染代替来源准备。
+
+### 按错误范围修复
+
+一次处理回执的全部错误，先查看 `path`、`reason` 与 `repair_scope`：
+
+| repair_scope | 修复动作 |
+| --- | --- |
+| request_only | 标题、正文或定位参数问题只修改本次请求；档案与集合未变化时复用当前 revision、delivery_set_id 重试。原文中的两处日期分别截取各自唯一短语即可，无需改写事实或为了定位而拆开自然段。 |
+| review_source | 核对引用的当前档案记录与锁定值。引用错或值填错只改请求；确需补充或纠正档案来源时，合批必要变化，再以新 revision 重建完整集合。主体仍须满足完整身份字段校验。 |
+
+`reason` 将区块不存在、片段未出现、片段重复、含多个日期/金额、缺少完整值、值不符、数值截断或重复归属分别定位。只修请求不新增档案记录、确认或集合；若同时有来源、版本、确认等其他错误，先处理这些依赖，不能凭某一项 request_only 绕过其余校验。无实质事实变化时复用已有用户确认，必要的档案格式修正仍遵守原确认范围与版本规则。
 
 ### 起草前确认
 
 起草前先按[权益扫描、最终补充与统一确认](rights-scan-and-unified-confirmation.md)核对当前已完成的对话步骤，只补尚未完成的一步并等待答复。该路由适用于普通 candidate，包括被迫解除通知书；“理解风险、先要草稿、不发送”是草稿授权，不替代当前完整摘要确认。已有步骤和未变化的确认直接复用，候选稿无需用户确认实施解除或外发。仲裁申请书的候选稿同样要在权益范围选择、最终开放式补充和当前完整摘要的自然语言确认之后准备。
 
-`delivery-set` 对仲裁申请书的机械检查只核对当前案件档案中是否存在绑定档案修订版本的确认记录，不要求确认记录使用固定列表或五项字段标签；唯一机器可读字段是独立一行 `绑定档案修订版本：<提交后的纯数字版本号>`，写法见上述统一确认参考。其他候选能通过 set 不表示对话确认已完成。确认是否真实、摘要是否完整仍由模型依据用户原话判断；未完成时回到该参考的当前步骤，不补写或猜测确认记录，也不改用单份 render 绕过受管集合。若返回 `confirmation_revision_unreadable`，先核对原确认记录的绑定字段，再向用户如实说明交付受阻，不用重复调用掩盖记录格式错误。用户要求申请书及配套证据目录时，集合创建失败后不得改建只有证据目录的集合来声称本轮已交付；应如实说明整包未完成。候选稿允许缺项占位，和上述对话顺序是两回事。
+`delivery-set` 提前核对所有显式 `confirmation_refs`：记录存在、字段可解析、版本等于当前档案，与 `render` 使用同一检查；高风险文书的candidate集合沿用其候选降级契约，确认过期只返回warning，不能因此外发。仲裁申请书还要求档案已有普通摘要确认；`candidate` 空引用允许使用不晚于当前版本的统一确认，`external_final` 要求其中有当前版本确认。唯一机器可读字段是独立一行 `绑定档案修订版本：<提交后的纯数字版本号>`，常见加粗与列表可解析，冲突或不明确值拒绝。确认是否真实、摘要是否完整由模型依据用户原话判断；其他候选能通过 set 不代表对话确认已完成。未完成时补当前缺失步骤，不猜测确认，不绕过完整集合。返回 `confirmation_revision_unreadable` 或 `confirmation_stale` 时按统一确认参考区分格式修复、原确认范围内补录和实质变化，一次合批处理后再建集合；不自动续期或靠改数字伪造授权。申请书及配套证据目录的集合失败时，整包尚未完成。
 
 普通 `candidate` 不因用户已做事实、范围或口径的统一确认就自动填写
 `confirmation_refs`，也不得为了让 renderer 通过而新建、改写或猜测确认记录。除下文明确
@@ -66,6 +110,10 @@ WorkBuddy 推荐以已安装 Skill 根目录为 cwd，通过 Bash 执行每一�
 确认参考中的公开字段一次写对，不能读取 canonical Markdown 或用内联脚本探测格式。
 
 普通候选的 delivery-set 请求和每一份 render 请求都明确写 `"confirmation_refs": []`。两者必须一致；若错误地把普通统一确认写入 set 而导致成员不匹配，按当前档案重新建立空引用的完整 set，再为其全部成员 render。修正请求即可，沿用真实的摘要确认记录，不增写确认或让用户重新确认已未变化的事实。
+
+## 局部更正与改稿
+
+修改已交付文书时先读[改稿短指南](document-edit.md)，在改档案前取得可信原稿。局部更正、压缩后接续、旧稿失效及外部改写的流程以该指南为唯一说明。
 
 ## 候选稿复用与更新
 
@@ -137,12 +185,14 @@ view 成功时可保留原候选，内部回执另列 `current_archive_revision`
 
 `locked_bindings.kind` 可取 `party`、`claim`、`amount`、`fact_amount`、`date`、`document_heading`、`signature`、`evidence` 或 `attachment`。`archive_record_ref` 只能引用当前档案中已有记录；计算金额用 `amount` 引用 `CAL-*`，主张引用 `CL-*`，证据引用 `E-*`。`rendered_value` 是要显示给用户的完整值，工具只核对它与引用记录一致，不把档案记录标识写进正式文书。
 
-候选仲裁申请书的“事实与理由”、催告函的“劳动关系说明”、解除通知书的“解除理由”可用 `fact_amount` 引用含同一数值的 `F-*`，保留用户陈述的合同工资标准等事实金额，并如实标明来源及未核要素；例如 `{ "kind": "fact_amount", "archive_record_ref": "F-001", "rendered_value": "15000元", "occurrences": [{ "section_id": "grounds", "text": "据本人陈述，约定月薪15000元" }] }`。这不是计算结果，只限 candidate 的上述事实区块；请求、结算、计算结果及 external_final 仍使用 `amount` / `CAL-*`。
+仲裁申请书的“事实与理由”、催告函的“劳动关系说明”、解除通知书的“解除理由”和证据目录的“五列表格/证据列表/证据目录表格”可用 `fact_amount` 引用含同一数值的 `F-*`，保留合同工资标准等原始事实金额，并如实标明来源；例如 `{ "kind": "fact_amount", "archive_record_ref": "F-001", "rendered_value": "15000元", "occurrences": [{ "section_id": "grounds", "text": "据本人陈述，约定月薪15000元" }] }`。candidate 可保留待核陈述，external_final 仍须以已确认的当前事实为依据，不能使用分析假设或未确认事实。`fact_amount` 不作为算术结果，也不能进入请求、履行、结算或赔偿金额区块；所有计算结果（含基数平均值、分项和合计）使用 `amount` / `CAL-*`，即使在事实区块或证据说明中出现也沿用该计算来源。模型按金额的业务含义选来源，不为避免报错改写事实或把计算结果转存 `F-*`。
 
 金额与日期使用显式正文定位，不能靠全篇数字搜索判断其业务归属：
 
+正文货币值使用完整半角阿拉伯数字加“元/圆”；万元/亿元、人民币/RMB/CNY/¥ 前缀和中文金额须由模型先改为明确元值，再与计算来源逐处绑定。繁体、口语或全角写法（如“壹萬圓整”“一万块钱”“６０００元”）以及元后的角分、整/正后缀同样返回可定位的 `binding_mismatch`，先规范表达再重建绑定。这些表达不会被当作“没有金额”放行，也不由 renderer 猜测换算或改写正文。主体与落款绑定使用“角色：完整姓名/单位全称”；external_final 必须在正文存在可校验的对应标签，各处同标签身份精确一致。申请人、被申请人、答辩人、被答辩人、执行主体和收件人专用章节须各自包含完整身份绑定，不能仅用其他章节或落款替代主体位置。劳动者可对应“通知人”，用人单位可对应“收件人/致”；其他身份信息另列字段，不能作为任意姓名后缀。
+
 - `occurrences` 为非空对象数组，每项只有 `section_id` 和 `text`，均为非空单行字符串。`section_id` 引用本请求正文区块；`text` 从该区块原样复制，是在该区块恰好出现一次、包含完整金额、日期或签署角色与姓名的短片段，不填写字符偏移或内部编号。
-- 一个金额在正文中多次出现时，逐处列出定位。每个正文货币金额只能归属一个金额绑定；候选事实金额按上述 `fact_amount` 处理，不同计算主张、基数、已付额和合计各自绑定对应计算记录，不要求全篇金额相等。金额定位必须覆盖完整数字，不能把 `6000.00元` 当成 `16000.00元` 的一部分。
+- 一个金额在正文中多次出现时，逐处列出定位。每个正文货币金额只能归属一个金额绑定；原始事实金额按上述 `fact_amount` 处理，不同计算主张、计算所得基数和合计各自绑定对应计算记录，不要求全篇金额相等。金额定位必须覆盖完整数字，不能把 `6000.00元` 当成 `16000.00元` 的一部分。
 - 每个 `CAL-*` 记录须有且仅有一个明确的最终结果标签，形式为 `确定性计算结果：6000.00元`（允许在标签前加“工资差额”等语义名称），并保留公式、输入及工具来源说明。若一次计算有多个分项/合计，分别提交结果记录；渲染器只核对该标签后的结果，不从基数、期间或中间步骤寻找相同数字。
 - 日期允许 `2026年9月7日` 和 `2026-09-07` 两种等值形式，且必须是有效日历日期。`external_final` 正文各区块中的每个完整中文或 ISO 日期都必须通过 occurrence 单独定位，并由所引用的档案记录支持；同一日期在同一区块或不同区块重复出现时，每处都要单独绑定。不能把历史日期当作自动豁免项。落款日期仍须单独绑定。
 - 除证据目录外，`external_final` 必须至少绑定一名签署人；`rendered_value` 必须包含完整角色与姓名，且该完整值必须在实际落款区块中出现，并由 occurrence 精确定位。仅出现相同姓名、但角色不同，不构成签名匹配。催告函将末区块中的签署信息作为落款。只有绑定对象、正文没有相应落款，不能定稿。生成器返回错误，由模型补正文，不替模型补写。
@@ -259,6 +309,8 @@ candidate 可以缺少尚未取得的隐私字段或其他锁定要素，但必�
 
 ## 聚合错误与恢复
 
+单次 JSON 输入沿用[档案文件边界与失败清理](model-led-case-archive.md#文件边界与容量)。发布失败后，受管事务确认旧稿已回滚、或 canonical 完整且没有未决备份时，可接收重读档案后重建的新请求；回滚本身中断且 canonical 缺失时，受管事务先核验旧备份与旧事务的身份、完整性及案件归属，再原子恢复旧稿并继续新请求。未证明完整恢复时继续返回 `publication_conflict`，保留唯一旧稿。已提交备份只在核验新 canonical、原备份和事务身份后归为非 canonical；同请求重放会再次受管回收，清理失败是 warning，不反转已成功的新稿，也不把备份作为正式交付成员。
+
 所有可发现错误尽量一次返回，每项错误必须包含 `code`、准确 `path`、`message`、`expected`、`received` 和 `recoverable`。核心错误至少包括：
 
 `unsupported_document_type`、`template_version_mismatch`、`archive_revision_conflict`、`missing_section`、`binding_not_found`、`binding_mismatch`、`document_type_conflict`、`undeclared_placeholder`、`placeholder_in_final`、`confirmation_missing`、`confirmation_stale`、`authority_required`、`authority_stale`、`internal_content_leak`、`ooxml_invalid`、`publication_conflict`、`permission_denied` 和 `io_failure`。
@@ -300,7 +352,7 @@ candidate 可以缺少尚未取得的隐私字段或其他锁定要素，但必�
 }
 ```
 
-遇到隐私缺失，模型在 candidate 中声明占位符并交付候选，补齐信息、重新读取档案、取得必要确认后重新调用；遇到绑定冲突或事实冲突，模型不得自行改值，必须回到档案和计算结果；遇到 `archive_revision_conflict`、`confirmation_stale` 或 external_final 的 `authority_stale`，必须先 `CaseArchive.read` 当前档案再重建请求。动态现行规则核验受阻、程序阶段待核实或高风险确认过期时，三类程序文书的 candidate 可以保留为候选并返回可恢复 warning，但不得把它标为 `final_ready`。任何错误都不发布半成品。
+遇到隐私缺失，模型在 candidate 中声明占位符并交付候选，补齐信息、重新读取档案、取得必要确认后重新调用；遇到绑定冲突或事实冲突，模型核对档案和成功计算结果，不自行改值。一次处理回执中所有错误：正文内容正确而只缺引用或定位时沿用原正文、修正绑定，不重做计算、不改档案；只有事实、结果来源或确认内容确实需改时才合批提交，再建集合。遇到 `archive_revision_conflict`、`confirmation_stale` 或 external_final 的 `authority_stale`，先 `CaseArchive.read` 当前档案再重建请求。动态现行规则核验受阻、程序阶段待核实或高风险确认过期时，三类程序文书的 candidate 可以保留为候选并返回可恢复 warning，但不得把它标为 `final_ready`。任何错误都不发布半成品。
 
 恢复示例：
 
@@ -314,6 +366,6 @@ candidate 可以缺少尚未取得的隐私字段或其他锁定要素，但必�
 
 `installed_skill_modified` 表示安装树或其身份链校验失败；返回 `recoverable=false`，在预检阶段停止且不创建 staging 或 canonical 文件。若错误回显 `native_upload_marker_missing`、`native_upload_marker_stale` 或 `native_upload_vendor_runtime_*`，说明是 WorkBuddy 原生上传的便携标记或随包运行时问题，应重新上传已验签 ZIP 并完全重启客户端；原生上传不生成、也不需要 `arbibuddy.install.json`。若错误回显 `external_trust_anchor_*` 或 `install_receipt_*`，说明是本地受管安装的外部信任锚/回执问题，应重新执行受管安装或更新；不得把这两条恢复路径混用。`document_runtime_unavailable` 表示当前解释器与随包 WorkBuddy 文书运行时不匹配、vendor 摘要不一致或 DOCX 依赖不可导入；返回 `recoverable=false`，明确“未生成 DOCX”，只能重新安装兼容包或更换已支持环境后重试，不得运行期 pip、创建虚拟环境或临时脚本。
 
-`ooxml_invalid`、`permission_denied` 和 `io_failure` 表示其他运行环境或文件事务边界，说明本次新的 Word 未成功交付。覆盖被拒绝时保留原 DOCX、独立核验清单和机器清单；先关闭 Word/WPS 及文件预览中占用的目标文件，再按同一公开生成请求重试。旧产物及事务锁由受管事务维护，不删除、移走或手工拼装旧产物，也不手工清除档案锁或交付锁来绕过拒绝。关闭占用后同一受管请求仍失败时，停止生成并回报限制，不用临时脚本试删旧稿、诊断进程或重建已消费的请求文件；不能因锁内进程号仍存在或删除成功就断言锁已过期、没有占用或旧稿无损。需要保留故障经验时只记录错误现象和受管恢复路径，清单的“请勿外发”等提醒原样保留；案件记忆的来源边界见[案情档案参考](model-led-case-archive.md)。
+`ooxml_invalid`、`permission_denied` 和 `io_failure` 表示其他运行环境或文件事务边界，说明本次新的 Word 未成功交付。覆盖被拒绝时保留原 DOCX、独立核验清单和机器清单；先关闭 Word/WPS 及文件预览中占用的目标文件，再通过宿主 `Write` 重写已消费的单次输入，按同一公开生成请求重试。旧产物及事务锁由受管事务维护，不删除、移走或手工拼装旧产物，也不手工清除档案锁或交付锁来绕过拒绝。关闭占用后同一受管请求仍失败时，停止生成并回报限制，不用临时脚本试删旧稿或诊断进程；不能因锁内进程号仍存在或删除成功就断言锁已过期、没有占用或旧稿无损。需要保留故障经验时只记录错误现象和受管恢复路径，清单的“请勿外发”等提醒原样保留；案件记忆的来源边界见[案情档案参考](model-led-case-archive.md)。
 
 工具不引入 LibreOffice、Poppler 或视觉模型作为运行时依赖；模型不得调用宿主通用 documents 技能、`load_workspace_dependencies` 或 `render_docx.py`，也不得在 canonical `output` 目录创建 PDF、PNG、QA 子目录或其他旁路文件。提交或发送前，用户仍须在 Word/WPS 中预览字体、层级、间距、分页、表格、金额和落款。

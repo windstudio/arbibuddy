@@ -59,7 +59,9 @@ class PublicLayoutFeedbackTests(unittest.TestCase):
                 request = demand_request(case_id, revision, mode=mode)
                 request['sections'][-1]['full_text'] = request['sections'][-1]['full_text'].replace('通知人：张三', '催告人：张三')
                 for binding in request['locked_bindings']:
-                    if binding['kind'] == 'signature':
+                    if binding['kind'] == 'party' and binding['rendered_value'] == '劳动者：张三':
+                        binding['rendered_value'] = '催告人：张三'
+                    elif binding['kind'] == 'signature':
                         binding['rendered_value'] = '催告人：张三'
                 result = render(with_occurrence_bindings(request), workspace)
                 self.assertTrue(result['ok'], result)

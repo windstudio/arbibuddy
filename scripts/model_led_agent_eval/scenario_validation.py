@@ -77,6 +77,7 @@ class ScenarioResponseRequest:
     prompt_version: str = "scenario-responder-prompt-v5"
     schema_version: str = "scenario-responder-schema-v3"
     turn: int = 0
+    public_delivery_observation: Mapping[str, object] | None = None
 
     def prompt_payload(self) -> dict[str, object]:
         """返回仅包含公开 Scenario 输入的 JSON 兼容载荷。"""
@@ -137,6 +138,8 @@ class ScenarioResponseRequest:
             }
         if self.required_next_fact_id is not None:
             payload["required_next_fact_id"] = self.required_next_fact_id
+        if self.public_delivery_observation is not None:
+            payload["public_delivery_observation"] = dict(self.public_delivery_observation)
         return payload
 
 

@@ -721,7 +721,7 @@ class WorkBuddyClientAcceptanceTests(unittest.TestCase):
 
                 self.assertTrue(view["stopped"])
                 self.assertEqual(view["presentation_files"], [])
-                self.assertIn("case-archive-v1", view["reason"])
+                self.assertIn("工作区或案件路径不安全", view["reason"])
 
     def test_managed_view_rejects_model_manifest_and_checklist_contract_drift(self):
         with TemporaryDirectory() as temp:
@@ -3527,7 +3527,7 @@ class WorkBuddyClientAcceptanceTests(unittest.TestCase):
                         "sessionId": "readonly-pipe",
                         "timestamp": 100,
                         "commandPreview": (
-                            'ls -R "C:/Users/tester/.workbuddy/skills/arbibuddy" '
+                            'ls -R "C:/Users/fixture-user/.workbuddy/skills/arbibuddy" '
                             "| head -80"
                         ),
                         "returncode": 0,

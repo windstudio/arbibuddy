@@ -44,6 +44,37 @@ _OUTCOME_LABELS = {
     "stale": "已有基线超过复核日期，尚未确认现行规则",
     "unavailable": "官方来源暂未完成动态核验，当前无法取得可确认的官方来源",
 }
+AUTHORITY_OUTCOME_LABELS = _OUTCOME_LABELS
+
+
+def authority_control_values(body: str, labels: tuple[str, ...]) -> list[str]:
+    """Read one unambiguous control value, excluding the official source list."""
+    pattern = "|".join(re.escape(label) for label in labels)
+    values: list[str] = []
+    in_sources = False
+    for line in body.splitlines():
+        normalized = re.sub(r"\*\*([^*]+)\*\*", r"\1", line).strip()
+        if normalized == "官方来源：":
+            in_sources = True
+            continue
+        if in_sources and (not normalized or re.match(r"^[-*+]\s+", normalized)):
+            continue
+        in_sources = False
+        # Legacy archive examples put control fields on one semicolon-delimited
+        # line. Repeated fields still fail closed; source data never participates.
+        for item in re.split(r"[；;]", normalized):
+            item = re.sub(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)", "", item).strip()
+            match = re.fullmatch(rf"(?:{pattern})\s*[：:]\s*(.*?)\s*。?", item)
+            if match is not None:
+                values.append(match.group(1).strip().rstrip("。"))
+    return values
+
+
+def authority_control_field(body: str, labels: tuple[str, ...]) -> str:
+    values = authority_control_values(body, labels)
+    return values[0] if len(values) == 1 else ""
+
+
 _SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
 _HTTPS_HOST_PATTERN = re.compile(
     r"^https://(?P<host>[^/?#:\s]+)(?::\d+)?(?:[/?#].*)?$",
@@ -57,7 +88,10 @@ _NATIONAL_JURISDICTIONS = frozenset({"全国", "中央", "国家", "中国"})
 _PENDING_JURISDICTIONS = frozenset(
     {"", "待用户确认", "待确认", "未填写", "未提供", "未确认", "不明", "未知"}
 )
-_TRUSTED_FACT_STATUS_MARKERS = ("**事实状态：用户陈述", "**事实状态：证据支持事实")
+_TRUSTED_FACT_STATUS_PATTERN = re.compile(
+    r"(?m)^\s*(?:[-*+]\s+)?(?:\*\*)?事实状态(?:\*\*)?\s*[：:]\s*(?:\*\*)?"
+    r"(?:用户陈述|证据支持事实)(?:\*\*)?\s*[。]?\s*$"
+)
 _TRUSTED_JURISDICTION_PATTERN = re.compile(
     r"(?:适用地区|地区|城市|劳动合同履行地|工作地点|工作地|"
     r"单位所在地|用人单位所在地|履行地)\s*[：:]\s*([^，。；;\n]+)"
@@ -724,13 +758,13 @@ class LegalVerificationTracer:
                         received=value,
                     )
                 )
-            elif any(marker in value for marker in ("\x00", "<!--", "## ", "### [")):
+            elif any(marker in value for marker in ("\n", "\r", "\x00", "<!--", "## ", "### [")):
                 errors.append(
                     _error(
                         "invalid_observation",
                         path=f"observation.{field}",
                         message="字段不能注入档案章节或事务标记",
-                        expected="plain text",
+                        expected="non-empty single-line plain text",
                         received=value,
                     )
                 )
@@ -739,7 +773,7 @@ class LegalVerificationTracer:
             require_text(field)
 
         trigger = observation.get("trigger")
-        if trigger not in _DYNAMIC_TRIGGERS:
+        if not isinstance(trigger, str) or trigger not in _DYNAMIC_TRIGGERS:
             errors.append(
                 _error(
                     "invalid_observation",
@@ -750,7 +784,7 @@ class LegalVerificationTracer:
                 )
             )
         outcome = observation.get("outcome")
-        if outcome not in _OUTCOMES:
+        if not isinstance(outcome, str) or outcome not in _OUTCOMES:
             errors.append(
                 _error(
                     "invalid_observation",
@@ -953,14 +987,12 @@ class LegalVerificationTracer:
         ):
             bindings.add(metadata_match.group(1).strip())
 
-        trusted_scope = re.split(
-            r"^## (?:分析与假设|计算结果|法律核验|风险与确认|下一步|更新记录)$",
-            markdown,
-            maxsplit=1,
-            flags=re.MULTILINE,
-        )[0]
-        for block in re.split(r"^### [^\r\n]+$", trusted_scope, flags=re.MULTILINE):
-            if any(marker in block for marker in _TRUSTED_FACT_STATUS_MARKERS):
+        facts_match = re.search(r"(?ms)^## 事实\n(?P<facts>.*?)(?=^## |\Z)", markdown)
+        facts = facts_match.group("facts") if facts_match else ""
+        for block in re.split(r"^### \[F-\d{3,}\] [^\r\n]+$", facts, flags=re.MULTILINE)[1:]:
+            normalized = re.sub(r"\*\*([^*]+)\*\*", r"\1", block)
+            statuses = re.findall(r"(?m)^\s*(?:[-*+]\s+)?事实状态\s*[：:]\s*([^\r\n]+)", normalized)
+            if len(statuses) == 1 and _TRUSTED_FACT_STATUS_PATTERN.search(normalized):
                 trusted_text_parts.append(block)
 
         for text in trusted_text_parts:
@@ -1082,6 +1114,7 @@ class LegalVerificationTracer:
     def _render_archive_change(observation: Mapping[str, Any]) -> str:
         lines = [
             f"核验事项：{observation['scope']}",
+            f"核验状态：{observation['outcome']}",
             f"核验结论：{_OUTCOME_LABELS[observation['outcome']]}",
             "官方来源：",
         ]

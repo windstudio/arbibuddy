@@ -8,6 +8,7 @@ tests/runs/
 tests/runs/*
 !tests/runs/.gitkeep
 dist/
+references/workbuddy-wheels/
 
 # Generated investigation and client-test outputs; keep Specs/Tickets/notes tracked.
 .scratch/**/artifacts/

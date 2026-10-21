@@ -868,17 +868,22 @@ class ModelLedArchiveContractTests(unittest.TestCase):
             created = tool.create()
             case_id = created["result"]["case_id"]
 
-            def deny_archive_read(*args, **kwargs):
-                raise PermissionError("denied")
+            original_open = Path.open
+
+            def deny_archive_open(path, *args, **kwargs):
+                mode = args[0] if args else kwargs.get("mode", "r")
+                if path == Path(created["result"]["canonical_location"]) and mode == "rb":
+                    raise PermissionError("denied")
+                return original_open(path, *args, **kwargs)
 
             with patch(
                 "scripts.case_archive.service._RUNTIME_IDENTITY.preflight",
                 return_value={"verified": True},
             ), patch.object(
                 Path,
-                "read_text",
+                "open",
                 autospec=True,
-                side_effect=deny_archive_read,
+                side_effect=deny_archive_open,
             ):
                 denied = tool.read(case_id)
 

@@ -74,6 +74,7 @@ class RuntimeIdentityModuleTests(unittest.TestCase):
         for platform in ("codex", "claude-code"):
             with self.subTest(platform=platform), TemporaryDirectory() as temp:
                 workspace = Path(temp) / "case-workspace"
+                workspace.mkdir()
                 archive = CaseArchive(workspace)
                 created = archive.create({"initial_goal": "保护已有用户档案"})
                 self.assertTrue(created["ok"], created)

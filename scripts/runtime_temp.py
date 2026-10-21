@@ -10,7 +10,7 @@ import time
 from typing import Iterator
 from uuid import uuid4
 
-from scripts.platform_paths import path_for_io, public_path
+from scripts.platform_paths import path_for_io, public_path, assert_no_path_links
 
 
 class RuntimeTempError(OSError):
@@ -110,8 +110,9 @@ def runtime_temp_root(anchor: Path, *, use_configured_root: bool = True) -> Path
         )
     )
     try:
+        assert_no_path_links(root)
         path_for_io(root).mkdir(parents=True, exist_ok=True)
-    except OSError as error:
+    except (OSError, ValueError) as error:
         raise RuntimeTempError(root, "create_root", error) from error
     return root
 

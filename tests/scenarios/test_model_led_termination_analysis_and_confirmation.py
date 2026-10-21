@@ -17,6 +17,7 @@ class _NaturalLanguageTerminationScenarioModel:
     """A deterministic scenario adapter for the model-owned public seams."""
 
     def __init__(self, workspace_root: Path):
+        workspace_root.mkdir(parents=True, exist_ok=True)
         self.archive = CaseArchive(workspace_root)
         self.calculator = AmountCalculator()
         self.case_id: str | None = None

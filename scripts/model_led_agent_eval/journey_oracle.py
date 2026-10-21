@@ -263,6 +263,20 @@ class JourneyOracle:
 
     def _missing_for_path(self, path: Any, state: Any) -> tuple[str, ...]:
         missing: list[str] = []
+        phone_spec = getattr(self.journey, "postdelivery_phone_correction", None)
+        if phone_spec is not None:
+            from .postdelivery import check_phone_correction
+            trigger_index = next((i for i, turn in enumerate(state.transcripts)
+                                  if phone_spec["fact_id"] in (turn.get("selected_fact_ids") or ())), None)
+            if trigger_index is None:
+                missing.append("phone_correction_not_requested")
+            elif trigger_index == 0:
+                missing.append("phone_correction_before_first_delivery")
+            else:
+                before = state.transcripts[trigger_index - 1].get("public_artifact_snapshot", {})
+                after = state.transcripts[-1].get("public_artifact_snapshot", {})
+                missing.extend("postdelivery:" + error for error in check_phone_correction(
+                    before, after, old_phone=phone_spec["old_phone"], new_phone=phone_spec["new_phone"]))
         if not state.runtime_completed:
             missing.append("runtime_turn_incomplete")
         restart_context = state.restart_context

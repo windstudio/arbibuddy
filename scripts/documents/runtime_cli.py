@@ -12,12 +12,13 @@ import json
 import os
 import platform
 from pathlib import Path
+from scripts.platform_paths import consume_runtime_input, runtime_input_path, validated_workspace_root, validated_workspace_path, RuntimeInputCleanupError
 import subprocess
 import sys
 from typing import Any, Mapping, Sequence
 
 MAX_RUNTIME_INPUT_BYTES = 2 * 1024 * 1024
-_OPERATIONS = ("describe", "runtime-check", "delivery-set", "render", "view")
+_OPERATIONS = ("describe", "runtime-check", "delivery-set", "render", "view", "edit-context")
 RUNTIME_BOOTSTRAP_ENV = "ARBIBUDDY_DOCUMENT_RUNTIME_BOOTSTRAPPED"
 _RUNTIME_ROOT_NAME = "workbuddy-runtime"
 _RUNTIME_MANIFEST_NAME = "runtime-manifest.json"
@@ -256,14 +257,18 @@ def bootstrap_document_runtime(
 
 
 def _parser() -> argparse.ArgumentParser:
+    from scripts.documents.public import DOCUMENT_TYPES
     parser = argparse.ArgumentParser(
         description="ArbiBuddy WorkBuddy 文书公共 transport"
     )
     parser.add_argument("--workspace", type=Path, required=True)
     commands = parser.add_subparsers(dest="operation", required=True)
-    commands.add_parser("describe", help="读取公开文书契约")
+    describe = commands.add_parser("describe", help="读取公开文书契约")
+    describe.add_argument("--operation", dest="describe_operation", choices=("delivery-set", "render", "view", "edit-context"))
+    describe.add_argument("--document-type", choices=DOCUMENT_TYPES,
+                          help="仅配合 --operation render，返回所选类型要求和完整虚构示例")
     commands.add_parser("runtime-check", help="只读检查并选择已有文书环境")
-    for operation in ("delivery-set", "render", "view"):
+    for operation in ("delivery-set", "render", "view", "edit-context"):
         command = commands.add_parser(operation)
         source = command.add_mutually_exclusive_group(required=True)
         source.add_argument("--json", dest="request_json")
@@ -292,40 +297,11 @@ def _error(code: str, message: str, *, received: object = None) -> dict[str, Any
 
 
 def _workspace_root(value: Path) -> Path:
-    root = value.expanduser().resolve()
-    if not root.is_dir():
-        raise ValueError("--workspace 必须是已存在的工作区目录")
-    return root
+    return validated_workspace_root(value)
 
 
 def _consume_runtime_input(path: Path, workspace: Path) -> str:
-    runtime_root_raw = workspace / ".arbibuddy" / "runtime-input"
-    if runtime_root_raw.is_symlink() or not runtime_root_raw.is_dir():
-        raise ValueError("invalid_runtime_input_path")
-    runtime_root = runtime_root_raw.resolve()
-    if not runtime_root.is_relative_to(workspace.resolve()):
-        raise ValueError("invalid_runtime_input_path")
-    if any(part == ".." for part in Path(str(path)).parts):
-        raise ValueError("invalid_runtime_input_path")
-    candidate = path.expanduser()
-    if not candidate.is_absolute():
-        candidate = workspace / candidate
-    if candidate.is_symlink():
-        raise ValueError("invalid_runtime_input_path")
-    candidate = candidate.resolve()
-    if (
-        candidate.parent != runtime_root
-        or candidate.suffix.casefold() != ".json"
-        or not candidate.is_file()
-        or not candidate.is_relative_to(workspace.resolve())
-    ):
-        raise ValueError("invalid_runtime_input_path")
-    size = candidate.stat().st_size
-    if size > MAX_RUNTIME_INPUT_BYTES:
-        raise OverflowError("runtime_input_too_large")
-    payload = candidate.read_text(encoding="utf-8-sig")
-    candidate.unlink()
-    return payload
+    return consume_runtime_input(path, workspace, MAX_RUNTIME_INPUT_BYTES)
 
 
 def _request(args: argparse.Namespace, workspace: Path) -> Mapping[str, Any]:
@@ -345,6 +321,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         args = _parser().parse_args(raw_argv)
     except SystemExit as error:
         return int(error.code) if isinstance(error.code, int) else 2
+    if args.operation == "describe" and args.document_type is not None and args.describe_operation != "render":
+        from scripts.cli_encoding import configure_utf8_stdio
+        configure_utf8_stdio()
+        print(json.dumps(_error("invalid_runtime_request", "--document-type 必须与 --operation render 同时使用"), ensure_ascii=False, sort_keys=True))
+        return 2
     if args.operation != "runtime-check" and bootstrap_document_runtime(raw_argv):
         return 0
     from scripts.cli_encoding import configure_utf8_stdio
@@ -354,7 +335,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         workspace = _workspace_root(args.workspace)
         if args.operation == "describe":
-            contract = describe_contract()
+            contract = describe_contract(args.describe_operation, document_type=args.document_type)
             contract["runtime_preparation"] = {
                 "operation": "document.runtime-check", "contract_version": "document.runtime-check-v1",
                 "command": "python -B -X utf8 -m scripts.documents.runtime_cli --workspace <workspace_root> runtime-check",
@@ -378,6 +359,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 create_delivery_set(request, workspace)
                 if args.operation == "delivery-set"
                 else render(request, workspace)
+            )
+        elif args.operation == "edit-context":
+            request = _request(args, workspace)
+            if set(request) - {"case_id", "delivery_set_id", "document_types"}:
+                raise ValueError("unknown_edit_context_fields")
+            from scripts.documents.view import managed_edit_context
+            result = managed_edit_context(
+                workspace=workspace, case_id=request.get("case_id"),
+                delivery_set_id=request.get("delivery_set_id"),
+                document_types=request.get("document_types"),
             )
         else:
             request = _request(args, workspace)
@@ -434,6 +425,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "文书请求超过公开 transport 的大小上限",
             received=str(error),
         )
+    except RuntimeInputCleanupError as error:
+        result = _error("runtime_input_cleanup_failed", str(error), received="owned transient input retained")
+        result["warnings"] = [{"code": "temporary_cleanup_failed", "message": str(error), "recoverable": True}]
     except (OSError, TypeError, json.JSONDecodeError) as error:
         result = _error(
             "invalid_runtime_request",

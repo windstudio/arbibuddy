@@ -1,6 +1,12 @@
-# 历史技术映射摘要
+# 04/05 号工单迁移追踪表
 
-下表仅保留旧代码/测试与当前参考和工具的责任映射，供回归测试核对。旧工单编号是历史分类标签；原工单、审核过程及完整验收报告不在公开仓库。表中的旧路径不代表当前可调用入口。当前架构见 [架构说明](domain.md)。
+本表是 04 号工单三项知识、首个金额接缝以及 05 号工单四项知识的迁移清单。每个旧实现分支、规则参考或测试场景只能使用下列一种处置：
+
+- `preserve`：业务语义原样迁入模型参考或公共行为测试；
+- `revise`：保留业务意图，但按模型主导、单一档案或新法律来源重写边界；
+- `calculator`：只迁移纯数学、单位、期间或舍入不变量到 `amount.calculate`；
+- `obsolete`：只验证旧阶段、私有载荷、分析器/CLI、固定 ID 或重复门禁；
+- `unresolved`：需要事实、来源或法律专业复核，记录待复核边界，不自行猜测。
 
 | 来源/分支/场景 | 类型 | 处置 | 新权威位置或证据 | 说明 |
 | --- | --- | --- | --- | --- |
@@ -43,7 +49,7 @@
 | `tests/scenarios/test_wage_analysis.py::test_partial_month_wage_rejects_monthly_basis_times_workdays_without_write` | 单位错配场景 | calculator | `tests/amount_calculator/test_model_led_amount_contract.py` | 改为公开 amount.calculate 错误路径 |
 | `tests/scenarios/test_wage_analysis.py::test_partial_month_exact_wage_requires_structured_calendar_inputs_without_write` | 期间输入不足场景 | calculator | 同上 | 缺少明确期间/分段不产精确结果 |
 | `tests/scenarios/test_wage_analysis.py::test_partial_month_exact_wage_rejects_workdays_that_conflict_with_official_calendar` | 日历冲突场景 | calculator | 同上 + 动态核验 | 纯日期关系与法源触发分开 |
-| `tests/scenarios/test_wage_analysis.py::test_partial_month_exact_wage_rejects_official_source_from_wrong_year_without_write` | 来源年份场景 | unresolved | `references/legal-verification.md`；[有界验收摘要](../acceptance-summary.md) | 保留旧迁移分类；2026-10-05 年度错配与正确年度行为已按实质内容有界补证，不追认旧工作日数或工资公式，个案来源适用仍需核对 |
+| `tests/scenarios/test_wage_analysis.py::test_partial_month_exact_wage_rejects_official_source_from_wrong_year_without_write` | 来源年份场景 | unresolved | `references/legal-verification.md`；[当前内容复验](../legal-content-closeout-2026-10-04.md) | 保留旧迁移分类；2026-10-05 年度错配与正确年度行为已按实质内容有界补证，不追认旧工作日数或工资公式，个案来源适用仍需核对 |
 | `tests/scenarios/test_structured_wage_claims_cli.py` 中 exact/placeholder/scenario、替代证据和抗辩场景 | 工资行为组 | revise | `references/model-led/wage-analysis.md` | 保留业务意图，去除旧 CLI/私有路径断言 |
 | `tests/scenarios/test_variable_remuneration_claims_cli.py` 中五类收入条件、共享收入和重复主张场景 | 奖金行为组 | revise | `references/model-led/wage-analysis.md` | 保留支付条件、primary/fallback 和重复获偿边界 |
 | `tests/amount_calculator/test_cli.py` 与 `tests/amount_calculator/test_rc14_amount_invariants.py` | 算术回归 | calculator | `tests/amount_calculator/test_model_led_amount_contract.py` | 旧 CLI 仍保留；新公开契约覆盖 golden |
@@ -83,7 +89,11 @@
 | `paid-leave-routing` 旧服务、参考和场景 | 后续专项知识 | revise | 05 号工单；`references/model-led/paid-leave-routing.md` | 由 05 号工单完成模型参考、路由迁移和行为接缝；旧执行层仍按本工单非目标保留 |
 | `unlawful-termination` 旧服务、参考和场景 | 后续专项知识 | revise | `references/model-led/unlawful-termination.md` 与 06 号 Scenario | 已移交 06 号模型参考；旧执行层和旧门禁仍待统一收缩 |
 | `unsigned-contract-double-wage` 旧服务、参考和场景 | 后续专项知识 | revise | 05 号工单；`references/model-led/unsigned-contract-double-wage.md` | 由 05 号工单完成模型参考、公式迁移和行为接缝；旧执行层仍按本工单非目标保留 |
+
 ## 05 号工单：工时、休假与未签合同双倍工资
+
+以下清单覆盖四项旧实现的规则分支、领域参考、法律登记和历史场景。每行只使用一种处置：`preserve`、`revise`、`calculator`、`obsolete` 或 `unresolved`；`unresolved` 仅表示需要案件事实、动态法源或专业复核，不阻塞已确认边界的实现。旧文件保留为迁移来源，不是新主链入口。
+
 | 来源/分支/场景 | 类型 | 处置 | 新权威位置或证据 | 说明 |
 | --- | --- | --- | --- | --- |
 | `scripts/overtime_pay/service.py:OVERTIME_TYPES`（工作日/休息日/法定休假日） | 法律输入分支 | preserve | `references/model-led/overtime-pay.md#金额与 amount.calculate` | 三类主张和 1.5/2/3 倍数语义迁入模型参考；倍数由模型显式输入 |
@@ -155,7 +165,11 @@
 | `tests/scenarios/test_unsigned_contract_double_wage.py::test_exclusion_or_unresolved_limitation_overrides_conflict_scenarios` | 竞合负向场景 | preserve | 未签合同参考#主张分析卡与方案比较 | 排除/时效优先于高额情景 |
 | `scripts/cli_orchestration/registry.py` 的四项目标、旧 `cli.py` 和旧专项服务调用 | 旧运行层 | obsolete | 四份模型参考、amount.calculate 和自然语言 Scenario | 旧文件和旧测试不删除，本工单不新增兼容入口 |
 | `tests/scenarios/test_model_led_working_time_leave_double_wage.py` | 新公共 Scenario | preserve | 自然语言→档案→分析/计算闭环 | 观察共享工资基数、劳动关系前提、休假路由和重复获偿排除 |
+
 ## 06 号工单迁移追踪表
+
+本节逐项记录解除领域旧实现和历史场景的处置。`preserve` 保留业务语义，`revise` 按模型主导边界重写，`calculator` 只迁移纯算术，`obsolete` 只验证旧运行层或重复门禁，`unresolved` 仅表示最终专业复核边界，不是实现阻塞。
+
 | 来源/分支/场景 | 类型 | 处置 | 新权威位置或证据 | 说明 |
 | --- | --- | --- | --- | --- |
 | `tests/scenarios/test_model_led_termination_analysis_and_confirmation.py` | 新模型行为 Scenario | preserve | 本文件 06 号追踪表与三项工具接缝 | 覆盖两域四类事实样本、路由、confirmation、金额竞合和用户可见边界 |
@@ -237,7 +251,11 @@
 | `tests/high_risk_action/test_semantic_confirmation.py::test_only_explicit_confirm_or_decline_is_accepted` | 用户选择 | preserve | 06 号 Scenario | 只观察明确选择与拒绝，不固定内部调用 |
 | `tests/high_risk_action/test_semantic_confirmation.py::test_ambiguous_response_is_rejected_at_boundary` | 用户选择 | preserve | 06 号 Scenario | 歧义不能晋升为确认 |
 | U-01 解除事实、证据和实务提示精度 | 专业复核 | unresolved | 最终法律专业复核清单 | 已知限制，不阻塞本工单或技术测试 |
+
 ## 08 号工单迁移追踪表
+
+本节记录催告函与被迫解除通知书从旧文书路径迁移到模型主导 document.render 的处置。旧实现和旧测试文件按工单要求保留，但旧阶段、固定载荷和旧确认快照断言不作为新主路径证据。
+
 | 来源/分支/场景 | 类型 | 处置 | 新权威位置或证据 | 说明 |
 | --- | --- | --- | --- | --- |
 | references/model-led/demand-and-forced-termination-documents.md | 新领域参考 | preserve | 08 号模型参考与 SKILL.md 路由 | 模型负责目标分流、完整正文、风险说明和候选范围 |

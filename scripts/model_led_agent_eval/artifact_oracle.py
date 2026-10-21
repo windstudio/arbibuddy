@@ -193,9 +193,13 @@ def inspect_public_artifacts(workspace: str | Path) -> dict[str, Any]:
         except OSError:
             inspection_error_count += 1
             continue
+        retained_backups: set[Path] = set()
         for output_dir in output_dirs:
             if output_dir.is_symlink() or not output_dir.is_dir():
                 invalid_delivery_count += 1
+                continue
+            if _retained_generation_backup(output_dir, root=root, case_root=case_root, archive=archive):
+                retained_backups.add(output_dir)
                 continue
             try:
                 children = tuple(output_dir.iterdir())
@@ -234,7 +238,7 @@ def inspect_public_artifacts(workspace: str | Path) -> dict[str, Any]:
                 invalid_delivery_count += 1
 
         try:
-            docx_paths = _managed_docx_paths(output_root)
+            docx_paths = _managed_docx_paths(output_root, excluded_directories=retained_backups)
         except PermissionError:
             permission_denied_docx_count += 1
             continue
@@ -666,7 +670,53 @@ def _read_docx(path: Path, *, expected_title: str | None = None) -> str:
     return text
 
 
-def _managed_docx_paths(output_root: Path) -> list[Path]:
+def _retained_generation_backup(path: Path, *, root: Path, case_root: Path,
+                                archive: Mapping[str, Any] | None) -> bool:
+    """Recognize noncanonical retained files without trusting their old bytes.
+
+    A user's external save can invalidate the old DOCX digest. That generation
+    is deliberately retained by publication, not included in the new delivery.
+    Validate the current canonical independently and the backup's namespace,
+    case/type/filenames and ordinary-file shape; never promote the backup.
+    """
+    match = re.fullmatch(r"\.([a-z_]+)\.(regeneration|committed-backup)-([a-f0-9]{64})(?:-([a-f0-9]{32}))?", path.name)
+    if match is None or match[1] not in DOCUMENT_TITLES or path.is_symlink() or not path.is_dir() or not _is_within(path, path.parent) or getattr(path, "is_junction", lambda: False)():
+        return False
+    try:
+        canonical = path.parent / match[1]
+        current = _read_delivery(root=root, case_root=case_root, output_root=path.parent,
+                                 output_dir=canonical, archive=archive)
+        current_manifest = json.loads((root / current["manifest_path"]).read_text(encoding="utf-8"), object_pairs_hook=_reject_duplicate_keys)
+        if match[2] == "regeneration" and current_manifest.get("render_identity") != match[3]:
+            return False  # An interrupted promotion is not a committed backup.
+        children = tuple(path.iterdir())
+        if len(children) != 3 or any(p.is_symlink() or not p.is_file() for p in children):
+            return False
+        title = DOCUMENT_TITLES[match[1]]
+        manifest_name = f"《{title}》机器交付清单.json"
+        previous = json.loads((path / manifest_name).read_text(encoding="utf-8"), object_pairs_hook=_reject_duplicate_keys)
+        mode, revision = previous.get("mode"), previous.get("archive_revision")
+        document_name = f"《{title}》{'（候选草稿）' if mode == 'candidate' else ''}.docx"
+        checklist_name = f"《{title}》内部核验清单（仅供核对，请勿外发）.txt"
+        return (previous.get("schema_version") == 1
+                and previous.get("contract_version") == DOCUMENT_CONTRACT
+                and previous.get("operation") == DOCUMENT_OPERATION
+                and previous.get("case_id") == case_root.name
+                and previous.get("document_type") == match[1]
+                and previous.get("title") == title
+                and previous.get("template_version") == TEMPLATE_VERSION
+                and mode in {"candidate", "external_final"}
+                and _is_nonnegative_integer(revision) and revision <= current["current_archive_revision"]
+                and _is_sha256(previous.get("render_identity"))
+                and {p.name for p in children} == {manifest_name, document_name, checklist_name}
+                and previous.get("document", {}).get("filename") == document_name
+                and previous.get("verification_checklist", {}).get("filename") == checklist_name
+                and previous.get("machine_manifest", {}).get("filename") == manifest_name)
+    except (OSError, ValueError, TypeError, KeyError, AttributeError, BadZipFile, ElementTree.ParseError):
+        return False
+
+
+def _managed_docx_paths(output_root: Path, *, excluded_directories: set[Path] | None = None) -> list[Path]:
     """Enumerate explicitly so an unreadable subtree cannot look complete."""
 
     result: list[Path] = []
@@ -677,6 +727,8 @@ def _managed_docx_paths(output_root: Path) -> list[Path]:
             if path.is_symlink():
                 continue
             if path.is_dir():
+                if path in (excluded_directories or ()):
+                    continue
                 pending.append(path)
             elif (
                 path.suffix.casefold() == ".docx"
