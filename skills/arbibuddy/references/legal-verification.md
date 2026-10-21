@@ -75,6 +75,10 @@ python -B -X utf8 -m scripts.legal_verification.runtime_cli --workspace "<worksp
 
 ### 规则适用地区与来源发布地区双绑定
 
+`scope`、`jurisdiction`、`impact` 必须是非空单行文本，不接受换行、章节或事务标记；各来源字段同样沿用公开的单行限制。工具生成独立且唯一的 `核验状态：verified|source_conflict|stale|unavailable` 与展示结论行；自由文本不能代替控制字段。文书消费端拒绝重复/冲突字段，只有 `verified` 及其成功展示结论能满足当前依据门禁；旧单一“已核验”或“已完成动态核验”展示记录仍可读取。
+
+本 transport 的工作区、路径验证与失败输入清理共用[档案文件边界](model-led-case-archive.md#文件边界与容量)，不读取或删除链接指向的外部输入。
+
 `observation.jurisdiction` 和来源的 `jurisdiction` 表示规则适用地区；来源的 `publisher_jurisdiction` 表示发布机关或官方站点所在地区。两者不是同一个字段：上海官方站点发布一条全国规则时，规则适用地区仍可写“全国”，但来源发布地区仍是“上海市”。已知官方主机的地区判断优先于来源自报字段；例如 `shanghai.gov.cn`、`sh.gov.cn` 及其子域名按上海发布来源处理。
 
 地方发布来源进入动态核验前，当前用户或当前案情档案必须已有可信地区绑定；可信绑定只来自当前档案元数据、当前档案中的“用户陈述”或“证据支持事实”。没有绑定时先只询问一个地区问题并结束本轮，不搜索、采用、评估或记录该地方来源；稳定全国基线或真正的中央/全国发布来源可以继续。来源与已有地区冲突时也不得采用。`LegalVerificationTracer.record` 是共享的最后门禁：未绑定返回可恢复的 `jurisdiction_confirmation_required`，冲突返回 `jurisdiction_conflict`，两者都不提交 `AUTH-*`、不改变档案 revision；`assess` 只做形状校验，模型不得用它绕过前置地区门禁。分析假设、既有 authority 记录、平台 memory、历史会话和其他案件不能自行绑定当前地区。
@@ -99,6 +103,7 @@ python -B -X utf8 -m scripts.legal_verification.runtime_cli --workspace "<worksp
 核验结论通过 `LegalVerificationTracer.record` 交给既有 `CaseArchive.commit`，仍只写一份 `案情档案.md` 的 `authority` 记录。档案最少包含：
 
 - 核验事项；
+- 唯一核验状态枚举；
 - 核验结论；
 - 官方来源；
 - 登记链接、最终落地链接及内容 SHA-256（`verified` 必须具备）；

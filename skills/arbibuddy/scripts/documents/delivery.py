@@ -5,16 +5,152 @@ from datetime import datetime
 from hashlib import sha256
 import json
 import os
+import re
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import shutil
 from uuid import uuid4
 
-from scripts.platform_paths import path_for_io, public_path
+from scripts.platform_paths import path_for_io, public_path, is_path_link_or_reparse_point
 
 
 DELIVERY_COMMIT_LOCK = ".delivery-commit.lock"
 GENERATION_BACKUP_MARKER = ".regeneration-"
 GENERATION_COMMITTED_BACKUP_MARKER = ".committed-backup-"
+
+
+def _complete_generation(path: Path) -> dict | None:
+    """Identify an intact canonical generation without consulting legal facts."""
+    try:
+        _safe_generation_tree(path)
+        files = tuple(path_for_io(path).iterdir())
+        manifests = [child for child in files if child.name.endswith("机器交付清单.json")]
+        if len(manifests) != 1 or manifests[0].stat().st_size > 128 * 1024:
+            return None
+        manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
+        if not isinstance(manifest, dict) or manifest.get("contract_version") != "document.render-v1":
+            return None
+        if manifest.get("validation_summary", {}).get("status") != "passed":
+            return None
+        expected_names = {manifests[0].name}
+        for key in ("document", "verification_checklist"):
+            entry = manifest.get(key)
+            if not isinstance(entry, dict) or not isinstance(entry.get("filename"), str):
+                return None
+            name = entry["filename"]
+            if Path(name).name != name:
+                return None
+            expected_names.add(name)
+            if sha256(path_for_io(path / name).read_bytes()).hexdigest() != entry.get("sha256"):
+                return None
+        if {child.name for child in files} != expected_names:
+            return None
+        return manifest
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
+
+
+def is_committed_generation_backup(path: Path) -> bool:
+    match = re.fullmatch(r"\.(?P<kind>[a-z_]+)\.(?P<stage>regeneration|committed-backup)-(?P<transaction>[a-f0-9]{64})(?:-[a-f0-9]{32})?", path.name)
+    if match is None:
+        return False
+    current = _complete_generation(path.parent / match["kind"])
+    previous = _complete_generation(path)
+    if current is None or previous is None or current.get("document_type") != match["kind"] or previous.get("document_type") != match["kind"]:
+        return False
+    # An unarchived regeneration is non-canonical only after its new generation
+    # is proven complete with the exact publishing transaction identity.
+    return match["stage"] == "committed-backup" or current.get("render_identity") == match["transaction"]
+
+
+def is_retained_external_generation(path: Path) -> bool:
+    """Identify preserved, noncanonical user edits, never deletion authority.
+
+    The new generation must be complete. The old manifest must still identify
+    the same case/type and exact three-file generation; its old file digests
+    need not match after an external Office save. No old text is trusted.
+    """
+    match = re.fullmatch(r"\.(?P<kind>[a-z_]+)\.(?P<stage>regeneration|committed-backup)-(?P<transaction>[a-f0-9]{64})(?:-[a-f0-9]{32})?", path.name)
+    if match is None:
+        return False
+    current = _complete_generation(path.parent / match["kind"])
+    if current is None or current.get("document_type") != match["kind"]:
+        return False
+    if match["stage"] == "regeneration" and current.get("render_identity") != match["transaction"]:
+        return False
+    try:
+        _safe_generation_tree(path)
+        children = tuple(path_for_io(path).iterdir())
+        if len(children) != 3 or any(not child.is_file() for child in children):
+            return False
+        title = current["title"]
+        manifest_name = f"《{title}》机器交付清单.json"
+        manifest_path = path_for_io(path / manifest_name)
+        if manifest_path.stat().st_size > 128 * 1024:
+            return False
+        previous = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(previous, dict):
+            return False
+        mode, revision = previous.get("mode"), previous.get("archive_revision")
+        document_name = f"《{title}》{'（候选草稿）' if mode == 'candidate' else ''}.docx"
+        checklist_name = f"《{title}》内部核验清单（仅供核对，请勿外发）.txt"
+        return (previous.get("schema_version") == 1
+                and previous.get("contract_version") == "document.render-v1"
+                and previous.get("operation") == "document.render"
+                and previous.get("case_id") == current.get("case_id")
+                and isinstance(current.get("case_id"), str)
+                and re.fullmatch(r"case-[a-f0-9]{24}", current["case_id"]) is not None
+                and previous.get("document_type") == match["kind"]
+                and previous.get("title") == title
+                and previous.get("template_version") == current.get("template_version")
+                and mode in {"candidate", "external_final"}
+                and isinstance(revision, int) and not isinstance(revision, bool)
+                and isinstance(current.get("archive_revision"), int)
+                and 0 <= revision <= current["archive_revision"]
+                and isinstance(previous.get("render_identity"), str)
+                and re.fullmatch(r"[a-f0-9]{64}", previous["render_identity"]) is not None
+                and {child.name for child in children} == {document_name, checklist_name, manifest_name}
+                and previous.get("document", {}).get("filename") == document_name
+                and previous.get("verification_checklist", {}).get("filename") == checklist_name
+                and previous.get("machine_manifest", {}).get("filename") == manifest_name)
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        return False
+
+
+def _recover_previous_generation(workspace: Path, metadata: dict[str, object]) -> bool:
+    case_id = metadata.get("case_id")
+    if not isinstance(case_id, str) or re.fullmatch(r"case-[a-f0-9]{24}", case_id) is None:
+        return False
+    output_root = workspace / ".arbibuddy" / "cases" / case_id / "output"
+    try:
+        _assert_safe_visible_path(workspace, output_root)
+        if not path_for_io(output_root).exists():
+            return True  # Failure before the first canonical promotion.
+        transaction_id = metadata.get("transaction_id")
+        # If a previous rollback was interrupted after moving the old output,
+        # restore its proven complete backup before accepting a revised request.
+        for child in tuple(path_for_io(output_root).iterdir()):
+            match = re.fullmatch(r"\.(?P<kind>[a-z_]+)\.regeneration-(?P<transaction>[a-f0-9]{64})", child.name)
+            if match is None or match["transaction"] != transaction_id:
+                continue
+            canonical = output_root / match["kind"]
+            if path_for_io(canonical).exists() or _is_reparse_point(canonical):
+                continue
+            previous = _complete_generation(child)
+            if previous is None or previous.get("case_id") != case_id or previous.get("document_type") != match["kind"]:
+                return False
+            _assert_safe_visible_path(workspace, canonical)
+            _replace_generation_child(child, canonical)
+        for child in path_for_io(output_root).iterdir():
+            if re.fullmatch(r"\.[a-z_]+\.staging-[a-z0-9]{8,64}", child.name):
+                _safe_generation_tree(child)
+                continue
+            if is_committed_generation_backup(child) or is_retained_external_generation(child):
+                continue
+            if child.name.startswith(".") or _complete_generation(child) is None:
+                return False
+        return True
+    except (OSError, ValueError):
+        return False
 
 
 def _public_resolved(value: Path) -> Path:
@@ -57,11 +193,7 @@ def _replace_with_retry(source: Path, target: Path) -> None:
 
 
 def _is_reparse_point(path: Path) -> bool:
-    path = path_for_io(path)
-    is_junction = getattr(path, "is_junction", None)
-    return path.is_symlink() or bool(
-        callable(is_junction) and is_junction()
-    )
+    return is_path_link_or_reparse_point(path)
 
 
 def _assert_safe_visible_path(workspace: Path, path: Path) -> None:
@@ -139,6 +271,7 @@ def _workspace_commit_guard(
     transaction_id: str | None = None,
     case_id: str | None = None,
     recovery_action: str = "document.render",
+    rollback_state: dict[str, bool] | None = None,
 ):
     workspace = path_for_io(_public_resolved(workspace))
     if os.name == "nt":
@@ -205,8 +338,9 @@ def _workspace_commit_guard(
             previous = _read_lock_metadata(lock_stream)
             if (
                 previous is not None
-                and previous.get("stage") != "completed"
+                and previous.get("stage") not in {"completed", "failed_rolled_back"}
                 and previous.get("transaction_id") != transaction_id
+                and not _recover_previous_generation(workspace, previous)
             ):
                 raise ValueError("交付事务身份不一致，必须使用同一请求恢复")
             _write_lock_metadata(
@@ -226,7 +360,7 @@ def _workspace_commit_guard(
                     _lock_metadata(
                         case_id=case_id,
                         transaction_id=transaction_id,
-                        stage="failed_recoverable",
+                        stage="failed_rolled_back" if rollback_state and rollback_state.get("safe") else "failed_recoverable",
                         recovery_action=recovery_action,
                     ),
                 )
@@ -256,8 +390,9 @@ def _workspace_commit_guard(
             previous = _read_lock_metadata(lock_stream)
             if (
                 previous is not None
-                and previous.get("stage") != "completed"
+                and previous.get("stage") not in {"completed", "failed_rolled_back"}
                 and previous.get("transaction_id") != transaction_id
+                and not _recover_previous_generation(workspace, previous)
             ):
                 raise ValueError("交付事务身份不一致，必须使用同一请求恢复")
             _write_lock_metadata(
@@ -277,7 +412,7 @@ def _workspace_commit_guard(
                     _lock_metadata(
                         case_id=case_id,
                         transaction_id=transaction_id,
-                        stage="failed_recoverable",
+                        stage="failed_rolled_back" if rollback_state and rollback_state.get("safe") else "failed_recoverable",
                         recovery_action=recovery_action,
                     ),
                 )
@@ -385,6 +520,7 @@ def commit_generation_staging(
         raise FileExistsError(f"输出目录已存在：{output_dir}")
 
     backup = _generation_backup_path(output_dir, transaction_id)
+    rollback_state = {"safe": False}
 
     def commit() -> None:
         if path_for_io(backup).exists() or _is_reparse_point(backup):
@@ -400,6 +536,8 @@ def commit_generation_staging(
                 _replace_generation_child(backup, output_dir)
         if path_for_io(output_dir).exists() and not replace_existing:
             raise FileExistsError(f"输出目录已存在：{output_dir}")
+        if path_for_io(output_dir).exists():
+            _safe_generation_tree(output_dir)
         moved_old = False
         if path_for_io(output_dir).exists():
             _replace_generation_child(output_dir, backup)
@@ -408,12 +546,11 @@ def commit_generation_staging(
             _replace_generation_child(staging_dir, output_dir)
             _safe_generation_tree(output_dir)
         except BaseException:
-            if (
-                not path_for_io(output_dir).exists()
-                and moved_old
-                and path_for_io(backup).exists()
-            ):
+            if path_for_io(output_dir).exists() and not path_for_io(staging_dir).exists():
+                _replace_generation_child(output_dir, staging_dir)
+            if moved_old and path_for_io(backup).exists():
                 _replace_generation_child(backup, output_dir)
+            rollback_state["safe"] = not path_for_io(backup).exists()
             raise
         if path_for_io(backup).exists():
             # The new output is already complete.  A failed archival rename is
@@ -431,5 +568,6 @@ def commit_generation_staging(
     with _workspace_commit_guard(
         workspace, transaction_id=transaction_id, case_id=case_id,
         recovery_action="document.render",
+        rollback_state=rollback_state,
     ):
         commit()

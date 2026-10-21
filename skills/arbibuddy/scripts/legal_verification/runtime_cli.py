@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from scripts.platform_paths import consume_runtime_input, runtime_input_path, validated_workspace_root, validated_workspace_path, RuntimeInputCleanupError
 import sys
 from typing import Any, Mapping, Sequence
 
@@ -58,33 +59,11 @@ def _error(code: str, message: str, *, received: object = None) -> dict[str, Any
 
 
 def _workspace_root(value: Path) -> Path:
-    root = value.expanduser().resolve()
-    if not root.is_dir():
-        raise ValueError("workspace_not_found")
-    return root
+    return validated_workspace_root(value)
 
 
 def _consume_runtime_input(path: Path, workspace: Path) -> str:
-    runtime_root = (workspace / ".arbibuddy" / "runtime-input").resolve()
-    candidate = path.expanduser()
-    if not candidate.is_absolute():
-        candidate = workspace / candidate
-    candidate = candidate.resolve()
-    if (
-        candidate.parent != runtime_root
-        or candidate.suffix.casefold() != ".json"
-        or not candidate.is_file()
-    ):
-        raise ValueError("invalid_runtime_input_path")
-    if candidate.stat().st_size > MAX_RUNTIME_INPUT_BYTES:
-        raise OverflowError("runtime_input_too_large")
-    payload = candidate.read_text(encoding="utf-8-sig")
-    candidate.unlink()
-    try:
-        runtime_root.rmdir()
-    except OSError:
-        pass
-    return payload
+    return consume_runtime_input(path, workspace, MAX_RUNTIME_INPUT_BYTES)
 
 
 def _request(args: argparse.Namespace, workspace: Path) -> Mapping[str, Any]:
@@ -181,6 +160,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "法律核验请求超过公开 transport 的大小上限",
             received=str(error),
         )
+    except RuntimeInputCleanupError as error:
+        result = _error("runtime_input_cleanup_failed", str(error), received="owned transient input retained")
+        result["warnings"] = [{"code": "temporary_cleanup_failed", "message": str(error), "recoverable": True}]
     except (OSError, TypeError, json.JSONDecodeError) as error:
         result = _error(
             "invalid_runtime_request",

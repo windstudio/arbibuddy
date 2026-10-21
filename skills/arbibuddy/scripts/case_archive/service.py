@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from contextlib import contextmanager
+from collections import Counter
 from hashlib import sha256
 import json
 import os
@@ -10,15 +11,20 @@ import re
 import secrets
 import shutil
 import tempfile
-from threading import RLock, Lock
+from threading import RLock, Lock, local
 import time
 from typing import Any, Mapping
-from scripts.platform_paths import absolute_path_for_io, public_path
+from scripts.platform_paths import (absolute_path_for_io, public_path, lexical_absolute_path,
+                                    validated_workspace_root, validated_workspace_path, assert_no_path_links)
 from scripts.runtime_identity import RuntimeIdentityModule, runtime_identity_failure_message
 
 
 CONTRACT_VERSION = "case-archive-v1"
 ARCHIVE_FILENAME = "案情档案.md"
+MAX_RECORD_BYTES = 16 * 1024
+MAX_BATCH_BYTES = 64 * 1024
+MAX_ARCHIVE_BYTES = 128 * 1024
+MAX_BATCH_CHANGES = 64
 CASE_ID_PATTERN = re.compile(r"^case-[a-f0-9]{24}$")
 REVISION_PATTERN = re.compile(r"^- 档案修订版本：(?P<revision>\d+)$", re.MULTILINE)
 CASE_ID_LINE_PATTERN = re.compile(
@@ -113,6 +119,7 @@ RECORD_TYPE_LABELS = {
 RECORD_ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*-\d{3,}$")
 _LOCKS: dict[str, RLock] = {}
 _LOCKS_GUARD = Lock()
+_LOCK_DEPTH = local()
 _RUNTIME_IDENTITY = RuntimeIdentityModule()
 _USER_VISIBLE_SUMMARIES = {
     "create": "案情档案已创建",
@@ -259,6 +266,9 @@ def _validate_create_request(request: Mapping[str, Any]) -> list[dict[str, Any]]
                     received=value,
                 )
             )
+        if len(value.encode("utf-8")) > 1024:
+            errors.append(_error("capacity_exceeded", path=f"create.{key}",
+                                 message="创建字段超过字节预算", expected=1024, received="over byte budget"))
     for key in sorted(set(request) & _PII_KEYS):
         errors.append(
             _error(
@@ -348,7 +358,13 @@ def _case_sections(markdown: str) -> list[str]:
 
 def _parse_archive(case_id: str, archive_path: Path) -> tuple[str, int, str] | list[dict[str, Any]]:
     try:
-        markdown = archive_path.read_text(encoding="utf-8")
+        with archive_path.open("rb") as stream:
+            raw = stream.read(MAX_ARCHIVE_BYTES + 1)
+        if len(raw) > MAX_ARCHIVE_BYTES:
+            return [_error("archive_too_large", path="archive.markdown",
+                           message="档案超过全文恢复容量；原件未修改，不能声称已完整恢复",
+                           expected=MAX_ARCHIVE_BYTES, received="over byte budget")]
+        markdown = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
     except FileNotFoundError:
         return [
             _error(
@@ -390,6 +406,10 @@ def _parse_archive(case_id: str, archive_path: Path) -> tuple[str, int, str] | l
             )
         ]
 
+    return _validate_archive_markdown(case_id, markdown)
+
+
+def _validate_archive_markdown(case_id: str, markdown: str) -> tuple[str, int, str] | list[dict[str, Any]]:
     errors: list[dict[str, Any]] = []
     if not markdown.endswith("\n"):
         errors.append(
@@ -473,7 +493,8 @@ def _parse_archive(case_id: str, archive_path: Path) -> tuple[str, int, str] | l
                 )
             )
     record_ids = [match.group("record_id") for match in RECORD_HEADING_PATTERN.finditer(markdown)]
-    duplicates = sorted({item for item in record_ids if record_ids.count(item) > 1})
+    existing_ids = set(record_ids)
+    duplicates = sorted(item for item, count in Counter(record_ids).items() if count > 1)
     if duplicates:
         errors.append(
             _error(
@@ -490,7 +511,7 @@ def _parse_archive(case_id: str, archive_path: Path) -> tuple[str, int, str] | l
             reference
             for block in _record_content_blocks(markdown)
             for reference in RECORD_REFERENCE_PATTERN.findall(block)
-            if reference not in set(record_ids)
+            if reference not in existing_ids
         }
     )
     if dangling_references:
@@ -549,51 +570,95 @@ def _process_is_alive(pid: int) -> bool:
 
 @contextmanager
 def _case_lock(archive_path: Path):
-    key = str(public_path(archive_path.resolve()))
+    key = os.path.normcase(str(public_path(archive_path.absolute())))
     with _LOCKS_GUARD:
         local_lock = _LOCKS.setdefault(key, RLock())
+    deadline = time.monotonic() + 10.0
+    if not local_lock.acquire(timeout=max(0.0, deadline - time.monotonic())):
+        raise _ArchiveLockTimeout("case archive local lock timeout")
+    depths = getattr(_LOCK_DEPTH, "depths", {})
+    _LOCK_DEPTH.depths = depths
+    if depths.get(key, 0):
+        depths[key] += 1
+        try:
+            yield
+        finally:
+            depths[key] -= 1
+            local_lock.release()
+        return
+    stream = None
+    acquired_os_lock = False
+    acquired_directory = False
+    body_entered = False
     lock_path = archive_path.parent / ".archive.lock"
-    local_lock.acquire()
-    acquired_file_lock = False
     try:
-        deadline = time.monotonic() + 10.0
+        # This stable inode is never removed. OS locks release on process death;
+        # all legacy-directory reclamation happens while holding this mutex.
+        mutex_path = archive_path.parent / ".archive.mutex"
+        assert_no_path_links(mutex_path)
+        assert_no_path_links(lock_path / "owner")
+        stream = mutex_path.open("a+b")
+        if stream.seek(0, os.SEEK_END) == 0:
+            stream.write(b"0")
+            stream.flush()
+        while not acquired_os_lock:
+            if time.monotonic() >= deadline:
+                raise _ArchiveLockTimeout("case archive OS lock timeout")
+            try:
+                stream.seek(0)
+                if os.name == "nt":
+                    import msvcrt
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                acquired_os_lock = True
+            except OSError:
+                time.sleep(min(0.01, max(0.0, deadline - time.monotonic())))
         while True:
+            if time.monotonic() >= deadline:
+                raise _ArchiveLockTimeout("case archive legacy lock timeout")
+            assert_no_path_links(lock_path / "owner")
             try:
                 lock_path.mkdir()
-                acquired_file_lock = True
-                owner = lock_path / "owner"
-                owner.write_text(str(os.getpid()), encoding="ascii")
+                acquired_directory = True
+                (lock_path / "owner").write_text(str(os.getpid()), encoding="ascii")
                 break
             except FileExistsError:
-                owner = lock_path / "owner"
                 try:
-                    owner_pid = int(owner.read_text(encoding="ascii").strip())
-                except (FileNotFoundError, ValueError, OSError):
+                    owner_pid = int((lock_path / "owner").read_text(encoding="ascii").strip())
+                except (ValueError, OSError):
                     owner_pid = 0
                 if owner_pid == os.getpid() or (owner_pid and not _process_is_alive(owner_pid)):
                     try:
                         shutil.rmtree(lock_path)
-                    except FileNotFoundError:
-                        continue
                     except OSError:
                         pass
-                    continue
-                if time.monotonic() >= deadline:
-                    raise _ArchiveLockTimeout("case archive lock timeout")
-                time.sleep(0.01)
-            except PermissionError as error:
-                raise _ArchiveLockTimeout("case archive lock permission denied") from error
+                time.sleep(min(0.01, max(0.0, deadline - time.monotonic())))
+        depths[key] = 1
+        body_entered = True
         yield
+    except (PermissionError, ValueError) as error:
+        if body_entered:
+            raise
+        raise _ArchiveLockTimeout("case archive lock unavailable") from error
     finally:
-        if acquired_file_lock:
+        depths.pop(key, None)
+        if acquired_directory:
             try:
                 shutil.rmtree(lock_path)
-            except FileNotFoundError:
-                pass
             except OSError:
-                # The next writer can recover a lock owned by this dead process
-                # only if it can inspect the owner file; leave it in place.
-                pass
+                pass  # A later owner reclaims under the OS mutex and deadline.
+        if stream is not None:
+            if acquired_os_lock:
+                stream.seek(0)
+                if os.name == "nt":
+                    import msvcrt
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+            stream.close()
         local_lock.release()
 
 
@@ -689,6 +754,13 @@ def _validate_commit_request(request: Any) -> list[dict[str, Any]]:
         )
         return errors
 
+    if len(changes) > MAX_BATCH_CHANGES:
+        errors.append(_error("capacity_exceeded", path="commit.changes", message="变更条数超过批次预算",
+                             expected=MAX_BATCH_CHANGES, received=len(changes)))
+    if len(json.dumps(request, ensure_ascii=False).encode("utf-8")) > MAX_BATCH_BYTES:
+        errors.append(_error("capacity_exceeded", path="commit", message="提交超过批次字节预算；请合并冗余描述后重建",
+                             expected=MAX_BATCH_BYTES, received="over byte budget"))
+        return errors  # Do not echo or process an unbounded input in a failure response.
     allowed_operations = {"append", "replace", "remove"}
     allowed_record_types = set(RECORD_TYPE_PREFIXES)
     for index, change in enumerate(changes):
@@ -716,7 +788,7 @@ def _validate_commit_request(request: Any) -> list[dict[str, Any]]:
                 )
             )
         operation = change.get("operation")
-        if operation not in allowed_operations:
+        if not isinstance(operation, str) or operation not in allowed_operations:
             errors.append(
                 _error(
                     "invalid_change",
@@ -727,7 +799,7 @@ def _validate_commit_request(request: Any) -> list[dict[str, Any]]:
                 )
             )
         record_type = change.get("record_type")
-        if record_type not in allowed_record_types:
+        if not isinstance(record_type, str) or record_type not in allowed_record_types:
             errors.append(
                 _error(
                     "invalid_change",
@@ -748,7 +820,7 @@ def _validate_commit_request(request: Any) -> list[dict[str, Any]]:
                     received=record_id,
                 )
             )
-        if operation in {"replace", "remove"}:
+        if isinstance(operation, str) and operation in {"replace", "remove"}:
             if not isinstance(record_id, str) or RECORD_ID_PATTERN.fullmatch(record_id) is None:
                 errors.append(
                     _error(
@@ -760,7 +832,11 @@ def _validate_commit_request(request: Any) -> list[dict[str, Any]]:
                     )
                 )
         content = change.get("content_markdown")
-        if operation in {"append", "replace"}:
+        if isinstance(content, str) and len(content.encode("utf-8")) > MAX_RECORD_BYTES:
+            errors.append(_error("capacity_exceeded", path=f"{path}.content_markdown",
+                                 message="单条记录超过字节预算；保留必要事实和稳定引用并减少冗余",
+                                 expected=MAX_RECORD_BYTES, received="over byte budget"))
+        if isinstance(operation, str) and operation in {"append", "replace"}:
             if not isinstance(content, str) or not content.strip():
                 errors.append(
                     _error(
@@ -773,8 +849,8 @@ def _validate_commit_request(request: Any) -> list[dict[str, Any]]:
                 )
             elif (
                 "\x00" in content
-                or re.search(r"(?m)^##\s", content)
-                or re.search(r"(?m)^### \[[A-Z][A-Z0-9_]*-\d{3,}\] ", content)
+                or re.search(r"(?m)^##\s", content.replace("\r\n", "\n").replace("\r", "\n"))
+                or re.search(r"(?m)^### \[[A-Z][A-Z0-9_]*-\d{3,}\] ", content.replace("\r\n", "\n").replace("\r", "\n"))
                 or "<!-- ARBIBUDDY:COMMIT" in content
             ):
                 errors.append(
@@ -797,7 +873,7 @@ def _validate_commit_request(request: Any) -> list[dict[str, Any]]:
                 )
             )
         reason = change.get("reason")
-        if operation in {"replace", "remove"} and (
+        if isinstance(operation, str) and operation in {"replace", "remove"} and (
             not isinstance(reason, str) or not reason.strip() or "\n" in reason or "\r" in reason
         ):
             errors.append(
@@ -880,7 +956,7 @@ def _section_span(markdown: str, heading: str) -> tuple[int, int]:
 
 
 def _render_record(record_id: str, record_type: str, content: str) -> str:
-    body = content.strip()
+    body = content.replace("\r\n", "\n").replace("\r", "\n").strip()
     return (
         f"### [{record_id}] {RECORD_TYPE_LABELS[record_type]}\n\n"
         f"{body}\n\n"
@@ -907,7 +983,7 @@ def _has_duplicate_record_content(
     start, end = _section_span(markdown, RECORD_TYPE_SECTIONS[record_type])
     section_body = markdown[start:end]
     headings = list(RECORD_HEADING_PATTERN.finditer(section_body))
-    normalized = content.strip()
+    normalized = content.replace("\r\n", "\n").replace("\r", "\n").strip()
     for index, heading in enumerate(headings):
         record_id = heading.group("record_id")
         if not _record_type_matches(record_id, record_type):
@@ -1030,15 +1106,30 @@ class CaseArchive:
     """Expose only create/read/commit operations for the Markdown case archive."""
 
     def __init__(self, workspace_root: str | Path) -> None:
-        self._workspace_root = absolute_path_for_io(workspace_root)
+        self._workspace_root = lexical_absolute_path(workspace_root)
         self._cases_root = self._workspace_root / ".arbibuddy" / "cases"
         self._runtime_input_root = self._workspace_root / ".arbibuddy" / "runtime-input"
+
+    def _workspace_errors(self, path: Path | None = None) -> list[dict[str, Any]]:
+        try:
+            validated_workspace_path(self._workspace_root, path or self._cases_root)
+            validated_workspace_path(self._workspace_root, self._runtime_input_root)
+        except (ValueError, OSError) as error:
+            return [_error("invalid_workspace_path", path="workspace",
+                           message="工作区或案件路径不安全/不可访问；未读取或修改案件",
+                           expected="current workspace without links or installed Skill paths",
+                           received=type(error).__name__)]
+        return []
 
     @contextmanager
     def _read_transaction(self, case_id: str):
         """Internal file transaction shared by commit and document publication."""
-        if CASE_ID_PATTERN.fullmatch(case_id) is None:
+        if not isinstance(case_id, str) or CASE_ID_PATTERN.fullmatch(case_id) is None:
             yield self.read(case_id)
+            return
+        path_errors = self._workspace_errors(self._cases_root / case_id / ARCHIVE_FILENAME)
+        if path_errors:
+            yield _failure("read", path_errors)
             return
         with _case_lock(self._cases_root / case_id / ARCHIVE_FILENAME):
             yield self.read(case_id)
@@ -1053,6 +1144,9 @@ class CaseArchive:
         errors = _validate_create_request(request)
         if errors:
             return _failure("create", errors)
+        path_errors = self._workspace_errors()
+        if path_errors:
+            return _failure("create", path_errors)
         try:
             self._runtime_input_root.mkdir(parents=True, exist_ok=True)
             self._cases_root.mkdir(parents=True, exist_ok=True)
@@ -1164,6 +1258,9 @@ class CaseArchive:
                 ],
             )
         archive_path = self._cases_root / case_id / ARCHIVE_FILENAME
+        path_errors = self._workspace_errors(archive_path)
+        if path_errors:
+            return _failure(operation, path_errors)
         parsed = _parse_archive(case_id, archive_path)
         if isinstance(parsed, list):
             return _failure(operation, parsed)
@@ -1211,6 +1308,9 @@ class CaseArchive:
                     )
                 ],
             )
+        except OSError as error:
+            return _failure("commit", [_error("io_failure", path="archive",
+                            message="档案事务 I/O 失败；请重新读取后受管重试", received=type(error).__name__)])
 
     def _commit(self, request: Mapping[str, Any]) -> dict[str, Any]:
         operation = "commit"
@@ -1220,7 +1320,13 @@ class CaseArchive:
 
         case_id = request["case_id"]
         archive_path = self._cases_root / case_id / ARCHIVE_FILENAME
+        path_errors = self._workspace_errors(archive_path)
+        if path_errors:
+            return _failure(operation, path_errors)
         with _case_lock(archive_path):
+            path_errors = self._workspace_errors(archive_path)
+            if path_errors:
+                return _failure(operation, path_errors)
             parsed = _parse_archive(case_id, archive_path)
             if isinstance(parsed, list):
                 return _failure(operation, parsed)
@@ -1427,6 +1533,16 @@ class CaseArchive:
             update_heading = "## 更新记录"
             update_start, update_end = _section_span(working, update_heading)
             working = working[:update_start] + "\n" + marker + working[update_start:update_end] + working[update_end:]
+            if len(working.encode("utf-8")) > MAX_ARCHIVE_BYTES:
+                return _failure(operation, [_error("capacity_exceeded", path="archive.markdown",
+                    message="档案接近全文恢复容量；本批未写入，请通过 replace 合并冗余并保留事实及引用",
+                    expected=MAX_ARCHIVE_BYTES, received="over byte budget")])
+            final_validation = _validate_archive_markdown(case_id, working)
+            if isinstance(final_validation, list):
+                return _failure(operation, final_validation)
+            path_errors = self._workspace_errors(archive_path)
+            if path_errors:
+                return _failure(operation, path_errors)
             try:
                 warnings = _atomic_write(archive_path, working)
             except PermissionError:

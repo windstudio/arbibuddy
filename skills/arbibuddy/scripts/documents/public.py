@@ -27,14 +27,15 @@ from uuid import uuid4
 
 from scripts.case_archive import CaseArchive
 from scripts.case_archive.service import CONTRACT_VERSION as ARCHIVE_CONTRACT
-from scripts.platform_paths import absolute_path_for_io, public_path
+from scripts.platform_paths import absolute_path_for_io, public_path, lexical_absolute_path
+from scripts.legal_verification.service import AUTHORITY_OUTCOME_LABELS, authority_control_field, authority_control_values
 from scripts.case_archive.service import _ArchiveLockTimeout
 from scripts.runtime_identity import (
     RuntimeIdentityModule,
     runtime_identity_failure_message,
 )
 
-from .delivery import commit_generation_staging
+from .delivery import commit_generation_staging, is_committed_generation_backup, is_retained_external_generation
 from .archive_dependencies import (
     candidate_dependencies, validate_archive_freshness, validate_dependency_shape,
 )
@@ -247,6 +248,12 @@ _DOCUMENT_TYPE_CONTRACTS = {
     "arbitration_application": {
         "title": "劳动人事争议仲裁申请书",
         "sections": ["申请人", "被申请人", "仲裁请求", "事实与理由", "落款"],
+        "numbered_section_input": {
+            "heading": "仲裁请求",
+            "rule": "混合列表中只给需编号的请求行加 1.、2. 等输入标记，合计等普通段落不加；renderer 去掉输入标记后生成真实 Word 编号。整段没有标记时所有非空行都会编号，插入空行不能排除合计。",
+            "editing": "edit-context 的 text 不含 Word 自动编号；按原 blocks.numbering 为列表项恢复输入标记，numbering=null 的普通段落保留原文；不把 numId 写进正文。",
+            "example": {"full_text": "1. 请求支付工资差额6000.00元。\n以上请求合计6000.00元。"},
+        },
         "external_final": "需要主体、主张、金额、日期和落款锁定要素",
     },
     "arbitration_defense": {
@@ -301,10 +308,18 @@ _TOP_LEVEL_FIELDS = (
     "additional_checklist_items",
     "delivery_set_id",
 )
+_REQUIRED_TOP_LEVEL_FIELDS = tuple(field for field in _TOP_LEVEL_FIELDS[:8] if field != "title")
+_IDENTITY_NAME_FIELDS = ("姓名", "单位名称", "用人单位名称")
+_IDENTITY_FOLLOWING_FIELDS = (
+    "申请人", "申请人姓名", "被申请人", "被申请人名称", *_IDENTITY_NAME_FIELDS,
+    "用人单位", "身份证号", "身份证号码", "联系电话", "住所", "住址", "地址",
+    "单位送达地址", "法定代表人", "法定代表人姓名", "合同约定月薪", "统一社会信用代码",
+)
 _FACT_AMOUNT_HEADINGS = {
     "arbitration_application": frozenset({"事实与理由"}),
     "employment_obligation_demand_letter": frozenset({"劳动关系说明"}),
     "forced_termination_notice": frozenset({"解除理由"}),
+    "evidence_catalog": frozenset({"五列表格", "证据列表", "证据目录表格"}),
 }
 _SECTION_FIELDS = ("section_id", "heading", "full_text")
 _BINDING_FIELDS = ("kind", "archive_record_ref", "rendered_value", "label", "occurrences")
@@ -339,7 +354,24 @@ _CONFLICT_PATTERNS = (
 )
 _EVIDENCE_DELIMITER_PATTERN = re.compile(r"[|｜\t]")
 _CURRENCY_AMOUNT_PATTERN = re.compile(
-    r"(?<![0-9.])(?P<amount>[0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?)\s*(?:元|圆|人民币)"
+    r"(?<![0-9.])(?P<amount>[0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?)\s*(?:元|圆)"
+)
+# Recognition is deliberately broader than the canonical, source-bound form.
+# Share numeral and unit coverage so an unsupported spelling cannot disappear
+# from the gate merely by combining Chinese digits with another currency unit.
+_CURRENCY_NUMERALS = "0-9０-９零〇○一二两兩三四五六七八九十百千万萬亿億兆壹贰貳貮叁參叄肆伍陆陸柒捌玖拾佰仟廿卅卌"
+_CURRENCY_NUMBER = (
+    rf"(?:[{_CURRENCY_NUMERALS}][{_CURRENCY_NUMERALS},，.．点點]*|[.．点點][{_CURRENCY_NUMERALS}]+)"
+    r"(?:\s*[kKwWmM])?"
+)
+_CURRENCY_UNITS = r"(?:人民[币幣]|RMB|CNY|美元|港元|日元|[欧歐]元|元|[圆圓]|[块塊][钱錢]?)"
+_CURRENCY_FRACTION = (
+    rf"(?:\s*(?:整|正|[{_CURRENCY_NUMERALS}]+\s*角(?:\s*[{_CURRENCY_NUMERALS}]+\s*分)?|[{_CURRENCY_NUMERALS}]+\s*分))?"
+)
+_CURRENCY_EXPRESSION_PATTERN = re.compile(
+    rf"(?:人民[币幣]|RMB|CNY|[￥¥])\s*[+\-−﹣－＋负負]?\s*{_CURRENCY_NUMBER}\s*(?:{_CURRENCY_UNITS})?{_CURRENCY_FRACTION}"
+    rf"|[+\-−﹣－＋负負]?\s*{_CURRENCY_NUMBER}\s*{_CURRENCY_UNITS}{_CURRENCY_FRACTION}",
+    re.IGNORECASE,
 )
 _CONFIRMATION_FIELD_LABELS = {
     "action_type": ("action_type", "动作类别", "高风险确认标识"),
@@ -442,8 +474,10 @@ def _error(
     received: Any,
     *,
     recoverable: bool = True,
+    reason: str | None = None,
+    repair_scope: str | None = None,
 ) -> dict[str, Any]:
-    return {
+    result = {
         "code": code,
         "path": path,
         "message": message,
@@ -451,6 +485,11 @@ def _error(
         "received": received,
         "recoverable": recoverable,
     }
+    if reason is not None:
+        result["reason"] = reason
+    if repair_scope is not None:
+        result["repair_scope"] = repair_scope
+    return result
 
 
 def _load_docx_builder() -> Any:
@@ -688,7 +727,7 @@ def _validate_request(request: Any) -> tuple[dict[str, Any] | None, list[dict[st
         return None, [_error("invalid_object", "request", "document.render 请求必须是对象", "object", request)]
     errors: list[dict[str, Any]] = []
     _exact_keys(request, _TOP_LEVEL_FIELDS, "request", errors)
-    for field in _TOP_LEVEL_FIELDS[:8]:
+    for field in _REQUIRED_TOP_LEVEL_FIELDS:
         if field not in request:
             errors.append(_error("missing_input", field, "请求缺少必填字段", "required", None))
 
@@ -731,11 +770,13 @@ def _validate_request(request: Any) -> tuple[dict[str, Any] | None, list[dict[st
     mode = _single_line(request.get("mode"), "mode", errors)
     if mode is not None and mode not in MODES:
         errors.append(_error("invalid_mode", "mode", "文书成熟度不在公开枚举中", list(MODES), mode))
-    title = _single_line(request.get("title"), "title", errors)
+    title = (_DOCUMENT_TYPE_TITLES.get(document_type)
+             if "title" not in request else _single_line(request.get("title"), "title", errors))
     if document_type in _DOCUMENT_TYPE_TITLES and title is not None:
         expected_title = _DOCUMENT_TYPE_TITLES[document_type]
         if title != expected_title:
-            errors.append(_error("binding_mismatch", "title", "标题必须与文书类型的注册标题一致", expected_title, title))
+            errors.append(_error("binding_mismatch", "title", "标题由文书类型派生；省略 title 或使用注册标题，候选标识由 mode 处理", expected_title, title,
+                                 reason="registered_title_mismatch", repair_scope="request_only"))
 
     sections_value = request.get("sections")
     sections: list[dict[str, str]] = []
@@ -950,7 +991,51 @@ def _value_candidates(value: str, label: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(item for item in candidates if item))
 
 
+def _identity_source_matches(body: str, rendered_value: str) -> bool:
+    """Require the complete identity as a Markdown field value, never a substring."""
+    identity = re.split(r"[：:]", rendered_value, maxsplit=1)[-1].strip()
+    if not identity:
+        return False
+    normalized = body.replace("**", "")
+    field_label = r"[^\r\n：:；;，,]{1,40}[：:]"
+    fields = re.finditer(
+        rf"(?:^|[\r\n；;，,])\s*(?:[-*+]\s+|\d+[.)]\s+)?{field_label}\s*",
+        normalized,
+    )
+    for field in fields:
+        remainder = normalized[field.end():]
+        if not remainder.startswith(identity):
+            continue
+        tail = remainder[len(identity):]
+        # Consume the complete literal name before checking separators, so
+        # punctuation inside a company name cannot turn its prefix into a name.
+        if re.match(rf"^\s*(?:。\s*)?(?:$|[\r\n]|[；;，,]\s*{field_label})", tail):
+            return True
+    # Extend only explicit fields: a Chinese full stop may separate fields,
+    # but never strip qualifications, truncate a name, or infer another role.
+    role = re.split(r"[：:]", rendered_value, maxsplit=1)[0].strip()
+    source_labels = {role, *_IDENTITY_NAME_FIELDS}
+    source_labels.update({"劳动者": ("通知人",), "用人单位": ("收件人", "致")}.get(role, ()))
+    labels = "|".join(re.escape(label) for label in sorted(source_labels, key=len, reverse=True))
+    following = "|".join(re.escape(label) for label in _IDENTITY_FOLLOWING_FIELDS)
+    explicit_fields = re.finditer(
+        rf"(?:^|[\r\n；;，,。])\s*(?:[-*+]\s+|\d+[.)]\s+)?(?:{labels})\s*[：:]\s*",
+        normalized,
+    )
+    for field in explicit_fields:
+        remainder = normalized[field.end():]
+        if not remainder.startswith(identity):
+            continue
+        tail = remainder[len(identity):]
+        if (re.match(rf"^\s*(?:。\s*)?(?:$|[\r\n]|[；;，,]\s*{field_label})", tail)
+                or re.match(rf"^\s*。\s*(?:{following})\s*[：:]", tail)):
+            return True
+    return False
+
+
 def _binding_value_matches(body: str, binding: Mapping[str, Any]) -> bool:
+    if binding["kind"] in {"party", "signature"}:
+        return _identity_source_matches(body, binding["rendered_value"])
     if binding["kind"] == "fact_amount":
         expected = list(_CURRENCY_AMOUNT_PATTERN.finditer(binding["rendered_value"]))
         if len(expected) != 1:
@@ -996,8 +1081,43 @@ def _record_field(body: str, field: str) -> str:
 
 
 def _confirmation_revision(body: str) -> int | None:
-    value = _record_field(body, "archive_revision")
-    return int(value) if value.isdigit() else None
+    labels = "|".join(re.escape(label) for label in _CONFIRMATION_FIELD_LABELS["archive_revision"])
+    revisions: set[int] = set()
+    for line in re.split(r"[\r\n；;]", body):
+        line = re.sub(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)", "", line.strip())
+        line = re.sub(r"\*\*([^*]+)\*\*", r"\1", line)
+        match = re.fullmatch(rf"(?:{labels})\s*[：:]\s*(.*?)\s*。?", line)
+        if match is None:
+            continue
+        value = match.group(1).strip()
+        if re.fullmatch(r"[0-9]+", value) is None:
+            return None
+        try:
+            revisions.add(int(value))
+        except ValueError:
+            return None
+    return next(iter(revisions)) if len(revisions) == 1 else None
+
+
+def _confirmation_reference_errors(
+    refs: Sequence[str], records: Mapping[str, str], archive_revision: int,
+) -> list[dict[str, Any]]:
+    errors: list[dict[str, Any]] = []
+    for index, ref in enumerate(refs):
+        body = records.get(ref)
+        path = f"confirmation_refs[{index}]"
+        if body is None:
+            errors.append(_error("confirmation_stale", path,
+                                 "引用的确认记录不存在或已失效", "existing archive record", ref))
+            continue
+        revision = _confirmation_revision(body)
+        if revision is None:
+            errors.append(_error("confirmation_missing", path,
+                                 "确认记录缺少明确的绑定档案修订版本", archive_revision, ref))
+        elif revision != archive_revision:
+            errors.append(_error("confirmation_stale", path,
+                                 "确认记录绑定的档案修订版本已过期", archive_revision, revision))
+    return errors
 
 
 def _confirmation_source_refs(body: str) -> tuple[str, ...]:
@@ -1005,20 +1125,22 @@ def _confirmation_source_refs(body: str) -> tuple[str, ...]:
 
 
 def _authority_is_current(body: str) -> bool:
-    conclusion = _record_field(body, "authority_conclusion")
-    if not conclusion:
-        conclusion_match = re.search(
-            r"(?:核验结论|结论)\s*[：:]\s*([^\r\n；;。]+)", body
-        )
-        conclusion = conclusion_match.group(1).strip() if conclusion_match else ""
-    return conclusion == "已核验" and not any(
+    conclusion = authority_control_field(body, _CONFIRMATION_FIELD_LABELS["authority_conclusion"])
+    states = authority_control_values(body, ("核验状态", "authority_outcome"))
+    if states and states != ["verified"]:
+        return False
+    if conclusion not in {AUTHORITY_OUTCOME_LABELS["verified"], "已核验"}:
+        return False
+    if states == ["verified"]:
+        return True  # Free-text discussion of an expired baseline is not its status.
+    return not any(
         marker in body for marker in ("过期", "冲突", "受阻", "失败")
     )
 
 
 def _authority_supports_forced_termination(body: str, *, archive_region: str) -> bool:
-    topic = _record_field(body, "authority_topic")
-    scope = _record_field(body, "authority_scope")
+    topic = authority_control_field(body, _CONFIRMATION_FIELD_LABELS["authority_topic"])
+    scope = authority_control_field(body, _CONFIRMATION_FIELD_LABELS["authority_scope"])
     region_matches = (
         not archive_region
         or "全国" in scope
@@ -1501,8 +1623,8 @@ def _authority_supports_document(
 ) -> bool:
     if not _authority_is_current(body):
         return False
-    topic = _record_field(body, "authority_topic")
-    scope = _record_field(body, "authority_scope")
+    topic = authority_control_field(body, _CONFIRMATION_FIELD_LABELS["authority_topic"])
+    scope = authority_control_field(body, _CONFIRMATION_FIELD_LABELS["authority_scope"])
     if not topic or not scope:
         return False
     if not any(term in topic for term in _PROGRAM_AUTHORITY_TOPIC_TERMS[document_type]):
@@ -1621,23 +1743,31 @@ def _section_binding_errors(request: Mapping[str, Any]) -> list[dict[str, Any]]:
             section = sections.get(target["section_id"])
             text = target["text"]
             if kind == "fact_amount" and (
-                request["mode"] != "candidate"
-                or section is None
+                section is None
                 or section["heading"] not in _FACT_AMOUNT_HEADINGS.get(request["document_type"], frozenset())
             ):
                 errors.append(_error("binding_mismatch", path,
-                                     "事实金额只可用于候选文书的事实说明区块，不能替代请求或结算金额计算",
-                                     "candidate fact section", target))
+                                     "事实金额只可用于事实说明或证据描述区块，不能替代请求或结算金额计算",
+                                     "factual narrative or evidence description section", target))
                 continue
             matches = list(pattern.finditer(text))
-            if (
-                section is None
-                or section["full_text"].count(text) != 1
-                or len(matches) != 1
-                or (kind == "date" and not _valid_date_key(key(matches[0])))
-                or key(matches[0]) != expected
-            ):
-                errors.append(_error("binding_mismatch", path, "正文定位缺失、不唯一或与锁定值不一致", "unique exact excerpt containing the locked value", target))
+            reason = None
+            if section is None:
+                reason, message = "section_not_found", "section_id 未指向本次请求中的正文区块"
+            elif section["full_text"].count(text) == 0:
+                reason, message = "excerpt_not_found", "定位短语未原样出现在指定正文区块中"
+            elif section["full_text"].count(text) != 1:
+                reason, message = "excerpt_not_unique", "定位短语在指定区块中重复；请选取包含上下文的唯一原样短语"
+            elif len(matches) > 1:
+                reason = "excerpt_multiple_values"
+                message = f"定位短语含 {len(matches)} 个完整{'金额' if is_amount else '日期'}；每个绑定只定位当前值，分别取原样唯一短语"
+            elif not matches:
+                reason, message = "excerpt_value_missing", "定位短语未包含该绑定所需的完整金额或日期"
+            elif (kind == "date" and not _valid_date_key(key(matches[0]))) or key(matches[0]) != expected:
+                reason, message = "excerpt_value_mismatch", "定位短语中的值与本绑定锁定值不一致或日期无效；核对后修正定位"
+            if reason is not None:
+                errors.append(_error("binding_mismatch", path, message, "unique exact excerpt containing the locked value", target,
+                                     reason=reason, repair_scope="request_only"))
                 continue
             offset = section["full_text"].index(text)
             span = (offset + matches[0].start(), offset + matches[0].end())
@@ -1651,7 +1781,8 @@ def _section_binding_errors(request: Mapping[str, Any]) -> list[dict[str, Any]]:
                 )
                 or (kind == "date" and (target["section_id"], *span) in covered_dates)
             ):
-                errors.append(_error("binding_mismatch", path, "正文定位必须覆盖完整且唯一归属的数值", "complete numeric token", target))
+                errors.append(_error("binding_mismatch", path, "正文定位必须覆盖完整数值且不重复归属；修正本次请求中的定位", "complete numeric token", target,
+                                     reason="incomplete_or_reused_value", repair_scope="request_only"))
                 continue
             if is_amount:
                 covered_amounts[target["section_id"]].add(span)
@@ -1661,9 +1792,15 @@ def _section_binding_errors(request: Mapping[str, Any]) -> list[dict[str, Any]]:
                 if target["section_id"] in closing_ids:
                     bound_closing_dates.add(qualified_span)
     for index, section in enumerate(request["sections"]):
+        for match in _CURRENCY_EXPRESSION_PATTERN.finditer(section["full_text"]):
+            if _CURRENCY_AMOUNT_PATTERN.fullmatch(match.group(0).strip()) is not None:
+                continue
+            errors.append(_error("binding_mismatch", f"sections[{index}].full_text",
+                                 "货币表达必须使用完整阿拉伯数字加元，并逐处绑定；请先规范万元/前缀/中文金额",
+                                 "N元 with explicit amount occurrence", match.group(0)))
         for match in _CURRENCY_AMOUNT_PATTERN.finditer(section["full_text"]):
             if match.span() not in covered_amounts[section["section_id"]]:
-                errors.append(_error("binding_mismatch", f"sections[{index}].full_text", "正文金额缺少对应的计算或候选事实绑定", "explicit amount occurrence", match.group(0)))
+                errors.append(_error("binding_mismatch", f"sections[{index}].full_text", "正文金额缺少通过校验的定位；先核对请求中的金额绑定与 occurrences，来源确实缺失时再补档案", "explicit amount occurrence", match.group(0)))
 
     if request["mode"] == "external_final":
         for index, section in enumerate(request["sections"]):
@@ -1685,7 +1822,7 @@ def _section_binding_errors(request: Mapping[str, Any]) -> list[dict[str, Any]]:
                         _error(
                             "binding_mismatch",
                             f"sections[{index}].full_text",
-                            "正文完整日期 occurrence 缺少对应的档案绑定",
+                            "正文日期缺少通过校验的定位；先核对请求中的日期绑定与 occurrences，来源确实缺失时再补档案",
                             "explicit date occurrence bound to a source record",
                             match.group(0),
                         )
@@ -1710,29 +1847,47 @@ def _section_binding_errors(request: Mapping[str, Any]) -> list[dict[str, Any]]:
     return errors
 
 
+def _labelled_identity_pattern(labels: str) -> re.Pattern[str]:
+    # Commas and dots can belong to an official name. End a value only at
+    # a new labelled field, a line boundary, or the end of the section.
+    next_field = r"[；;，,]\s*[^\r\n：:；;，,]{1,40}[：:]"
+    return re.compile(
+        rf"(?<![\u4e00-\u9fff])(?P<role>{labels})\s*[:：]\s*"
+        rf"(?P<identity>[^\r\n]*?)(?={next_field}|[\r\n]|$)"
+    )
+
+
 def _section_labelled_binding_errors(
     request: Mapping[str, Any],
 ) -> list[dict[str, Any]]:
     errors: list[dict[str, Any]] = []
-    for binding in request["locked_bindings"]:
+    identities: set[tuple[str, str]] = set()
+    for binding_index, binding in enumerate(request["locked_bindings"]):
         if binding["kind"] not in {"party", "signature"}:
             continue
         rendered_value = binding["rendered_value"]
         delimiter = "：" if "：" in rendered_value else ":" if ":" in rendered_value else ""
         if not delimiter:
+            if request["mode"] == "external_final":
+                errors.append(_error("binding_mismatch", f"locked_bindings[{binding_index}].rendered_value",
+                                     "外发主体或落款绑定必须包含角色与完整身份值", "role：name", rendered_value))
             continue
         label, expected = rendered_value.split(delimiter, 1)
         label = label.strip()
-        expected = expected.strip().strip("，,；;。！？.!?")
+        expected = expected.strip()
         if not label or not expected:
             continue
-        pattern = re.compile(
-            rf"(?<![\u4e00-\u9fff]){re.escape(label)}\s*[:：]\s*([^，,；;。！？.!?\r\n]+)"
-        )
+        aliases = {"劳动者": ("劳动者", "通知人"), "用人单位": ("用人单位", "收件人", "致")}.get(label, (label,))
+        if binding["kind"] == "party":
+            identities.update((alias, expected) for alias in aliases)
+        labels = "|".join(re.escape(item) for item in aliases)
+        pattern = _labelled_identity_pattern(labels)
+        found = False
         for section_index, section in enumerate(request["sections"]):
             for match in pattern.finditer(section["full_text"]):
-                actual = match.group(1).strip()
-                if actual and not actual.startswith(expected):
+                actual = match["identity"].strip().rstrip("。！？")
+                found = True
+                if actual != expected:
                     errors.append(
                         _error(
                             "binding_mismatch",
@@ -1742,6 +1897,40 @@ def _section_labelled_binding_errors(
                             match.group(0),
                         )
                     )
+        if request["mode"] == "external_final" and not found:
+            errors.append(_error("binding_mismatch", f"locked_bindings[{binding_index}].rendered_value",
+                                 "正文缺少可精确校验的主体或落款位置", f"labelled full identity: {rendered_value}", None))
+    if request["mode"] == "external_final":
+        role_pattern = _labelled_identity_pattern(
+            r"申请执行人|被执行人|被申请人|申请人|被答辩人|答辩人|劳动者|用人单位|收件人|通知人|致"
+        )
+        for section_index, section in enumerate(request["sections"]):
+            labelled_positions = list(role_pattern.finditer(section["full_text"]))
+            required_roles = (
+                {section["heading"]}
+                if section["heading"] in {"申请人", "被申请人", "答辩人", "被答辩人", "申请执行人", "被执行人"}
+                else {"收件人", "致", "用人单位"} if section["heading"] == "收件人" else set()
+            )
+            if required_roles and not any(
+                match["role"] in required_roles
+                and (match["role"], match["identity"].strip().rstrip("。！？")) in identities
+                for match in labelled_positions
+            ):
+                errors.append(_error("binding_mismatch", f"sections[{section_index}].full_text",
+                                     "主体专用章节必须有本角色的完整身份绑定，不能仅靠其他章节或落款替代",
+                                     sorted(required_roles), section["full_text"]))
+            for match in labelled_positions:
+                if (match["role"], match["identity"].strip().rstrip("。！？")) not in identities:
+                    # A closing role may differ from the subject role, but must
+                    # still use an explicitly supported signature identity.
+                    signature_supported = any(
+                        binding["kind"] == "signature"
+                        and _normalized_signature_text(binding["rendered_value"]) == f"{match['role']}：{match['identity'].strip().rstrip('。！？')}"
+                        for binding in request["locked_bindings"]
+                    )
+                    if not signature_supported:
+                        errors.append(_error("binding_mismatch", f"sections[{section_index}].full_text",
+                                             "正文主体位置缺少对应的完整角色与身份绑定", "explicit party binding for every labelled identity", match.group(0)))
     return errors
 
 
@@ -1852,6 +2041,8 @@ def _binding_errors(
                     "标题锁定值必须与请求标题一致",
                     request["title"],
                     binding["rendered_value"],
+                    reason="registered_title_mismatch",
+                    repair_scope="request_only",
                 )
             )
         if kind == "amount" and not _binding_value_matches(body, binding):
@@ -1862,6 +2053,8 @@ def _binding_errors(
                     "金额渲染值与确定性计算记录不一致",
                     "value present in referenced CAL record",
                     binding["rendered_value"],
+                    reason="source_value_mismatch",
+                    repair_scope="review_source",
                 )
             )
         elif kind != "document_heading" and not _binding_value_matches(body, binding):
@@ -1869,9 +2062,12 @@ def _binding_errors(
                 _error(
                     "binding_mismatch",
                     f"{path}.rendered_value",
-                    "锁定渲染值与所引用档案记录不一致",
+                    ("主体或落款值未通过引用记录的完整身份字段校验；核对该记录的标签与完整身份，不能截取更长姓名"
+                     if kind in {"party", "signature"} else "锁定渲染值与所引用档案记录不一致；核对引用和值，来源确需纠正时再提交档案"),
                     "value present in referenced archive record",
                     binding["rendered_value"],
+                    reason="source_value_mismatch",
+                    repair_scope="review_source",
                 )
             )
         elif kind == "document_heading" and request["title"] not in body:
@@ -1882,72 +2078,30 @@ def _binding_errors(
                     "文书标题绑定未在档案记录中得到支持",
                     request["title"],
                     binding["rendered_value"],
+                    reason="source_value_mismatch",
+                    repair_scope="review_source",
                 )
             )
     errors.extend(_section_binding_errors(request))
     errors.extend(_section_labelled_binding_errors(request))
     errors.extend(_section_evidence_errors(request))
-    for ref_path in ("confirmation_refs", "authority_refs"):
-        for index, ref in enumerate(request[ref_path]):
-            body = records.get(ref)
-            if body is None:
-                errors.append(
-                    _error(
-                        "confirmation_stale" if ref_path == "confirmation_refs" else "authority_stale",
-                        f"{ref_path}[{index}]",
-                        "引用的确认或现行依据记录不存在或已失效",
-                        "existing archive record",
-                        ref,
-                    )
-                )
-                continue
-            if ref_path == "confirmation_refs" and ref.startswith("CONF-"):
-                bound_revision = _confirmation_revision(body)
-                if bound_revision is None:
-                    errors.append(
-                        _error(
-                            "confirmation_missing",
-                            f"{ref_path}[{index}]",
-                            "确认记录缺少绑定的档案修订版本",
-                            archive_revision,
-                            ref,
-                        )
-                    )
-                elif bound_revision != archive_revision:
-                    errors.append(
-                        _error(
-                            "confirmation_stale",
-                            f"{ref_path}[{index}]",
-                            "确认记录绑定的档案修订版本已过期",
-                            archive_revision,
-                            bound_revision,
-                        )
-                    )
-            if ref_path == "authority_refs" and ref.startswith("AUTH-"):
-                authority_current = (
-                    _authority_supports_forced_termination(
-                        body,
-                        archive_region=archive_region,
-                    )
-                    if request["document_type"] == "forced_termination_notice"
-                    else _authority_supports_document(
-                        body,
-                        document_type=request["document_type"],
-                        archive_region=archive_region,
-                    )
-                    if request["document_type"] in _PROGRAM_DOCUMENT_TYPES
-                    else _authority_is_current(body)
-                )
-                if not authority_current:
-                    errors.append(
-                        _error(
-                            "authority_stale",
-                            f"{ref_path}[{index}]",
-                            "现行依据记录不是已核验状态，不能支撑当前引用",
-                            "核验结论：已核验",
-                            ref,
-                        )
-                    )
+    errors.extend(_confirmation_reference_errors(request["confirmation_refs"], records, archive_revision))
+    for index, ref in enumerate(request["authority_refs"]):
+        body = records.get(ref)
+        if body is None:
+            errors.append(_error("authority_stale", f"authority_refs[{index}]",
+                                 "引用的现行依据记录不存在或已失效", "existing archive record", ref))
+            continue
+        authority_current = (
+            _authority_supports_forced_termination(body, archive_region=archive_region)
+            if request["document_type"] == "forced_termination_notice"
+            else _authority_supports_document(body, document_type=request["document_type"], archive_region=archive_region)
+            if request["document_type"] in _PROGRAM_DOCUMENT_TYPES
+            else _authority_is_current(body)
+        )
+        if not authority_current:
+            errors.append(_error("authority_stale", f"authority_refs[{index}]",
+                                 "现行依据记录不是已核验状态，不能支撑当前引用", "核验结论：已核验", ref))
     errors.extend(_forced_confirmation_errors(request, records))
     errors.extend(_program_confirmation_errors(request, records))
     errors.extend(_demand_semantic_errors(request))
@@ -1960,7 +2114,7 @@ def _binding_errors(
             _error(
                 "missing_input",
                 "locked_bindings",
-                "正文包含金额时必须提供计算或候选事实金额锁定要素",
+                "正文包含金额时必须提供计算或事实金额锁定要素",
                 "at least one amount binding for every rendered currency amount",
                 bindings,
             )
@@ -2312,17 +2466,11 @@ def create_delivery_set(
         ])
     requested = requested_templates if requested_templates is not None else requested_document_types
     normalized_requested, expected_types, errors = _delivery_set_expected_types(requested)
-    refs = request.get("confirmation_refs", [])
-    if not isinstance(refs, list) or not all(isinstance(item, str) and item for item in refs):
-        errors.append(
-            _delivery_set_error(
-                "invalid_confirmation_refs",
-                "confirmation_refs",
-                "确认引用必须是字符串数组",
-                "array[string]",
-                refs,
-            )
-        )
+    refs_value = request.get("confirmation_refs", [])
+    refs = _validate_refs(refs_value, "confirmation_refs", errors)
+    if refs_value is None:
+        errors.append(_delivery_set_error("invalid_confirmation_refs", "confirmation_refs",
+                                          "确认引用必须是字符串数组", "array[string]", refs_value))
     if errors:
         return _delivery_set_failure(errors)
     root = absolute_path_for_io(workspace_root)
@@ -2350,9 +2498,16 @@ def create_delivery_set(
                 revision,
             )
         ])
+    archive_markdown = archive_result.get("result", {}).get("markdown", "")
+    records = _archive_records(archive_markdown)
+    errors = _confirmation_reference_errors(refs, records, revision)
+    warnings: list[dict[str, Any]] = []
+    if mode == "candidate" and set(expected_types).issubset(_HIGH_RISK_DOCUMENT_TYPES):
+        warnings = [error for error in errors if error["code"] == "confirmation_stale"]
+        errors = [error for error in errors if error["code"] != "confirmation_stale"]
+    if errors:
+        return _delivery_set_failure(errors)
     if "arbitration_application" in expected_types:
-        archive_markdown = archive_result.get("result", {}).get("markdown", "")
-        records = _archive_records(archive_markdown)
         confirmation_bodies = [
             body for record_id, body in records.items()
             if record_id.startswith("CONF-")
@@ -2360,7 +2515,7 @@ def create_delivery_set(
         confirmations = [
             body for body in confirmation_bodies
             if (bound_revision := _confirmation_revision(body)) is not None
-            and bound_revision <= revision
+            and (bound_revision == revision if mode == "external_final" else bound_revision <= revision)
         ]
         if not confirmations:
             if confirmation_bodies and all(
@@ -2374,6 +2529,12 @@ def create_delivery_set(
                         "绑定档案修订版本：<非负整数>",
                         "unreadable",
                     )
+                ])
+            if confirmation_bodies and any(_confirmation_revision(body) is not None for body in confirmation_bodies):
+                return _delivery_set_failure([
+                    _delivery_set_error("confirmation_stale", "archive.confirmation.archive_revision",
+                                        "摘要确认的绑定版本尚未覆盖本次仲裁材料所需的档案版本",
+                                        revision, [_confirmation_revision(body) for body in confirmation_bodies])
                 ])
             return _delivery_set_failure([
                 _delivery_set_error(
@@ -2456,7 +2617,7 @@ def create_delivery_set(
         "expected_document_types": expected_types,
         "confirmation_refs": list(refs),
         "delivery_set_digest": digest,
-    })
+    }, warnings=warnings)
 
 
 def _contract_examples() -> dict[str, Any]:
@@ -3051,7 +3212,13 @@ def _cleanup_backup(output_dir: Path, transaction_id: str) -> list[dict[str, Any
             }
         ]
     for candidate in candidates:
-        if not candidate.name.startswith(prefix):
+        if not (candidate.name.startswith(prefix) or candidate.name == f".{output_dir.name}.regeneration-{transaction_id}"):
+            continue
+        if not is_committed_generation_backup(candidate):
+            if is_retained_external_generation(candidate):
+                warnings.append({"code": "external_generation_retained", "message": "旧稿曾被外部修改，现作为非交付材料保留；新文书另行核验，旧稿不可直接用于交付。", "recoverable": False})
+                continue
+            warnings.append({"code": "temporary_cleanup_failed", "message": "旧备份身份或新 canonical 完整性无法证明；保留并通过受管请求重试", "recoverable": True})
             continue
         try:
             if candidate.is_dir() and not candidate.is_symlink():
@@ -3084,7 +3251,7 @@ class _DocumentRenderer:
     """Implement the complete, narrow ``document.render`` contract internally."""
 
     def __init__(self, workspace_root: str | Path) -> None:
-        self._workspace_root = absolute_path_for_io(workspace_root)
+        self._workspace_root = lexical_absolute_path(workspace_root)
         self._archive = CaseArchive(self._workspace_root)
 
     def describe(self) -> dict[str, Any]:
@@ -3092,12 +3259,13 @@ class _DocumentRenderer:
             **CONTRACT_METADATA,
             "input": {
                 "fields": [
-                    {"name": name, "required": name in _TOP_LEVEL_FIELDS[:8], "type": "array[object]" if name in {"sections", "locked_bindings"} else "array[string]" if name.endswith("refs") else "array[object]" if name == "placeholders" else "array[string]" if name == "additional_checklist_items" else "string" if name not in {"archive_revision"} else "non-negative integer"}
+                    {"name": name, "required": name in _REQUIRED_TOP_LEVEL_FIELDS, "type": "array[object]" if name in {"sections", "locked_bindings"} else "array[string]" if name.endswith("refs") else "array[object]" if name == "placeholders" else "array[string]" if name == "additional_checklist_items" else "string" if name not in {"archive_revision"} else "non-negative integer"}
                     for name in _TOP_LEVEL_FIELDS
                 ],
                 "document_types": list(DOCUMENT_TYPES),
                 "modes": list(MODES),
                 "template_version": TEMPLATE_VERSION,
+                "title": "optional; omitted title is derived from the selected document type's registered title; explicit title must equal it; mode alone controls candidate labelling; existing heading-source bindings still apply",
                 "document_type_requirements": deepcopy(_DOCUMENT_TYPE_CONTRACTS),
                 "section": {
                     "required_fields": list(_SECTION_FIELDS),
@@ -3107,10 +3275,18 @@ class _DocumentRenderer:
                     "required_fields": ["kind", "archive_record_ref", "rendered_value"],
                     "optional_fields": ["label", "occurrences"],
                     "uniqueness": "unique kind + archive_record_ref + rendered_value; one archive record may support multiple distinct locked values",
-                    "occurrences": {"required_for": ["amount", "fact_amount", "date", "signature in external_final"], "fields": ["section_id", "text"], "text": "unique exact single-line excerpt; bind every complete amount/date occurrence and the full role:name signature inside the closing section"},
+                    "occurrences": {"required_for": ["amount", "fact_amount", "date", "signature in external_final"], "fields": ["section_id", "text"], "text": "unique exact single-line excerpt inside its section; an amount excerpt contains only its bound currency amount, not another amount from the same line; bind every complete amount/date occurrence and the full role:name signature inside the closing section"},
                     "external_final_date_coverage": "every complete Chinese or ISO calendar date in every body section must be valid and individually located by a date occurrence supported by its referenced archive record",
                     "amount_source": "one explicitly labelled 确定性计算结果：N元 in the referenced CAL record",
-                    "fact_amount_source": {"record": "F record containing the same currency value", "mode": "candidate", "allowed_headings": {key: sorted(value) for key, value in _FACT_AMOUNT_HEADINGS.items()}, "scope": "factual narrative only; claim/settlement amounts still use CAL"},
+                    "currency_lexical_form": "Arabic numeric yuan (N元/圆); normalize 万元/亿元, currency prefixes and Chinese amounts before binding; unsupported forms are rejected",
+                    "party_identity": "role：full name; source Markdown must contain the exact full name as a labelled field value, never a substring in a longer name or prose; external_final requires a matching labelled identity in every dedicated party/recipient section and exact identity at every matching label; 劳动者 also matches 通知人, 用人单位 also matches 收件人/致",
+                    "party_source_field_boundaries": {
+                        "existing_formats": "line breaks or labelled fields separated by semicolons/commas; complete literal names, including their spaces and punctuation, are preserved",
+                        "chinese_full_stop": "also allowed between an explicit matching role/name field and a recognised following field; no inferred roles, stripped qualifications or searching other records; existing supported fields need no archive reformatting",
+                        "name_fields": list(_IDENTITY_NAME_FIELDS),
+                        "following_fields": list(_IDENTITY_FOLLOWING_FIELDS),
+                    },
+                    "fact_amount_source": {"record": "F record containing the same currency value", "modes": list(MODES), "allowed_headings": {key: sorted(value) for key, value in _FACT_AMOUNT_HEADINGS.items()}, "scope": "original fact values in factual narrative or evidence description; calculated results and claim/settlement amounts still use CAL; external_final requires confirmed current facts"},
                     "kinds": list(_BINDING_KINDS),
                 },
                 "placeholders": {
@@ -3119,7 +3295,8 @@ class _DocumentRenderer:
                     "candidate_only": True,
                 },
                 "references": {
-                    "confirmation_refs": "optional array of archive record ids",
+                    "confirmation_refs": "optional unique array of CONF record ids; delivery-set and render check the same current archive revision; high-risk candidates retain stale-confirmation warnings",
+                    "confirmation_revision": "one unambiguous non-negative integer on 绑定档案修订版本：N; common Markdown bold/list formatting is accepted; conflicting values are rejected",
                     "authority_refs": "optional array of archive record ids",
                 },
             },
@@ -3193,19 +3370,18 @@ class _DocumentRenderer:
                     "delivery_set_mismatch",
                     "delivery_set_member_mismatch",
                 ],
-                "shape": "每项包含 code、path、message、expected、received、recoverable",
-                "recovery": "按 path 一次修正请求；revision/绑定/确认/来源变化先重新读取档案；发布失败不产生 canonical 半成品",
+                "shape": "每项包含 code、path、message、expected、received、recoverable；部分绑定错误另含 reason、repair_scope",
+                "repair_scopes": {
+                    "request_only": "只修本次标题/正文/定位参数；档案与集合未变化时复用当前 revision 和 delivery_set_id 重试，不为格式修复 commit 或重建 set；并发与其他来源错误仍须处理",
+                    "review_source": "核对本次引用和值及当前档案；请求引用错误只修请求，档案来源确需补充或纠正才合批 commit 并按新 revision 重建完整 set",
+                },
+                "recovery": "集中处理全部错误；按各项 repair_scope 区分请求修复与来源核对；revision/确认/真实来源变化走对应恢复，发布失败不产生 canonical 半成品",
             },
             "examples": {
                 **_contract_examples(),
             },
             "scope": "本公共接缝实现八类模型主导文书；不自动提交、发送或签署",
-            "delivery_set": {
-                "contract_version": DELIVERY_SET_CONTRACT_VERSION,
-                "operation": DELIVERY_SET_OPERATION,
-                "entrypoint": "scripts.documents.public.create_delivery_set",
-                "managed_view_required": True,
-            },
+            "delivery_set": _delivery_set_contract(),
         }
 
     def render(self, request: Any) -> dict[str, Any]:
@@ -3444,7 +3620,7 @@ class _DocumentRenderer:
                 if replay_errors:
                     return _failure(replay_errors)
                 if replay is not None:
-                    return _success(replay, replay_warnings)
+                    return _success(replay, [*replay_warnings, *_cleanup_backup(output_dir, identity)])
             staging_dir = output_dir.parent / (
                 f".{output_dir.name}.staging-{uuid4().hex}"
             )
@@ -3552,6 +3728,8 @@ class _DocumentRenderer:
                         return _failure([_error("permission_denied", "output", "没有原子发布文书的权限；本次新文书未交付。保留旧DOCX、独立核验清单和机器清单，关闭Word/WPS及预览后仅用同一受管请求重试；仍失败则停止并回报，不删除、移走旧稿或清除事务锁。", "replaceable canonical output", error.__class__.__name__)])
                     except OSError as error:
                         return _failure([_error("io_failure", "output", "原子发布文书失败，旧 canonical 文件保持不变", "atomic output replacement", error.__class__.__name__)])
+                    except ValueError as error:
+                        return _failure([_error("publication_conflict", "output", "交付事务尚未安全恢复；保留原产物并通过受管请求重试", "recoverable managed transaction", str(error))])
                     warnings.extend(_cleanup_backup(output_dir, transaction_id))
                     published, publication_errors, _publication_warnings = _load_replay(
                         output_dir,
@@ -3605,10 +3783,89 @@ def render(request: Any, workspace_root: str | Path) -> dict[str, Any]:
     return _DocumentRenderer(workspace_root).render(request)
 
 
-def describe_contract() -> dict[str, Any]:
+def _delivery_set_contract() -> dict[str, Any]:
+    return {
+        "contract_version": DELIVERY_SET_CONTRACT_VERSION,
+        "operation": DELIVERY_SET_OPERATION,
+        "entrypoint": "scripts.documents.public.create_delivery_set",
+        "managed_view_required": True,
+        "input": {
+            "fields": [
+                {"name": "case_id", "required": True, "type": "case-<24 hex>"},
+                {"name": "archive_revision", "required": True, "type": "non-negative integer"},
+                {"name": "mode", "required": True, "enum": list(MODES)},
+                {"name": "requested_templates", "required": False, "type": "non-empty array[string]"},
+                {"name": "requested_document_types", "required": False, "type": "non-empty array[string]"},
+                {"name": "confirmation_refs", "required": False, "type": "unique array[string]", "default": []},
+            ],
+            "additional_fields": False,
+            "selection": "exactly one of requested_templates or requested_document_types; both accept registered template aliases or document types",
+            "template_aliases": dict(_TEMPLATE_TO_DOCUMENT_TYPE),
+            "document_types": list(DOCUMENT_TYPES),
+            "bundles": {key: list(value) for key, value in _DELIVERY_SET_BUNDLES.items()},
+            "bundle_rule": "applied after alias normalization, including direct arbitration_application; render every returned expected_document_types member once, sequentially",
+            "confirmation_refs": "same references as every render; ordinary candidates use []; arbitration requires existing unified summary confirmation; external_final requires current revision confirmation",
+            "authority_refs": "render request only; persist necessary authority records before creating the set",
+        },
+        "output": {"fields": ["case_id", "archive_revision", "mode", "delivery_set_id", "expected_document_types", "confirmation_refs", "delivery_set_digest"]},
+        "examples": {"request": {
+            "case_id": "case-0123456789abcdef01234567", "archive_revision": 1,
+            "mode": "candidate", "requested_templates": ["labor-arbitration-application"],
+            "confirmation_refs": [],
+        }},
+        "errors": {"recovery": "fix all returned paths together; unknown fields and conflicting selectors are rejected; changed archive requires a new complete set"},
+    }
+
+
+def describe_contract(operation: str | None = None, *, document_type: str | None = None) -> dict[str, Any]:
     """Return the public document.render contract without reading a case."""
 
-    return _DocumentRenderer(Path.cwd()).describe()
+    if document_type is not None:
+        if operation != "render":
+            raise ValueError("document_type_filter_requires_render_operation")
+        if not isinstance(document_type, str) or document_type not in DOCUMENT_TYPES:
+            raise ValueError("unsupported_document_type")
+    if operation == "delivery-set":
+        return _delivery_set_contract()
+    if operation in {"view", "edit-context"}:
+        from .view import describe_read_contract
+        return describe_read_contract(operation)
+    if operation not in {None, "render"}:
+        raise ValueError("unsupported_document_operation")
+    contract = _DocumentRenderer(Path.cwd()).describe()
+    if operation == "render":
+        contract.pop("delivery_set")
+    if document_type is not None:
+        from .contract_examples import render_worked_example
+        requirements = deepcopy(_DOCUMENT_TYPE_CONTRACTS[document_type])
+        contract["input"]["document_types"] = [document_type]
+        contract["input"]["document_type_requirements"] = {document_type: requirements}
+        contract["input"]["mode_requirements"] = {
+            "candidate": {
+                "placeholders": "declare every unresolved field used in the text; no invented facts or implicit finalization",
+                "binding_minimums": deepcopy(_FINAL_BINDING_COUNTS[document_type]) if document_type in _CANDIDATE_BINDING_DOCUMENT_TYPES else {},
+                "missing_bindings": "for this type, declared used placeholders must correspond to any missing minimum binding kinds" if document_type in _CANDIDATE_BINDING_DOCUMENT_TYPES else "existing values still require supported bindings; unresolved fields use declared placeholders",
+                "confirmation_refs": "ordinary candidates use [] in both set and render; reuse truthful summary confirmation in archive",
+            },
+            "external_final": {
+                "placeholders": "forbidden",
+                "binding_minimums": deepcopy(_FINAL_BINDING_COUNTS[document_type]),
+                "archive_revision": "strictly current for every member, including unchanged companion documents",
+                "high_risk_confirmation_and_authority_required": document_type in _HIGH_RISK_DOCUMENT_TYPES,
+                "type_rule": requirements["external_final"],
+            },
+        }
+        fact_source = contract["input"]["locked_binding"]["fact_amount_source"]
+        fact_source["allowed_headings"] = {
+            document_type: sorted(_FACT_AMOUNT_HEADINGS.get(document_type, ()))
+        }
+        worked = render_worked_example(document_type, requirements)
+        contract["examples"] = {
+            "request": deepcopy(worked["render_requests"][0]),
+            "worked_example": worked,
+            "recovery": contract["examples"]["recovery"],
+        }
+    return contract
 
 
 __all__ = [

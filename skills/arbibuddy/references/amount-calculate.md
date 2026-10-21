@@ -13,10 +13,14 @@ python -B -X utf8 -m scripts.amount_calculator.runtime_cli --workspace "<workspa
 python -B -X utf8 -m scripts.amount_calculator.runtime_cli --workspace "<workspace_root>" calculate --input "<workspace_root>/.arbibuddy/runtime-input/<nonce>.json"
 ```
 
-短请求也可用 `--json`。`--input` 只接受 `.arbibuddy/runtime-input/` 的直接 JSON 子文件；transport 在计算前消费并删除该文件，不保留请求副本。失败时按返回的错误修正同一公开请求，不改试旧 CLI、内联 Python 或源码探查。
+短请求优先用 `calculate --json '<完整请求JSON>'`，使用宿主 shell 的安全参数引用，直接提交一次计算，减少单独 Write；长请求或无法安全引用的内容使用 `--input`。同一公式的多个情景可按本契约一次提交；不同公式仍分别调用，依赖前项结果时等前项成功后构造后项。每次调用保留原有身份核验和数学校验。
+
+`--input` 只接受 `.arbibuddy/runtime-input/` 的直接 JSON 子文件；transport 在计算前消费并删除该文件，不保留请求副本。失败时按聚合错误一次修正公开请求，再直接提交新 `--json`，或由宿主 `Write` 写入新的单次输入后重试；旧输入已消费，不能直接重跑原路径。不改试旧 CLI、内联 Python 或源码探查。
 
 
 ## 正式计算记录门禁
+
+文件路径与失败清理沿用[档案文件边界](model-led-case-archive.md#文件边界与容量)：读取前拒绝链接、junction、安装根和越界输入；安全单次输入超限或读取失败也尝试删除。若收到 `runtime_input_cleanup_failed`，原输入尚待受管回收，先用原 `--input` 重试，不创建新请求副本；其余已消费的失败输入按上文重新写入。
 
 只有一次成功的 `amount.calculate-v1` 响应中 `ok=true` 的确定性结果，才能通过 `CaseArchive.commit` 形成正式 `CAL-*` 计算记录，或作为正式文书的金额绑定。模型心算、内嵌 Python `Decimal`、旧 CLI、临时脚本和未成功工具调用得到的数值不得写入正式计算区；它们最多只能作为普通语言中的明确待核实示例，不能冒充正式结果。工具调用失败时保留缺口并按错误契约恢复，不回退到手算或另一个入口。
 
@@ -92,7 +96,7 @@ max(0, 基数 × 数量 × 倍数 − 期间已付金额)
 
 解除相关的 `economic_compensation`（经济补偿）和 `unlawful_termination_compensation`（违法解除或终止赔偿金）使用同一纯数学形状，分别由模型选择适用工资基数、补偿/赔偿月数、倍数、已付金额、上限和情景。工具不判断解除主体、理由、日期、程序、救济竞合或用户选择；赔偿金与继续履行等互斥请求必须作为 `mutually_exclusive` 互斥情景分别返回，不能合并求和。
 
-基数和数量的维度必须匹配，例如 `yuan_per_month × month`、`yuan_per_day × day`。`cap` 若提供，必须是模型明确选择的 `yuan` 输入；工具只执行 `min(显式结果, 显式上限)`，不判断上限是否有法律依据。`wage_arrears_total` 与 `independent_amount_total` 只汇总模型明确提供的独立 `yuan` 分项。
+基数和数量的维度必须匹配，例如 `yuan_per_month × month`、`yuan_per_day × day`。`cap` 若提供，必须是模型明确选择的 `yuan` 输入；工具只执行 `min(显式结果, 显式上限)`，不判断上限是否有法律依据。
 
 `overtime_pay` 使用相同的线性差额公式，但只接受 `yuan_per_hour × hour` 或 `yuan_per_day × day`；工作日、休息日和法定休假日的倍数由模型分别选择并作为 `ratio` 输入。`unsigned_contract_double_wage` 接受 `yuan_per_month × month` 或 `yuan_per_day × day`，计算器不判断劳动关系、成立期间或时效。
 
@@ -105,6 +109,24 @@ max(0, (basis ÷ divisor) × quantity × multiplier − paid)
 其中 `basis` 是模型确认的 `yuan_per_month`，`divisor` 是带 `count` 单位的显式日工资折算除数（通常为 `21.75`），`quantity` 是 `day`，`multiplier` 和 `paid` 仍必须带 `ratio`/`yuan` 单位。计算器只做除法和算术，不从公式名称推导 21.75、3、1 或 2，也不判断年休假资格、排除、已休天数或时效。
 
 连续公式保留未舍入的 Decimal 中间值；每个独立分项在最终展示点按人民币分使用 `ROUND_HALF_UP` 舍入；情景小计使用已展示的分项相加。`mutually_exclusive` 情景分别返回小计，`grand_total` 为 `null`，不隐式求和或选最大值。只有模型明确提交 `sum_scenarios` 时才汇总多个情景。
+
+### 独立金额汇总
+
+`wage_arrears_total` 与 `independent_amount_total` 只汇总模型明确提供的独立 `yuan` 分项；`period.semantics` 必须为 `explicit_period`。每项只用 `line_id`、`amount` 和可选 `cap`，不沿用工资差额的 `basis/quantity/multiplier/paid`：
+
+```json
+{
+  "scenario_id": "primary",
+  "assumptions": ["两个独立分项可以相加，无重复或互斥。"],
+  "period": {"start_date": "2026-03-01", "end_date": "2026-04-30", "semantics": "explicit_period"},
+  "inputs": {"line_items": [
+    {"line_id": "first", "amount": {"value": "6000.00", "unit": "yuan"}},
+    {"line_id": "second", "amount": {"value": "4000.00", "unit": "yuan"}}
+  ]}
+}
+```
+
+此对象放入完整请求的 `scenarios`；其他顶层字段和舍入策略沿用前述完整契约。正文需要合计时，在文书准备阶段完成汇总并与分项结果同批落档。原始合同工资标准等事实金额直接保留在 `F-*`，文书事实区按 `fact_amount` 绑定，不用恒等计算制造 `CAL-*`。
 
 ## 成功响应
 

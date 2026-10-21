@@ -64,7 +64,7 @@ npx skills update arbibuddy --global
 
 ### WorkBuddy
 
-从 [1.2.7 发布页](https://github.com/windstudio/arbibuddy/releases/tag/v1.2.7) 下载 `arbibuddy-workbuddy.zip` 并在客户端选择“上传技能”，或从 [SkillHub](https://skillhub.cn/skills/indiv-xiaopang/arbibuddy) 安装或更新。安装或更新后完全重启客户端并新建会话。ZIP 安装包已包含文书依赖。
+从 [最新正式发布页](https://github.com/windstudio/arbibuddy/releases/latest) 下载 `arbibuddy-workbuddy.zip` 并在客户端选择“上传技能”，或从 [SkillHub](https://skillhub.cn/skills/indiv-xiaopang/arbibuddy) 安装或更新。安装或更新后完全重启客户端并新建会话。ZIP 安装包已包含文书依赖。
 
 ## 能力与降级
 

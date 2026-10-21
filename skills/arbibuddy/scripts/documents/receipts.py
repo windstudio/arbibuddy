@@ -15,6 +15,7 @@ from scripts.platform_paths import absolute_path_for_io, path_for_io, public_pat
 from scripts.case_archive.service import CONTRACT_VERSION as CASE_ARCHIVE_CONTRACT
 from .checklist_policy import required_checklist_bullets
 from .archive_dependencies import validate_archive_freshness
+from .delivery import is_committed_generation_backup, is_retained_external_generation
 from .ooxml_check import INTERNAL_LEAK_TERMS, audit_docx
 from .public import (
     CONTRACT_VERSION as DOCUMENT_RENDER_CONTRACT, DOCUMENT_TYPES,
@@ -217,7 +218,8 @@ def read_delivery_entries(
         (
             child
             for child in _directory_entries(output_root, description="canonical 输出目录")
-            if not _uncommitted_render_staging(child)
+            if not _uncommitted_render_staging(child) and not is_committed_generation_backup(child)
+            and not is_retained_external_generation(child)
         ),
         key=lambda path: path.name,
     )
