@@ -42,6 +42,7 @@ from .archive_dependencies import (
 from .checklist_policy import required_checklist_bullets
 from .ooxml_check import INTERNAL_LEAK_TERMS, audit_docx
 from .registry import get_template
+from . import lawyer_case_brief as brief
 from .runtime_dependencies import (
     DocumentRuntimeUnavailable,
     ensure_document_runtime,
@@ -59,6 +60,7 @@ OPERATION = CONTRACT_METADATA["operation"]
 PUBLIC_ENTRYPOINT = CONTRACT_METADATA["entrypoint"]
 TEMPLATE_VERSION = "1.0.0"
 DOCUMENT_TYPES = (
+    brief.DOCUMENT_TYPE,
     "employment_obligation_demand_letter",
     "forced_termination_notice",
     "arbitration_application",
@@ -94,6 +96,7 @@ _CANDIDATE_BINDING_DOCUMENT_TYPES = frozenset(
 )
 
 _TEMPLATE_IDS = {
+    brief.DOCUMENT_TYPE: brief.TEMPLATE_ID,
     "employment_obligation_demand_letter": "employment-obligation-demand-letter",
     "forced_termination_notice": "forced-termination-notice",
     "arbitration_application": "labor-arbitration-application",
@@ -174,6 +177,7 @@ _SECTION_ALIASES = {
     ),
 }
 _FINAL_BINDING_COUNTS = {
+    brief.DOCUMENT_TYPE: {"document_heading": 1},
     "employment_obligation_demand_letter": {
         "document_heading": 1,
         "party": 2,
@@ -234,6 +238,7 @@ _FINAL_BINDING_COUNTS = {
     },
 }
 _DOCUMENT_TYPE_CONTRACTS = {
+    brief.DOCUMENT_TYPE: brief.CONTRACT,
     "employment_obligation_demand_letter": {
         "title": "劳动用工义务催告函",
         "sections": ["收件人", "劳动关系说明", "具体义务", "履行期限", "沟通与保留权利"],
@@ -751,7 +756,7 @@ def _validate_request(request: Any) -> tuple[dict[str, Any] | None, list[dict[st
             _error(
                 "unsupported_document_type",
                 "document_type",
-                "本次公共工具只支持已开放的八类模型主导文书",
+                "本次公共工具只支持已注册的模型主导文书",
                 list(DOCUMENT_TYPES),
                 document_type,
             )
@@ -797,6 +802,12 @@ def _validate_request(request: Any) -> tuple[dict[str, Any] | None, list[dict[st
                 errors.append(_error("binding_mismatch", f"{path}.section_id", "section_id 不得重复", "unique section_id", section_id))
             section_ids.add(section_id)
             sections.append({"section_id": section_id, "heading": heading, "full_text": full_text})
+        if document_type == brief.DOCUMENT_TYPE:
+            if not sections or sections[0]["heading"] != brief.OVERVIEW:
+                errors.append(_error("missing_section", "sections[0].heading", "简报首页须为案情概要", brief.OVERVIEW, sections[0]["heading"] if sections else None))
+            continuations = [section["heading"] for section in sections[1:]]
+            if continuations and (continuations[0] != brief.TIMELINE or continuations.count(brief.TIMELINE) != 1 or brief.OVERVIEW in continuations):
+                errors.append(_error("missing_section", "sections", "复杂简报须在概要后只写一条共用时间线，再按争议事项续写", "案情概要 → 共用时间线 → 争议事项", continuations))
         if document_type in _SECTION_ALIASES and len(sections) != len(_SECTION_ALIASES[document_type]):
             errors.append(
                 _error(
@@ -1033,18 +1044,20 @@ def _identity_source_matches(body: str, rendered_value: str) -> bool:
     return False
 
 
-def _binding_value_matches(body: str, binding: Mapping[str, Any]) -> bool:
+def _binding_value_matches(body: str, binding: Mapping[str, Any], *, brief_amount: bool = False) -> bool:
     if binding["kind"] in {"party", "signature"}:
         return _identity_source_matches(body, binding["rendered_value"])
     if binding["kind"] == "fact_amount":
         expected = list(_CURRENCY_AMOUNT_PATTERN.finditer(binding["rendered_value"]))
         if len(expected) != 1:
             return False
-        return any(
+        matched = any(
             Decimal(match.group("amount").replace(",", ""))
             == Decimal(expected[0].group("amount").replace(",", ""))
             for match in _CURRENCY_AMOUNT_PATTERN.finditer(body)
         )
+        return matched or (brief_amount and brief.scaled_source_amount_matches(
+            body, Decimal(expected[0].group("amount").replace(",", ""))))
     if binding["kind"] == "amount":
         expected = list(_CURRENCY_AMOUNT_PATTERN.finditer(binding["rendered_value"]))
         if len(expected) != 1:
@@ -1744,7 +1757,8 @@ def _section_binding_errors(request: Mapping[str, Any]) -> list[dict[str, Any]]:
             text = target["text"]
             if kind == "fact_amount" and (
                 section is None
-                or section["heading"] not in _FACT_AMOUNT_HEADINGS.get(request["document_type"], frozenset())
+                or (request["document_type"] != brief.DOCUMENT_TYPE
+                    and section["heading"] not in _FACT_AMOUNT_HEADINGS.get(request["document_type"], frozenset()))
             ):
                 errors.append(_error("binding_mismatch", path,
                                      "事实金额只可用于事实说明或证据描述区块，不能替代请求或结算金额计算",
@@ -1830,7 +1844,7 @@ def _section_binding_errors(request: Mapping[str, Any]) -> list[dict[str, Any]]:
 
     if (
         request["mode"] == "external_final"
-        and request["document_type"] != "evidence_catalog"
+        and request["document_type"] not in {"evidence_catalog", brief.DOCUMENT_TYPE}
     ):
         closing = "\n".join(sections[key]["full_text"] for key in closing_ids)
         closing_date_spans: set[tuple[str, int, int]] = set()
@@ -1999,7 +2013,7 @@ def _binding_errors(
                 )
             )
             continue
-        if any(pattern.search(body) for pattern in _CONFLICT_PATTERNS):
+        if request["document_type"] != brief.DOCUMENT_TYPE and any(pattern.search(body) for pattern in _CONFLICT_PATTERNS):
             errors.append(
                 _error(
                     "fact_conflict",
@@ -2010,7 +2024,7 @@ def _binding_errors(
                 )
             )
         if request["mode"] == "external_final" and any(
-            marker in body for marker in ("事实状态：分析假设", "未确认事实")
+            marker in body for marker in (("事实状态：分析假设",) if request["document_type"] == brief.DOCUMENT_TYPE else ("事实状态：分析假设", "未确认事实"))
         ):
             errors.append(
                 _error(
@@ -2023,13 +2037,16 @@ def _binding_errors(
             )
         kind = binding["kind"]
         prefix = {"amount": "CAL", "fact_amount": "F", "claim": "CL", "evidence": "E", "attachment": "E"}.get(kind)
-        if prefix is not None and not ref.startswith(f"{prefix}-"):
+        if kind == "fact_amount" and request["document_type"] == brief.DOCUMENT_TYPE:
+            prefix = ("F", "E", "CL")
+        prefixes = prefix if isinstance(prefix, tuple) else (prefix,)
+        if prefix is not None and not ref.startswith(tuple(f"{item}-" for item in prefixes)):
             errors.append(
                 _error(
                     "binding_mismatch",
                     f"{path}.archive_record_ref",
                     f"{kind} 锁定要素必须引用对应类型的档案记录",
-                    f"{prefix}- record",
+                    " / ".join(f"{item}- record" for item in prefixes),
                     ref,
                 )
             )
@@ -2057,7 +2074,9 @@ def _binding_errors(
                     repair_scope="review_source",
                 )
             )
-        elif kind != "document_heading" and not _binding_value_matches(body, binding):
+        elif kind != "document_heading" and not _binding_value_matches(
+            body, binding, brief_amount=request["document_type"] == brief.DOCUMENT_TYPE
+        ):
             errors.append(
                 _error(
                     "binding_mismatch",
@@ -2759,13 +2778,17 @@ def _artifact_sha256(path: Path) -> str:
 
 def _checklist_text(request: Mapping[str, Any]) -> str:
     candidate = request["mode"] == "candidate"
+    state = ("阅案整理稿，可在同一份 Word 中审阅、编辑并自行转交"
+             if request["document_type"] == brief.DOCUMENT_TYPE else
+             "候选草稿，补全后再重新生成可外发定稿" if candidate else
+             "外发定稿，仍请在提交前完成人工核对")
     lines = [
         f"《{request['title']}》提交前核验清单",
         "",
         "本清单仅供核对，请勿外发；它不属于正式文书内容。",
         "",
         "## 一、文书状态",
-        f"- {'候选草稿，补全后再重新生成可外发定稿' if candidate else '外发定稿，仍请在提交前完成人工核对'}",
+        f"- {state}",
         "",
         "## 二、请核对的内容",
     ]
@@ -2782,7 +2805,9 @@ def _checklist_text(request: Mapping[str, Any]) -> str:
             for item in request["placeholders"]
         )
     lines.extend("- " + item for item in request["additional_checklist_items"])
-    if request["document_type"] == "evidence_catalog":
+    if request["document_type"] == brief.DOCUMENT_TYPE:
+        preview = "转交前可在同一份 Word/WPS 中预览、审阅、编辑并核对来源、信息范围、隐私及分页；待核事项可保留到面谈。"
+    elif request["document_type"] == "evidence_catalog":
         preview = "提交或发送前请在 Word/WPS 中预览证据表格、名称、证明目的、页码和分页。"
     elif candidate:
         preview = "请在 Word/WPS 中预览候选稿字段、正文层级和分页。"
@@ -3048,7 +3073,19 @@ def _build_docx(path: Path, request: Mapping[str, Any]) -> None:
     docx_builder = _load_docx_builder()
     landscape = request["document_type"] == "evidence_catalog"
     document = docx_builder._new_legal_document(landscape=landscape)
+    if request["document_type"] == brief.DOCUMENT_TYPE:
+        brief.configure_layout(document, docx_builder)
     docx_builder._add_title(document, request["title"])
+
+    if request["document_type"] == brief.DOCUMENT_TYPE:
+        # Keep the overview self-contained; complex matters start on page two.
+        for run in document.paragraphs[-1].runs:
+            docx_builder._set_run_font(run, name="黑体", size=18, bold=True)
+        for index, section in enumerate(request["sections"]):
+            if index == 1:
+                document.add_page_break()
+            brief.add_section(document, section, docx_builder)
+        return docx_builder._save_legal_document(document, path)
 
     if landscape:
         _add_evidence_table(document, _evidence_rows(request))
@@ -3286,7 +3323,7 @@ class _DocumentRenderer:
                         "name_fields": list(_IDENTITY_NAME_FIELDS),
                         "following_fields": list(_IDENTITY_FOLLOWING_FIELDS),
                     },
-                    "fact_amount_source": {"record": "F record containing the same currency value", "modes": list(MODES), "allowed_headings": {key: sorted(value) for key, value in _FACT_AMOUNT_HEADINGS.items()}, "scope": "original fact values in factual narrative or evidence description; calculated results and claim/settlement amounts still use CAL; external_final requires confirmed current facts"},
+                    "fact_amount_source": {"record": "F record containing the same currency value; lawyer_case_brief also accepts E/CL for attributed material amounts and previously filed requests", "modes": list(MODES), "allowed_headings": {**{key: sorted(value) for key, value in _FACT_AMOUNT_HEADINGS.items()}, brief.DOCUMENT_TYPE: "all brief sections"}, "scope": "original fact values in factual narrative or evidence description; calculated results and new claim/settlement amounts still use CAL; brief reports attributed estimates and existing requests without turning them into calculated claims"},
                     "kinds": list(_BINDING_KINDS),
                 },
                 "placeholders": {
@@ -3333,7 +3370,7 @@ class _DocumentRenderer:
                         ],
                     },
                     "amount_category": "仅非证据目录且正文含金额时要求，单独列项",
-                    "closing_category": "仅 external_final 且非证据目录时要求，单独列项",
+                    "closing_category": "仅 external_final 且非证据目录、律师阅案简报时要求，单独列项",
                     "candidate_closing_category": "不要求最终签署角色与日期核验项",
                 },
             },
@@ -3857,7 +3894,7 @@ def describe_contract(operation: str | None = None, *, document_type: str | None
         }
         fact_source = contract["input"]["locked_binding"]["fact_amount_source"]
         fact_source["allowed_headings"] = {
-            document_type: sorted(_FACT_AMOUNT_HEADINGS.get(document_type, ()))
+            document_type: "all brief sections" if document_type == brief.DOCUMENT_TYPE else sorted(_FACT_AMOUNT_HEADINGS.get(document_type, ()))
         }
         worked = render_worked_example(document_type, requirements)
         contract["examples"] = {

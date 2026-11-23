@@ -90,6 +90,8 @@ def _binding(kind, ref, value, *locations):
 
 def render_worked_example(document_type, requirements):
     """Return one coherent create/commit/set/render/view example for a type."""
+    if document_type == "lawyer_case_brief":
+        return _brief_worked_example()
     title = requirements["title"]
     # Ordinary examples also demonstrate final mode. High-risk examples are
     # deliberately candidates: fictional setup is no authority verification.
@@ -186,4 +188,53 @@ def render_worked_example(document_type, requirements):
         "render_requests": deepcopy(renders),
         "view": {"case_id": _CASE},
         "completion": "成功 view 的完整列表才授权展示；单份 render 成功不等于集合完成。高风险示例为 candidate，不证明可以外发。",
+    }
+
+
+def _brief_worked_example():
+    """No confirmation, calculation or complete evidence is needed for a brief."""
+    overview = (
+        "案情信息截至2026年4月15日（依据当事人当日陈述，此后进展尚未核实）。\n"
+        "本次咨询：当事人希望核对3月工资差额，并请律师判断口头要求离开后能否主张补偿。\n"
+        "用人单位：青岚设计有限公司\n"
+        "主体关系：据当事人陈述，劳动合同单位与付款方青岚服务有限公司不同，两家公司关系待核。\n"
+        "当前阶段：据当事人陈述，已申请仲裁，尚未收到开庭通知。\n"
+        "主要分歧：当事人现估3月工资差额8000元；据其提供的已提交仲裁申请书（已阅），同期间已请求10000元，差异待核，不合计。\n"
+        "关键经过：当事人称主管口头要求其离开；但又称收到公司HR的返岗微信，截图尚未提供，双方完整表述和后续出勤待核。\n"
+        "面谈先核实：收到返岗通知后如何回复、是否实际到岗？其次核对3月工资请求的两种口径。对方意见尚不清楚。"
+    )
+    contents = [
+        ("fact", "事实状态：用户陈述\n姓名：张三；身份证号：310000199001010000；私人手机号：13800000000。"),
+        ("fact", "事实状态：用户陈述\n单位名称：青岚设计有限公司\n劳动合同单位为该公司，付款方为青岚服务有限公司，两家公司关系待核。"),
+        ("fact", "文书准备信息（模型排版元数据，非新增用户陈述）：律师阅案简报。"),
+        ("fact", "事实状态：用户陈述\n当事人于2026年4月15日陈述案情，此后进展尚未核实。咨询目的为核对3月工资差额及口头要求离开后能否主张补偿。已申请仲裁，尚未收到开庭通知，对方意见尚不清楚。"),
+        ("fact", "事实状态：用户陈述\n当事人现估3月工资差额8000元。"),
+        ("claim", "材料状态：已阅\n已经提出的请求：当事人提供的已提交仲裁申请书载明3月工资差额请求1万元，与现估差异待核。"),
+        ("evidence", "当事人称主管口头要求其离开，但公司HR又发来返岗微信；截图尚未提供，内容未查看，双方完整表述、当事人回复及后续出勤待核。"),
+    ]
+    request = {
+        "case_id": _CASE, "archive_revision": 1, "document_type": "lawyer_case_brief",
+        "template_version": "1.0.0", "mode": "external_final",
+        "sections": [{"section_id": "overview", "heading": "案情概要", "full_text": overview}],
+        "locked_bindings": [
+            _binding("document_heading", "F-003", "律师阅案简报"),
+            _binding("party", "F-002", "用人单位：青岚设计有限公司"),
+            _binding("date", "F-004", "2026年4月15日", ("overview", "案情信息截至2026年4月15日")),
+            _binding("fact_amount", "F-005", "8000元", ("overview", "当事人现估3月工资差额8000元")),
+            _binding("fact_amount", "CL-001", "10000元", ("overview", "同期间已请求10000元")),
+            _binding("evidence", "E-001", "返岗微信"),
+        ],
+        "confirmation_refs": [], "authority_refs": [], "placeholders": [],
+    }
+    return {
+        "purpose": "仅在虚构工作区演示简报一次交付；不得复制为真实案件事实。",
+        "substitution": "使用 create 的 case_id、commit 的 revision 和 set 的 delivery_set_id 替换示例值。",
+        "create": {"initial_goal": "核对3月工资差额及口头离职经过，整理给律师"},
+        "commit": {"case_id": _CASE, "expected_revision": 0, "change_summary": "准备虚构简报来源，不添加确认或计算",
+                   "changes": [{"operation": "append", "record_type": kind, "content_markdown": content} for kind, content in contents]},
+        "delivery_set": {"case_id": _CASE, "archive_revision": 1, "mode": "external_final",
+                         "requested_templates": ["lawyer-case-brief"], "confirmation_refs": []},
+        "render_requests": [request],
+        "view": {"case_id": _CASE},
+        "completion": "成功 view 后一次展示唯一 Word，供审阅、编辑和自行转交；不等待另一次确认定稿。",
     }

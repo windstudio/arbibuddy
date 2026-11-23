@@ -234,6 +234,8 @@ def _require_numbering(
     document_root: ElementTree.Element,
     styles_root: ElementTree.Element,
     numbering_root: ElementTree.Element,
+    *,
+    require_usage: bool = True,
 ) -> None:
     abstract_ids = {
         _attribute(node, "abstractNumId")
@@ -257,7 +259,7 @@ def _require_numbering(
         num_id = _attribute(num_pr.find("w:numId", NS), "val")
         if num_id not in number_to_abstract or number_to_abstract[num_id] not in abstract_ids:
             raise ValueError("OOXML编号引用缺少对应的num/abstractNum")
-    if not num_prs:
+    if require_usage and not num_prs:
         raise ValueError("OOXML具体义务未使用真实编号")
 
 
@@ -351,6 +353,7 @@ def audit_docx(path: Path, template_id: str | None = None) -> OoxmlAudit:
         _require_evidence_table(document_root)
         checks.append("固定五列表头、显式列宽、重复表头与整行分页")
     else:
-        _require_numbering(document_root, styles_root, numbering_root)
-        checks.append("具体义务使用真实Word编号")
+        _require_numbering(document_root, styles_root, numbering_root,
+                           require_usage=template_id != "lawyer-case-brief")
+        checks.append("Word编号引用有效" if template_id == "lawyer-case-brief" else "具体义务使用真实Word编号")
     return OoxmlAudit(tuple(checks), visible_text)
