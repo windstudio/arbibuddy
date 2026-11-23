@@ -67,6 +67,7 @@ DEFAULT_SIMULATOR_TIMEOUT_SECONDS = 300
 _ALLOWED_ARTIFACTS = frozenset({"case_archive", "docx", "checklist"})
 _PUBLIC_DOCUMENT_TYPES = frozenset(
     {
+        "lawyer_case_brief",
         "employment_obligation_demand_letter",
         "forced_termination_notice",
         "arbitration_application",
@@ -198,6 +199,7 @@ class Journey:
     scenario_as_of_date: str | None = None
     resolved_dates: tuple[tuple[str, str], ...] = ()
     postdelivery_phone_correction: Mapping[str, str] | None = None
+    lawyer_case_brief: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -1037,6 +1039,7 @@ def load_journey(path: str | Path, *, as_of_date: date | None = None) -> Journey
             "response_markers",
             "completion_paths",
             "postdelivery_phone_correction",
+            "lawyer_case_brief",
         }
     )
     if expect_unknown:
@@ -1140,6 +1143,10 @@ def load_journey(path: str | Path, *, as_of_date: date | None = None) -> Journey
     valid_fact_ids = {fact.id for fact in facts}
     valid_milestone_ids = {milestone.id for milestone in milestones}
     phone_correction = expect.get("postdelivery_phone_correction")
+    from .brief_journey import validate_brief_spec
+    brief_spec = validate_brief_spec(expect.get("lawyer_case_brief"), facts=facts,
+        initial=initial, initial_fact_ids=initial_fact_ids, max_turns=max_turns,
+        deliveries=required_deliveries, phone_correction=phone_correction)
     if phone_correction is not None:
         if (not isinstance(phone_correction, Mapping)
             or set(phone_correction) != {"fact_id", "old_phone", "new_phone"}
@@ -1252,6 +1259,7 @@ def load_journey(path: str | Path, *, as_of_date: date | None = None) -> Journey
         scenario_as_of_date=calendar_date.isoformat() if resolved_dates else None,
         resolved_dates=tuple(sorted(resolved_dates.items())),
         postdelivery_phone_correction=phone_correction,
+        lawyer_case_brief=brief_spec,
     )
 
 
@@ -1663,6 +1671,10 @@ def run_journey(
             if journey.postdelivery_phone_correction is not None:
                 from .postdelivery import capture_delivery_snapshot
                 transcripts[-1]["public_artifact_snapshot"] = capture_delivery_snapshot(workspace)
+            elif journey.lawyer_case_brief is not None:
+                from .postdelivery import capture_delivery_snapshot
+                transcripts[-1]["public_artifact_snapshot"] = capture_delivery_snapshot(
+                    workspace, document_types={"lawyer_case_brief"})
             if managed_view_receipts:
                 observation["managed_view_receipts"] = list(managed_view_receipts)
             if managed_view_status is not None:
@@ -1876,7 +1888,9 @@ def run_journey(
         and assessment.passed
         and (assessment.completion_path == "delivered" or (
             journey.postdelivery_phone_correction is not None
-            and assessment.completion_path == "postdelivery_phone_corrected"))
+            and assessment.completion_path == "postdelivery_phone_corrected") or (
+            journey.lawyer_case_brief is not None
+            and assessment.completion_path == "brief_delivered"))
     ):
         try:
             retained_deliveries = _retain_verified_deliveries(
@@ -2234,6 +2248,18 @@ def _build_scenario_response_request(
             required_next_fact_id = phone_spec["fact_id"]
         elif required_next_fact_id == phone_spec["fact_id"]:
             required_next_fact_id = None
+    brief_edit_ids = set()
+    next_edit = None
+    if journey.lawyer_case_brief is not None:
+        from .brief_journey import next_brief_edit
+        brief_edit_ids = {e["fact_id"] for e in journey.lawyer_case_brief.get("edits", [])}
+        next_edit = next_brief_edit(journey.lawyer_case_brief, transcripts, used_facts)
+        if next_edit is not None or required_next_fact_id in brief_edit_ids:
+            required_next_fact_id = next_edit
+        snapshot = transcripts[-1].get("public_artifact_snapshot", {}) if transcripts else {}
+        verified = snapshot.get("verified") is True
+        public_delivery_observation = {"verified": verified,
+            "document_types": ["lawyer_case_brief"] if verified else []}
     return ScenarioResponseRequest(
         scenario_id=journey.id,
         turn=turn,
@@ -2252,6 +2278,7 @@ def _build_scenario_response_request(
             )
             for fact in journey.fact_pool
             if phone_spec is None or fact.id != phone_spec["fact_id"] or phone_ready
+            if fact.id not in brief_edit_ids or fact.id == next_edit
         ),
         max_facts_per_turn=journey.simulator.max_facts_per_turn,
         remaining_unavailable_uses=(
@@ -4323,17 +4350,17 @@ def _normalize_managed_view_receipt(
         or completed != expected
         or missing != []
         or len(summaries) != len(expected)
-        or len(files) != len(expected) * 2
+        or len(files) != sum(1 if kind == "lawyer_case_brief" else 2 for kind in expected)
     ):
         return None
 
     normalized_deliveries: list[dict[str, Any]] = []
     modes: set[str] = set()
+    file_index = 0
     for index, document_type in enumerate(expected):
         summary = summaries[index]
-        document_file = files[index * 2]
-        checklist_file = files[index * 2 + 1]
-        if not all(isinstance(item, Mapping) for item in (summary, document_file, checklist_file)):
+        kinds = (("document", ".docx"),) if document_type == "lawyer_case_brief" else (("document", ".docx"), ("checklist", ".txt"))
+        if not isinstance(summary, Mapping):
             return None
         mode = summary.get("mode")
         expected_state = "candidate_ready" if mode == "candidate" else "final_ready"
@@ -4358,13 +4385,12 @@ def _normalize_managed_view_receipt(
             return None
         modes.add(mode)
         normalized_files: dict[str, Mapping[str, Any]] = {}
-        for offset, (kind, file_item, suffix) in enumerate(
-            (
-                ("document", document_file, ".docx"),
-                ("checklist", checklist_file, ".txt"),
-            )
-        ):
-            expected_order = index * 2 + offset + 1
+        for kind, suffix in kinds:
+            file_item = files[file_index]
+            file_index += 1
+            if not isinstance(file_item, Mapping):
+                return None
+            expected_order = file_index
             path_value = file_item.get("path")
             digest = file_item.get("sha256")
             normalized_path = _normalize_managed_view_path(
@@ -4398,9 +4424,9 @@ def _normalize_managed_view_receipt(
                     f".arbibuddy/cases/{case_id}/案情档案.md"
                 ),
                 "document_path": normalized_files["document"]["path"],
-                "checklist_path": normalized_files["checklist"]["path"],
+                "checklist_path": normalized_files.get("checklist", {}).get("path"),
                 "document_sha256": normalized_files["document"]["sha256"],
-                "checklist_sha256": normalized_files["checklist"]["sha256"],
+                "checklist_sha256": normalized_files.get("checklist", {}).get("sha256"),
                 "validation_status": "passed",
             }
         )

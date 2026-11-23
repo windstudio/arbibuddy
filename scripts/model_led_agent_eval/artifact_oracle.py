@@ -46,6 +46,7 @@ REQUIRED_ARCHIVE_SECTIONS = (
     "## 更新记录",
 )
 DOCUMENT_TITLES = {
+    "lawyer_case_brief": "律师阅案简报",
     "employment_obligation_demand_letter": "劳动用工义务催告函",
     "forced_termination_notice": "被迫解除劳动合同通知书",
     "arbitration_application": "劳动人事争议仲裁申请书",
@@ -56,6 +57,12 @@ DOCUMENT_TITLES = {
     "enforcement_application": "强制执行申请书",
 }
 _CHECKLIST_OBJECTS = {
+    "lawyer_case_brief": (
+        ("主体与身份", "相关单位全称、人员角色及主体关系，交付稿隐名与隐私处理"),
+        ("事实或请求", "咨询目的、关键经过、当前阶段、主要分歧及面谈问题"),
+        ("关键日期与程序条件", "案情信息截至范围、临近安排日期及其来源"),
+        ("证据引用或附件完整性", "自然语言来源、已阅与转述的区分及相反材料"),
+    ),
     "employment_obligation_demand_letter": (
         ("主体与身份", "收件人和劳动关系双方"),
         ("事实或请求", "具体用工义务、履行期限和要求采取的行动"),
@@ -603,7 +610,7 @@ def _expected_checklist_bullets(
         bullets.append(
             "金额及计算依据：核对正文金额、计算结果、基数、期间、公式和合计是否一致。"
         )
-    if mode == "external_final" and document_type != "evidence_catalog":
+    if mode == "external_final" and document_type not in {"evidence_catalog", "lawyer_case_brief"}:
         role = _CHECKLIST_CLOSING_ROLES[document_type]
         bullets.append(
             f"落款角色与日期：核对{role}的签署身份、姓名与文书角色一致，"

@@ -36,8 +36,9 @@ def _blocks(parent):
     return result
 
 
-def capture_delivery_snapshot(workspace: Path) -> dict:
-    """Capture only a complete, current two-member delivery, or no trusted text."""
+def capture_delivery_snapshot(workspace: Path, *, document_types=None) -> dict:
+    """Capture a complete current bundle, including non-presented internal files."""
+    expected_types = _TYPES if document_types is None else set(document_types)
     failure = {"verified": False, "ordered_blocks": {}, "files": []}
     try:
         from scripts.documents.view import managed_delivery_view
@@ -47,7 +48,7 @@ def capture_delivery_snapshot(workspace: Path) -> dict:
             raise ValueError("independent_artifact_validation_failed")
         archives = observed["case_archives"]
         deliveries = observed["deliveries"]
-        if len(archives) != 1 or len(deliveries) != 2 or {d["document_type"] for d in deliveries} != _TYPES:
+        if len(archives) != 1 or len(deliveries) != len(expected_types) or {d["document_type"] for d in deliveries} != expected_types:
             raise ValueError("complete_single_case_bundle_required")
         case_id, revision = archives[0]["case_id"], archives[0]["archive_revision"]
         archive_path = root / archives[0]["archive_path"]
@@ -55,17 +56,26 @@ def capture_delivery_snapshot(workspace: Path) -> dict:
         archive_digest = sha256(archive_bytes).hexdigest()
         if archive_digest != archives[0]["archive_sha256"]:
             raise ValueError("archive_changed_during_capture")
-        fact_section = re.search(r"(?ms)^## 事实\s*\n(.*?)(?=^## |\Z)", archive_bytes.decode("utf-8"))
+        archive_markdown = archive_bytes.decode("utf-8")
+        fact_section = re.search(r"(?ms)^## 事实\s*\n(.*?)(?=^## |\Z)", archive_markdown)
         if fact_section is None:
             raise ValueError("archive_fact_section_missing")
+        archive_sections = {"archive_fact_text": fact_section.group(1)}
+        if "lawyer_case_brief" in expected_types:
+            evidence_section = re.search(r"(?ms)^## 证据材料\s*\n(.*?)(?=^## |\Z)", archive_markdown)
+            if evidence_section is not None:
+                archive_sections["archive_evidence_text"] = evidence_section.group(1)
         view = managed_delivery_view(workspace=root, case_id=case_id)
-        if view.get("stopped") or len(view.get("presentation_files", [])) != 4:
+        expected_presented = sum(1 if kind == "lawyer_case_brief" else 2 for kind in expected_types)
+        if view.get("stopped") or len(view.get("presentation_files", [])) != expected_presented:
             raise ValueError("managed_view_rejected")
         set_id = (view.get("delivery_set") or {}).get("delivery_set_id")
         if not isinstance(set_id, str) or not set_id:
             raise ValueError("delivery_set_required")
         presented = {Path(item["path"]).resolve(): item for item in view["presentation_files"]}
         files, blocks = [], {}
+        opening_text = ""
+        page_break_count = 0
         for delivery in deliveries:
             if delivery["case_id"] != case_id or delivery["archive_revision"] != revision:
                 raise ValueError("current_revision_required")
@@ -76,7 +86,13 @@ def capture_delivery_snapshot(workspace: Path) -> dict:
                 path = (root / delivery[key]).resolve()
                 data = path.read_bytes()
                 digest = sha256(data).hexdigest()
-                if not path.is_relative_to(root) or path not in presented or presented[path]["sha256"] != digest:
+                internal_only = delivery["document_type"] == "lawyer_case_brief" and kind == "checklist"
+                expected_digest = manifest["verification_checklist" if kind == "checklist" else "document"]["sha256"]
+                if (not path.is_relative_to(root) or digest != expected_digest
+                    or (internal_only and path in presented)
+                    or (not internal_only and (path not in presented or presented[path]["sha256"] != digest
+                        or presented[path].get("kind") != kind
+                        or presented[path].get("delivery_label") != delivery["document_type"]))):
                     raise ValueError("snapshot_changed_during_capture")
                 files.append({"document_type": delivery["document_type"], "kind": kind,
                               "path": path.relative_to(root).as_posix(), "size": len(data), "sha256": digest,
@@ -88,12 +104,23 @@ def capture_delivery_snapshot(workspace: Path) -> dict:
                         if body is None:
                             raise ValueError("document_body_missing")
                         blocks[delivery["document_type"]] = _blocks(body)
+                        if delivery["document_type"] == "lawyer_case_brief":
+                            page_break_count = len(body.findall('.//' + _W + 'br[@' + _W + 'type="page"]'))
+                            opening = []
+                            for node in body.iter():
+                                if node.tag == _W + "br" and node.get(_W + "type") == "page":
+                                    break
+                                if node.tag == _W + "t":
+                                    opening.append(node.text or "")
+                            opening_text = "".join(opening)
         final_view = managed_delivery_view(workspace=root, case_id=case_id)
         if final_view.get("stopped") or final_view.get("current_archive_revision") != revision or final_view.get("presentation_files") != view["presentation_files"] or final_view.get("delivery_set") != view.get("delivery_set") or sha256(archive_path.read_bytes()).hexdigest() != archive_digest:
             raise ValueError("snapshot_changed_during_capture")
         return {"verified": True, "case_id": case_id, "archive_revision": revision,
                 "delivery_set_id": set_id, "delivery_state": view["delivery_state"],
-                "archive_fact_text": fact_section.group(1),
+                **archive_sections,
+                "opening_text": opening_text,
+                "page_break_count": page_break_count,
                 "ordered_blocks": blocks, "files": files}
     except (OSError, ValueError, TypeError, KeyError, ET.ParseError, BadZipFile) as error:
         return {**failure, "failure_reason": str(error)[:160]}

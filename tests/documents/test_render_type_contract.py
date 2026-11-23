@@ -92,7 +92,7 @@ class RenderTypeContractTests(unittest.TestCase):
                     self.assertTrue(result["ok"], result)
                 view = managed_delivery_view(workspace=workspace, case_id=case_id)
                 self.assertFalse(view["stopped"], view)
-                self.assertEqual(len(view["presentation_files"]), 4 if kind == "arbitration_application" else 2)
+                self.assertEqual(len(view["presentation_files"]), 4 if kind == "arbitration_application" else 1 if kind == "lawyer_case_brief" else 2)
                 context = managed_edit_context(workspace=workspace, case_id=case_id)
                 self.assertTrue(context["ok"], context)
                 for document in context["result"]["documents"]:

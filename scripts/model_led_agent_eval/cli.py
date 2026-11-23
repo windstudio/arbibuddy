@@ -29,7 +29,7 @@ def _parser() -> argparse.ArgumentParser:
     run = subparsers.add_parser("run", help="运行一条模型主导 Journey")
     run.add_argument("journey", type=Path)
     _common(run)
-    suite = subparsers.add_parser("suite", help="运行三个 Journey 的完整平台套件")
+    suite = subparsers.add_parser("suite", help="运行所选 Journey 套件的平台验证")
     suite.add_argument("suite", type=Path)
     suite.add_argument(
         "--platform",

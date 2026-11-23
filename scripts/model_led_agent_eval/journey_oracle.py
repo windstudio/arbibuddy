@@ -263,6 +263,10 @@ class JourneyOracle:
 
     def _missing_for_path(self, path: Any, state: Any) -> tuple[str, ...]:
         missing: list[str] = []
+        brief_spec = getattr(self.journey, "lawyer_case_brief", None)
+        if brief_spec is not None:
+            from .brief_journey import check_brief_journey
+            missing.extend("brief:" + error for error in check_brief_journey(brief_spec, state.transcripts))
         phone_spec = getattr(self.journey, "postdelivery_phone_correction", None)
         if phone_spec is not None:
             from .postdelivery import check_phone_correction

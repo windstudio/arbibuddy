@@ -3,12 +3,12 @@
 在源码树外指定可写的临时根；各组单独启动 Python 进程，超时杀掉该组子进程并继续汇总其余结果。禁止给完整套件套单个600秒外层超时。
 
 ```powershell
-python -B -X utf8 -m scripts.test_suites.cli fast --temp-root <external-temp>/<VERSION>
-python -B -X utf8 -m scripts.test_suites.cli slow --temp-root <external-temp>/<VERSION> --wheelhouse <受控离线wheelhouse>
-python -B -X utf8 -m scripts.test_suites.cli full --temp-root <external-temp>/<VERSION> --wheelhouse <受控离线wheelhouse>
+python -B -X utf8 -m scripts.test_suites.cli fast --temp-root <源码树外本次临时根>
+python -B -X utf8 -m scripts.test_suites.cli slow --temp-root <源码树外本次临时根> --wheelhouse <受控离线wheelhouse>
+python -B -X utf8 -m scripts.test_suites.cli full --temp-root <源码树外本次临时根> --wheelhouse <受控离线wheelhouse>
 ```
 
-`fast` 包含档案、公共金额、法源观察登记、九领域与文书场景、模型主导静态约束、收缩契约、测试调度和网络诊断、自然语言Journey Harness的确定性测试；每组300秒。`slow` 包含八类文书核心、交付与OOXML支持性测试、三平台安装/身份/事务、发布证据原语；文书与平台各900秒，身份与发布各300秒。权威组清单是 `scripts/test_suites/cli.py`；`full` 依次运行两层，没有统一总超时。
+`fast` 包含档案、公共金额、法源观察登记、九领域与文书场景、模型主导静态约束、收缩契约、测试调度和网络诊断、自然语言Journey Harness的确定性测试；每组300秒。`slow` 包含九类文书核心（含律师阅案简报）、交付与OOXML支持性测试、三平台安装/身份/事务、发布证据原语；文书与平台各900秒，身份与发布各300秒。权威组清单是 `scripts/test_suites/cli.py`；`full` 依次运行两层，没有统一总超时。
 
 临时案件、安装树、ZIP和日志放在源码外；使用 TEMP/TMP/ARBIBUDDY_TEST_TEMP_ROOT 与 `tests/sitecustomize.py` 的清理约束。WorkBuddy锁定依赖按显式参数、ARBIBUDDY_WORKBUDDY_WHEELHOUSE、锁文件受控目录解析，不能联网下载补齐。缺环境必须报告边界，不能默默算PASS。
 

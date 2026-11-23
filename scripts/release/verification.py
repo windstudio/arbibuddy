@@ -9,22 +9,44 @@ from typing import Any, Mapping
 from scripts.runtime_identity import compare_runtime_identity
 from scripts.version import read_version
 
-FORMAL_PROJECT_ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_CHECKS = frozenset({"tools", "documents", "platforms", "migration", "review"})
 
 
+def _formal_project_root() -> Path:
+    """以发布工具所在检出定位主项目；关联 worktree 使用共享 .git 的所属根。"""
+    checkout = Path(__file__).resolve().parents[2]
+    marker = checkout / ".git"
+    if marker.is_dir() or not (marker.exists() or marker.is_symlink()):
+        return checkout
+    try:
+        prefix, separator, pointer = marker.read_text(encoding="utf-8").strip().partition(":")
+        if prefix != "gitdir" or not separator or not pointer.strip():
+            raise ValueError("无效的 gitdir 指针")
+        git_dir = (checkout / pointer.strip()).resolve()
+        relative_common = (git_dir / "commondir").read_text(encoding="utf-8").strip()
+        common = (git_dir / relative_common).resolve()
+        if (not relative_common or common.name != ".git" or not common.is_dir()
+                or git_dir.parent != common / "worktrees"):
+            raise ValueError("无法定位 worktree 所属主项目")
+    except (OSError, ValueError) as error:
+        raise ValueError("无法解析正式项目根目录；请检查 worktree 的 Git 元数据") from error
+    return common.parent
+
+
 def release_root(source: Path) -> Path:
-    return FORMAL_PROJECT_ROOT / "dist" / read_version(source)
+    return _formal_project_root() / "dist" / read_version(source)
 
 
 def validate_release_destination(source: Path, destination: Path) -> Path:
-    target = destination.expanduser().resolve()
-    expected = release_root(source).resolve()
-    if target != expected:
-        raise ValueError(f"正式发布目录必须是当前版本目录：{expected}")
-    if any(path.is_symlink() for path in (destination, *destination.parents)):
+    expected = release_root(source)
+    target = destination.expanduser()
+    if not target.is_absolute():
+        target = expected.parent.parent / target
+    if target.resolve() != expected.resolve():
+        raise ValueError(f"正式发布目录必须是当前版本目录：{expected.resolve()}")
+    if any(path.is_symlink() for path in (target, *target.parents)):
         raise ValueError("正式发布目录不得经过符号链接")
-    return target
+    return target.resolve()
 
 
 def verify_evidence(source: Path, record_path: Path) -> dict[str, Any]:

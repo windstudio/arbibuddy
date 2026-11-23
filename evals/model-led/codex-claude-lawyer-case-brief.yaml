@@ -1,0 +1,57 @@
+schema_version: 2
+id: ML04-lawyer-case-brief
+title: 律师阅案简报首次一次交付
+initial_user_message: 我叫林晓，联系电话13800001234，住在上海市示例路88号。我的劳动合同单位是青岚设计有限公司，工资付款方是青岚服务有限公司，两家关系我不清楚。我自己估计3月还差8000元工资，我之前交的仲裁申请书写的是3月工资差额10000元，为什么不一样还要核对。我记得主管口头说过明天不用来了，但后来HR又发微信叫我回去上班。我没有提供截图，原话、日期、我当时的回复和后续出勤都记不清了。现在已申请仲裁，还没收到开庭通知，对方的说法我也不知道。这些是我2026年4月15日整理的情况，此后的进展还没核实。我要找律师核对工资差额，并判断口头让我走以后能不能主张补偿，请把情况整理成一份可编辑的Word简报，我自己审阅后交给律师，材料我自己另附。我接下来没空回复了。
+initial_fact_ids: [brief_request]
+simulator:
+  persona: 虚构的劳动争议当事人
+  objective: 如实回应既定场景，不编造缺失材料或确认。本场景首条消息已表达咨询目的，之后没有补充答复。
+  max_facts_per_turn: 1
+  max_unavailable_uses: 0
+fact_pool:
+  - id: brief_request
+    message: 请整理一份Word简报供我审阅后交律师，核对3月工资差额及口头让我走后的补偿问题，未核实事项留到面谈。
+milestones: []
+expect:
+  required_artifacts: [case_archive, docx, checklist]
+  required_deliveries:
+    - document_type: lawyer_case_brief
+      mode: external_final
+  min_turns: 1
+  max_turns: 1
+  allow_degraded_delivery: false
+  allow_extra_deliveries: false
+  completion_paths:
+    - id: brief_delivered
+      requires_sent_facts: [brief_request]
+      required_artifacts: [case_archive, docx, checklist]
+      required_deliveries:
+        - document_type: lawyer_case_brief
+          mode: external_final
+  lawyer_case_brief:
+    first_delivery_turn: 1
+    complex_timeline: false
+    content_groups:
+      - [律师阅案简报]
+      - [青岚设计有限公司]
+      - [青岚服务有限公司]
+      - [8000元, '8,000元', '8000.00元', '8,000.00元']
+      - [10000元, '10,000元', '10000.00元', '10,000.00元']
+      - [微信]
+      - [未提供, 未查看, 未阅, 未提交]
+      - [返岗, 回去上班, 回去工作]
+      - [待核, 核实, 不详, 不清楚]
+    opening_groups:
+      - [截至, 截止, 信息范围]
+      - [2026年4月15日, '2026-04-15', '2026 年 4 月 15 日']
+      - [工资差额]
+      - [补偿]
+      - [已申请仲裁, 已申请劳动仲裁, 已提起仲裁, 已提交仲裁申请]
+      - [面谈, 优先核实, 先核实, 先与律师核实]
+    amount_attributions:
+      - amount: '8000'
+        context: [估计, 估算, 现估, 自估]
+      - amount: '10000'
+        context: [申请书, 已请求, 已提出, 已提交, 原请求]
+    forbidden_content: ['13800001234', 上海市示例路88号, '18000元', '18,000元', '18000.00元', '18,000.00元', 无录音或书面记录, '无录音、书面通知', 在场人与发出方式均记不清, 在场人和后续情况均记不清]
+    forbidden_archive_evidence: [无录音或书面记录, 没有录音或书面记录, 无录音或书面通知, '无录音、书面通知', 在场人和后续情况均记不清]

@@ -1,4 +1,4 @@
-"""八类文书的声明式名称，不承载私有载荷或运行时法律判断。"""
+"""文书的声明式名称，不承载私有载荷或运行时法律判断。"""
 from dataclasses import dataclass
 
 @dataclass(frozen=True)
@@ -7,6 +7,7 @@ class TemplateDefinition:
     title: str
 
 TEMPLATE_REGISTRY = {
+    'lawyer-case-brief': TemplateDefinition('lawyer-case-brief', '律师阅案简报'),
     'employment-obligation-demand-letter': TemplateDefinition('employment-obligation-demand-letter', '劳动用工义务催告函'),
     'labor-arbitration-application': TemplateDefinition('labor-arbitration-application', '劳动人事争议仲裁申请书'),
     'labor-arbitration-defense': TemplateDefinition('labor-arbitration-defense', '劳动人事争议仲裁答辩书'),

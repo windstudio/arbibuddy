@@ -193,6 +193,8 @@ def _model_managed_delivery_view(
             ("document", "document_path"),
             ("checklist", "checklist_path"),
         ):
+            if entry["document_type"] == "lawyer_case_brief" and kind == "checklist":
+                continue
             presentation_files.append(
                 {
                     "delivery_label": entry["document_type"],

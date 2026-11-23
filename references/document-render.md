@@ -1,9 +1,10 @@
 # `document.render` 模型主导文书契约
 
-这是模型调用的统一 Word 文书工具。模型负责根据已经确认的案情档案、计算结果和用户目标起草完整正文；工具只负责读取指定档案 revision、核对显式锁定要素、排版、占位符与内部泄漏检查、DOCX/OOXML 检查、原子交付和独立核验清单。工具不补写、概括、改写法律正文，不选择法律口径，也不自动提交、发送或签署。
+这是模型调用的统一 Word 文书工具。模型负责根据当前案情档案、用户目标及对应类型的起草条件组织完整正文；工具只负责读取指定档案 revision、核对显式锁定要素、排版、占位符与内部泄漏检查、DOCX/OOXML 检查、原子交付和独立核验清单。工具不补写、概括、改写法律正文，不选择法律口径，也不自动提交、发送或签署。
 
-本公共接缝支持八种 `document_type`：
+本公共接缝支持九种 `document_type`：
 
+- `lawyer_case_brief`（律师阅案简报，起草与交付按[简报专属流程](model-led/lawyer-case-brief.md)）；
 - `employment_obligation_demand_letter`（劳动用工义务催告函）；
 - `forced_termination_notice`（被迫解除劳动合同通知书）；
 - `arbitration_application`（劳动人事争议仲裁申请书）；
@@ -13,7 +14,7 @@
 - `property_preservation_application`（财产保全申请书）；
 - `enforcement_application`（强制执行申请书）。
 
-八类正式文书全部通过同一 `document.render` 接缝；不创建第二套文书工具，也不由 renderer 代替法院、仲裁机构或其他有权机关作程序决定。
+正式文书与律师阅案简报全部通过同一 `document.render` 接缝；不创建第二套文书工具，也不由 renderer 代替法院、仲裁机构或其他有权机关作程序决定。
 
 ## 模型唯一入口与客户端 transport
 
@@ -73,6 +74,8 @@ WorkBuddy 以已安装 Skill 根目录为 cwd，通过 Bash 原样执行每条 t
 
 ### 起草前准备
 
+律师阅案简报按[专属流程](model-led/lawyer-case-brief.md)准备来源并一次交付，以下普通文书的确认、计算与落款要求仅在该类型实际需要时适用。简报的原始估计、材料数额和已提出请求可用 `fact_amount` 绑定 F/E/CL 来源；计算结果仍用 CAL。
+
 在写长正文前，模型完成本次交付的来源准备：
 
 需要字段说明时，用 `describe --operation render --document-type <document_type>` 取得共享字段、该类型必需区块、candidate / external_final 条件和可执行虚构示例；已掌握契约时不增加调用。`--document-type` 仅与 `--operation render` 配合，使用上文完整文书类型名；不带筛选仍保留原完整契约。render 请求通常省略 `title`，工具按文书类型派生注册标题，并由 `mode` 统一添加候选标识；显式提供的 title 仍须与注册标题相同，标题来源绑定继续使用该注册标题。`examples.worked_example` 连贯展示 create、合批 commit、set、各成员 render、view，申请书示例包含配套证据目录；其身份、事实、计算和确认只供虚构演示，不得复制到真实案件。
@@ -99,6 +102,8 @@ WorkBuddy 以已安装 Skill 根目录为 cwd，通过 Bash 原样执行每条 t
 `reason` 将区块不存在、片段未出现、片段重复、含多个日期/金额、缺少完整值、值不符、数值截断或重复归属分别定位。只修请求不新增档案记录、确认或集合；若同时有来源、版本、确认等其他错误，先处理这些依赖，不能凭某一项 request_only 绕过其余校验。无实质事实变化时复用已有用户确认，必要的档案格式修正仍遵守原确认范围与版本规则。
 
 ### 起草前确认
+
+律师阅案简报使用专属起草条件；本节适用于其余文书。
 
 起草前先按[权益扫描、最终补充与统一确认](rights-scan-and-unified-confirmation.md)核对当前已完成的对话步骤，只补尚未完成的一步并等待答复。该路由适用于普通 candidate，包括被迫解除通知书；“理解风险、先要草稿、不发送”是草稿授权，不替代当前完整摘要确认。已有步骤和未变化的确认直接复用，候选稿无需用户确认实施解除或外发。仲裁申请书的候选稿同样要在权益范围选择、最终开放式补充和当前完整摘要的自然语言确认之后准备。
 
@@ -135,7 +140,7 @@ view 成功时可保留原候选，内部回执另列 `current_archive_revision`
 | `case_id` | 档案工具生成的案件标识；工具自行定位 `.arbibuddy/cases/<case_id>/案情档案.md` |
 | `archive_revision` | 非负整数；正文和锁定要素所依据的档案版本 |
 | `delivery_set_id` | 可选；若当前案件已有 `document.delivery-set-v1`，必须绑定同一集合；没有集合的兼容单文书调用仍只返回非授权 artifact 诊断 |
-| `document_type` | 八类已开放文书之一：`employment_obligation_demand_letter`、`forced_termination_notice`、`arbitration_application`、`arbitration_defense`、`evidence_catalog`、`company_deregistration_restriction_request_shanghai`、`property_preservation_application` 或 `enforcement_application` |
+| `document_type` | 已注册文书之一：`lawyer_case_brief`、`employment_obligation_demand_letter`、`forced_termination_notice`、`arbitration_application`、`arbitration_defense`、`evidence_catalog`、`company_deregistration_restriction_request_shanghai`、`property_preservation_application` 或 `enforcement_application` |
 | `template_version` | 当前值 `1.0.0` |
 | `mode` | `candidate` 或 `external_final`；它是文件成熟度，不是对话状态 |
 | `title` | 必须与文书类型的注册标题完全一致 |
@@ -195,7 +200,7 @@ view 成功时可保留原候选，内部回执另列 `current_archive_revision`
 - 一个金额在正文中多次出现时，逐处列出定位。每个正文货币金额只能归属一个金额绑定；原始事实金额按上述 `fact_amount` 处理，不同计算主张、计算所得基数和合计各自绑定对应计算记录，不要求全篇金额相等。金额定位必须覆盖完整数字，不能把 `6000.00元` 当成 `16000.00元` 的一部分。
 - 每个 `CAL-*` 记录须有且仅有一个明确的最终结果标签，形式为 `确定性计算结果：6000.00元`（允许在标签前加“工资差额”等语义名称），并保留公式、输入及工具来源说明。若一次计算有多个分项/合计，分别提交结果记录；渲染器只核对该标签后的结果，不从基数、期间或中间步骤寻找相同数字。
 - 日期允许 `2026年9月7日` 和 `2026-09-07` 两种等值形式，且必须是有效日历日期。`external_final` 正文各区块中的每个完整中文或 ISO 日期都必须通过 occurrence 单独定位，并由所引用的档案记录支持；同一日期在同一区块或不同区块重复出现时，每处都要单独绑定。不能把历史日期当作自动豁免项。落款日期仍须单独绑定。
-- 除证据目录外，`external_final` 必须至少绑定一名签署人；`rendered_value` 必须包含完整角色与姓名，且该完整值必须在实际落款区块中出现，并由 occurrence 精确定位。仅出现相同姓名、但角色不同，不构成签名匹配。催告函将末区块中的签署信息作为落款。只有绑定对象、正文没有相应落款，不能定稿。生成器返回错误，由模型补正文，不替模型补写。
+- 除证据目录、律师阅案简报外，`external_final` 必须至少绑定一名签署人；`rendered_value` 必须包含完整角色与姓名，且该完整值必须在实际落款区块中出现，并由 occurrence 精确定位。仅出现相同姓名、但角色不同，不构成签名匹配。催告函将末区块中的签署信息作为落款。只有绑定对象、正文没有相应落款，不能定稿。生成器返回错误，由模型补正文，不替模型补写。
 
 示例（片段，完整顶层示例由 `describe_contract()` 提供）：
 
@@ -225,6 +230,7 @@ view 成功时可保留原候选，内部回执另列 `current_archive_revision`
 
 各类 `external_final` 的最小锁定要素分别是：
 
+- 律师阅案简报：一个标题；实际出现的完整日期、金额与主体仍分别核对绑定，不强求未知字段或落款；
 - 劳动用工义务催告函：一个标题、两个主体、一个主张、一个日期和一个落款；若正文包含金额，还必须有金额绑定；
 - 被迫解除劳动合同通知书：一个标题、两个主体、一个主张、一个证据、两个日期和一个落款；若正文包含金额，还必须有金额绑定；
 - 仲裁申请书：一个标题、两个主体、一个主张、一个金额、一个日期和一个落款；

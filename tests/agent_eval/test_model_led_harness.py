@@ -1493,13 +1493,13 @@ class ModelLedHarnessTests(unittest.TestCase):
             f"artifact oracle imports non-standard modules: {sorted(set(oracle_imports) - sys.stdlib_module_names)}",
         )
 
-    def test_shared_suite_contains_three_natural_journeys_for_both_platforms(self):
+    def test_shared_suite_contains_four_natural_journeys_for_both_platforms(self):
         suite = (ROOT / "evals" / "suites" / "model-led-codex-claude.yaml").read_text(
             encoding="utf-8"
         )
-        self.assertEqual(suite.count("evals/model-led/"), 3)
+        self.assertEqual(suite.count("evals/model-led/"), 4)
         journey_paths = sorted((ROOT / "evals" / "model-led").glob("*.yaml"))
-        self.assertEqual(len(journey_paths), 3)
+        self.assertEqual(len(journey_paths), 4)
         expected_deliveries = {
             "ML01-wage-bonus-overtime": (
                 ("arbitration_application", "candidate"),
@@ -1509,6 +1509,7 @@ class ModelLedHarnessTests(unittest.TestCase):
                 ("forced_termination_notice", "candidate"),
             ),
             "ML03-interruption-correction-degradation": (),
+            "ML04-lawyer-case-brief": (("lawyer_case_brief", "external_final"),),
         }
         for path in journey_paths:
             journey = load_journey(path)

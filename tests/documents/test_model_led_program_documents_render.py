@@ -23,6 +23,7 @@ class ModelLedProgramDocumentsRenderTests(unittest.TestCase):
         self.assertEqual(
             set(contract["input"]["document_types"]),
             {
+                "lawyer_case_brief",
                 "employment_obligation_demand_letter",
                 "forced_termination_notice",
                 "arbitration_application",

@@ -6,9 +6,9 @@
 
 每条 Journey 都会在外部临时根创建独立的 Agent Workspace 和 ScenarioResponder Workspace，将当前工作树以 `copy` 安装到对应平台的发现目录，然后用平台原生 CLI 驱动模型 A。模型 B 通过独立 Codex SDK thread 读取有限 Scenario 上下文并只返回事实 ID/动作；Harness 确定性校验决定并从 Scenario 原文渲染消息。Harness 只观察安装回执、会话耗时、案情档案和公开文件副作用，不读取内部状态、不把模型 B 当作裁判。模型 B 动态扮演用户是本 Eval 的真实 Journey 组成部分：它只能依据隔离 Scenario 的既定事实回应模型 A 当前问题；无匹配事实时回答未知或安全停止，记录为 Scenario 覆盖/收敛证据，不自动判定 Skill 失败。
 
-套件包含三类显式完成路径：工资/奖金/加班并交付仲裁材料；解除路径、高风险确认并交付通知书候选材料；中断恢复、事实纠正与动态官方核验不可用时的降级。完成路径必须满足交付触发事实、能力边界、公开产物、重启后里程碑和响应组；早期出现“无法/待补”等普通措辞不能单独放行。若当前宿主没有可调用的 Word 文书能力，前两条路径必须观察到模型明确拒绝虚称 DOCX 并给出合法降级，而不是把 Markdown 当作 DOCX；有能力时则必须观察到 canonical DOCX 与独立清单。每条路径在 Codex 和 Claude Code 各运行一次，共六个隔离 Journey。
+默认套件包含四条 Journey：工资/奖金/加班并交付仲裁材料；解除路径、高风险确认并交付通知书候选材料；中断恢复、事实纠正与动态官方核验不可用时的降级；律师阅案简报首次一次交付。完成路径必须满足交付触发事实、能力边界、公开产物、重启后里程碑和响应组；早期出现“无法/待补”等普通措辞不能单独放行。若当前宿主没有可调用的 Word 文书能力，前两条路径必须观察到模型明确拒绝虚称 DOCX 并给出合法降级，而不是把 Markdown 当作 DOCX；有能力时则必须观察到 canonical DOCX 与独立清单。简报的内部清单仍须存在并通过校验，但用户展示列表只有 Word。每条路径在 Codex 和 Claude Code 各运行一次，共八个隔离 Journey。
 
-显式运行全部平台和三条路径（实现阶段不隐式执行）：
+显式运行默认套件的全部平台和四条路径（实现阶段不隐式执行）：
 
 ```powershell
 python -B -X utf8 -m scripts.model_led_agent_eval.cli suite evals/suites/model-led-codex-claude.yaml --source . --temp-root <仓库外临时目录>
@@ -16,7 +16,7 @@ python -B -X utf8 -m scripts.model_led_agent_eval.cli suite evals/suites/model-l
 
 默认模型：Codex 模型 A 和模型 B 均为 `gpt-6-luna`；Claude Code 模型 A 为 `sonnet`，模型 B 仍为 `gpt-6-luna`。可用 `--model`、`--codex-model`、`--claude-model` 或 `--simulator-model` 显式覆盖。
 
-所有 Codex/Claude Code 真实 Journey 的模型 A 单轮上限默认 **1200 秒**，`run` 与 `suite` 一致，ML01、ML02、ML03 均适用。`--timeout-per-turn` 可显式覆盖；模型 B 的 `--simulator-timeout` 独立计时，默认 **300 秒**。超时必须保留失败证据，不得视作完成或放宽 Oracle 门禁。
+所有 Codex/Claude Code 真实 Journey 的模型 A 单轮上限默认 **1200 秒**，`run` 与 `suite` 一致，ML01 至 ML04 均适用。`--timeout-per-turn` 可显式覆盖；模型 B 的 `--simulator-timeout` 独立计时，默认 **300 秒**。超时必须保留失败证据，不得视作完成或放宽 Oracle 门禁。
 
 单场景 Codex 模型 B 路径：
 
@@ -49,6 +49,32 @@ python -B -X utf8 -m scripts.model_led_agent_eval.cli suite evals/suites/model-l
 运行目录保留 `evidence.json`，记录平台、版本/共享核心身份、A/B 隔离边界、自然语言轮次、B 决定摘要、耗时、观察到的文件和失败归因。CLI 默认在失败后重跑同一 Journey 一次，并把每次结果写入 `retries`；一致的 Runtime Adapter/SUT 失败保留原归因，结果不一致或一次重跑通过时标记环境/模型波动或通过，不把一次失败直接当作 Skill 缺陷。默认只保留证据并清理两个 Workspace；需要失败诊断时才使用 `--keep-workspace-on-failure`。
 
 场景编写以当事人自然表述为准：事实卡提供事实、未知信息、用户目标和必要的明确选择，不向模型 A 提示内部命令、预期计算或 Oracle 判据。原始用户消息、模型 B 的事实选择、公开文件观察和失败归因分别保留；词句标记只作有限的过程线索，正式交付必须核验真实 DOCX 与独立清单。Harness 修复不得改写既有原始 evidence；场景内容变更后旧 Journey 通过记录只作历史基线。
+
+### 律师阅案简报 ML04
+
+`evals/suites/model-led-lawyer-case-brief.yaml` 包含三个独立场景，使用真实 Codex / Claude Code 模型 A 及既有 responder adapter。首次交付场景只有一轮用户输入，用来证明用户不再回复也能得到文档，因此该场景不会额外调用模型 B。改稿场景的后两轮由真实模型 B 选择事实卡，Harness 不伪造用户答复。
+
+| 场景 | 核心判据 |
+| --- | --- |
+| `ML04-lawyer-case-brief` | 第一轮即得到同案当前版本的 `external_final` 简报。保留未提供截图及两种工资金额口径，简报只用一页概要。Harness 检查是否加了续页或已知来源错误，实际页数由 Word 渲染复核。 |
+| `ML04-complex-hearing` | 首页概要包含用户抄录的开庭安排，后续只有一条共用时间线，并使用显式分页。通知和截图均未上传，不能冒充已阅原件。 |
+| `ML04-postdelivery-edits` | 首交后才能要求隐名，隐名后才能更正入职日期。隐名保留档案事实，更正须更新事实并重建当前交付。各轮仍只展示一份 Word，其他正文按用户要求保持原样。 |
+
+运行简报专项套件可用以下入口。Windows 建议选择较短的源码外临时根，避免嵌套安装目录触发路径限制。
+
+```powershell
+python -B -X utf8 -m scripts.model_led_agent_eval.cli suite evals/suites/model-led-lawyer-case-brief.yaml --platform codex --source . --temp-root <源码外短路径> --retries 0 --retain-deliveries
+```
+
+更换 `--platform claude-code` 可验证另一平台。默认模型及超时沿用本文设置。本套件以 Word 交付为目标，环境不具备文书能力时不能用降级回复记作该场景 PASS，也不由此直接认定 Skill 缺陷。
+
+`expect.lawyer_case_brief` 声明首次交付轮次、正文及开头的备选词组、金额出处片段、禁止出现在正文或档案证据材料中的场景特定用语，以及有序修改卡。`complex_timeline` 为 `true` 时检查独立时间线和显式分页，为 `false` 时检查未插入时间线或显式分页，省略时不检查简报续页结构。loader 拒绝未知字段、无效轮次、未定义或初始修改卡、无法从场景追溯的新旧值。修改卡按最近一次已验证公开交付开放，B 只能看到交付是否有效和文书类型，不会收到内部正文、档案或断言。它仍须通过真实 responder 的事实 ID 校验。
+
+独立 artifact observer 验证档案、DOCX、机器清单及内部核验清单。展示回执按类型校验文件数、顺序、类型、路径、摘要和案件身份，简报只允许 Word，其他类型仍遵循原附件规则。快照从 OOXML 独立读取正文，不复用 SUT 的 edit-context。丢失/篡改内部清单、过期档案、错案交付、候选替代可转交稿、第二轮才交付、金额出处交换及隐名污染事实均不能通过相应断言。
+
+正文词组和金额邻近片段属于可重复的场景检查，不能独立证明完整语义正确。`opening_text` 只表示 OOXML 首个显式分页符之前的内容，不是 Office 实际排版页。真实运行后仍须在 Word/WPS 核对简单版一页、复杂版首页可独立理解、来源是转述还是已阅、相反材料是否紧邻、金额含义及问题是否有用。无自然分页溢出、语义保真和宿主附件可见须另留人工证据。`--retain-deliveries` 保留的内部清单仅作验收证据，不作为交给律师的附件。
+
+确定性测试位于 `tests.agent_eval.test_lawyer_case_brief_journey`，纳入 fast 的 `model_led_agent_eval` 组。它使用独立正反例及一次公开 renderer 接缝验证，不能冒充真实 Journey。新增或改动场景后，旧 ML01—ML03 或单元测试通过记录不证明 ML04 已通过。
 
 ### 交付后更正电话的独立场景
 

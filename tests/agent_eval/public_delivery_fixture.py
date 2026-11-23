@@ -16,6 +16,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 
 DOCUMENT_TITLES = {
+    "lawyer_case_brief": "律师阅案简报",
     "employment_obligation_demand_letter": "劳动用工义务催告函",
     "forced_termination_notice": "被迫解除劳动合同通知书",
     "arbitration_application": "劳动人事争议仲裁申请书",
@@ -26,6 +27,7 @@ DOCUMENT_TITLES = {
     "enforcement_application": "强制执行申请书",
 }
 DOCUMENT_BODY_TEXT = {
+    "lawyer_case_brief": "案情概要\n案情信息截至2026年4月15日\n本次咨询：工资差额及补偿\n青岚设计有限公司、青岚服务有限公司关系待核。已申请仲裁。\n当事人现估3月工资差额8000元；申请书记载3月请求10000元，差异待核。\n当事人称HR微信要求返岗，截图未提供。\n面谈先核实返岗回复和出勤。",
     "employment_obligation_demand_letter": "收件人\n劳动关系说明\n具体义务\n履行期限\n沟通与保留权利",
     "forced_termination_notice": "收件人\n解除意思表示\n解除理由\n结算与手续\n落款",
     "arbitration_application": "申请人：张三\n被申请人：示例公司\n仲裁请求：支付工资差额6000.00元\n事实与理由\n申请人：张三\n2026年9月12日",
@@ -36,6 +38,12 @@ DOCUMENT_BODY_TEXT = {
     "enforcement_application": "申请执行人\n被执行人\n执行请求：支付8000元\n事实与理由\n财产线索\n附件\n落款",
 }
 _CHECKLIST_OBJECTS = {
+    "lawyer_case_brief": (
+        ("主体与身份", "相关单位全称、人员角色及主体关系，交付稿隐名与隐私处理"),
+        ("事实或请求", "咨询目的、关键经过、当前阶段、主要分歧及面谈问题"),
+        ("关键日期与程序条件", "案情信息截至范围、临近安排日期及其来源"),
+        ("证据引用或附件完整性", "自然语言来源、已阅与转述的区分及相反材料"),
+    ),
     "employment_obligation_demand_letter": (
         ("主体与身份", "收件人和劳动关系双方"),
         ("事实或请求", "具体用工义务、履行期限和要求采取的行动"),
@@ -274,7 +282,7 @@ def _fixture_checklist_bullets(
         bullets.append(
             "金额及计算依据：核对正文金额、计算结果、基数、期间、公式和合计是否一致。"
         )
-    if mode == "external_final" and document_type != "evidence_catalog":
+    if mode == "external_final" and document_type not in {"evidence_catalog", "lawyer_case_brief"}:
         role = _CHECKLIST_CLOSING_ROLES[document_type]
         bullets.append(
             f"落款角色与日期：核对{role}的签署身份、姓名与文书角色一致，"

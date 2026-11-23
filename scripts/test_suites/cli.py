@@ -48,6 +48,7 @@ FAST_GROUPS = (
     TestGroup("test_suites", 300),
     TestGroup("network", 300, test_modules=("tests.test_network_diagnostics",)),
     TestGroup("model_led_agent_eval", 300, test_modules=(
+        "tests.agent_eval.test_lawyer_case_brief_journey",
         "tests.agent_eval.test_artifact_oracle",
         "tests.agent_eval.test_issue10_ml02_regressions",
         "tests.agent_eval.test_issue10_observer_failure_regressions",
@@ -66,6 +67,7 @@ FAST_GROUPS = (
 
 SLOW_GROUPS = (
     TestGroup("documents_core", 900, test_modules=(
+        "tests.documents.test_lawyer_case_brief",
         "tests.documents.test_model_led_document_render",
         "tests.documents.test_model_led_demand_forced_render",
         "tests.documents.test_model_led_program_documents_render",
