@@ -16,6 +16,7 @@ from scripts.case_archive.service import CONTRACT_VERSION as CASE_ARCHIVE_CONTRA
 from .checklist_policy import required_checklist_bullets
 from .archive_dependencies import validate_archive_freshness
 from .delivery import is_committed_generation_backup, is_retained_external_generation
+from .lawyer_case_brief import DOCUMENT_TYPE as BRIEF_TYPE, LEGACY_TITLE as LEGACY_BRIEF_TITLE
 from .ooxml_check import INTERNAL_LEAK_TERMS, audit_docx
 from .public import (
     CONTRACT_VERSION as DOCUMENT_RENDER_CONTRACT, DOCUMENT_TYPES,
@@ -281,7 +282,8 @@ def read_delivery_entries(
             or document_type != output_dir.name
         ):
             raise ValueError("document.render-v1 文书类型或 canonical 目录名无效")
-        if manifest["title"] != _DOCUMENT_TYPE_TITLES[document_type]:
+        legacy_brief = document_type == BRIEF_TYPE and manifest["title"] == LEGACY_BRIEF_TITLE
+        if manifest["title"] != _DOCUMENT_TYPE_TITLES[document_type] and not legacy_brief:
             raise ValueError("document.render-v1 文书标题与注册类型不一致")
         delivery_state = manifest.get("delivery_state")
         if delivery_state not in MODEL_DELIVERY_PHASES:

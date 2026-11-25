@@ -4,10 +4,10 @@
   "marker_type": "repository-distribution",
   "runtime_identity": {
     "schema_version": 2,
-    "source_commit": "2d798d4e25006e0ced8eed292bec4a1cd5730024",
-    "skill_version": "v1.2.12",
+    "source_commit": "1bd2c377b9fe24f7320d80c94ef46d85b0271af1",
+    "skill_version": "v1.2.13",
     "core_contract_version": 7,
-    "version_sha256": "04fc2af24f6a13951c4d4c66a776c18297388eb6f77e5bedd30c685e4e78978e",
+    "version_sha256": "290661ae02c6acfc816a488d3b748cca7726c6b4205d3f3c3362418236d3be81",
     "installation_manifest": {
       "file_count": 87,
       "files": [
@@ -99,19 +99,19 @@
         "scripts/runtime_temp.py",
         "scripts/version.py"
       ],
-      "sha256": "4d64ab5afe9e093f0ec796d6cf029ce6361f0714f5feaa2fc6950d2c78f083a0"
+      "sha256": "09033e30ed35d3dc6585be1f45bef2445769f0800c6359585c3e7c64a169c01b"
     },
-    "installation_manifest_sha256": "4d64ab5afe9e093f0ec796d6cf029ce6361f0714f5feaa2fc6950d2c78f083a0",
-    "artifact_manifest_sha256": "61505e6bfccc3684f63d19c1320d1f1eb9f766a3f1b95e1f06992e83b29dbfb9",
-    "core_manifest_sha256": "cf07a13f1a7fce9c9131e74b16b90051b1eaf670022f735b492a95efe95f2822",
+    "installation_manifest_sha256": "09033e30ed35d3dc6585be1f45bef2445769f0800c6359585c3e7c64a169c01b",
+    "artifact_manifest_sha256": "b45a5b2fbb17ff531816668d1a84ee9b3bdce5f2dcd42a7500d047d68f7bd188",
+    "core_manifest_sha256": "bcbf1d78415ea4135c1594e7551ef7e0a0822f23b29643902a346a002e05d7bb",
     "resource_sha256": {
-      "SKILL.md": "652b720e0c1698e5528abf56cf3ea8bef963193e3ef8acdcf044e14cdf989d99",
-      "VERSION.txt": "04fc2af24f6a13951c4d4c66a776c18297388eb6f77e5bedd30c685e4e78978e",
+      "SKILL.md": "998cea42b36f3d106cb037cd19abe0412187d127b459af3f79a209ed19c591fd",
+      "VERSION.txt": "290661ae02c6acfc816a488d3b748cca7726c6b4205d3f3c3362418236d3be81",
       "scripts/runtime_resources.py": "6edab019082614733186a74214953bea5aaf371493f922752814937249bf283c",
       "scripts/case_archive/service.py": "5aaa1e25ef1a49391aff15a72d621aa3f9bcc485b4819e56774da17582a341f5",
       "scripts/amount_calculator/public.py": "ffd28d43f22260970b7157345a47735f7b992678dc585bbe34889d869d918820",
-      "scripts/documents/public.py": "ecb3f08ab002d52d36a0acb80bf0aaf21444559f36effc3c7411be9c3293b6aa",
-      "scripts/documents/receipts.py": "3b909c645e71f098b169f5c94ea75966d6b80a5c7b474fb14393c1c6c98e2e36",
+      "scripts/documents/public.py": "eb4dc8ca9b21a44c97ae41b0a4e36c7fb2752ead53fa08c30e8dacb0d74ae86c",
+      "scripts/documents/receipts.py": "04884c5984ff8a2452d7e2db195f02eaf4b8a3d665ff22467e60d946cb23fe5a",
       "scripts/documents/delivery.py": "b96d85a31d004f1fb25181f88daad09ac85b185a2d095225135cdb26c30c8ab2",
       "scripts/runtime_identity.py": "147a5fd6510b2b1c2a5e79d36bb697df3e165215d5e3c50066ababe4ed36ef3a",
       "scripts/runtime_manifest.py": "274c82ec491583a08e110a76f0abfec03e0e8b8df40455a185e831ab07dd607d",
@@ -120,13 +120,13 @@
       "scripts/runtime_context.py": "6eb100fe60841a578e6bc5bd1931cac3b451e71e7541b3cb096b04cd72a0eb5f"
     },
     "critical_resource_sha256": {
-      "SKILL.md": "652b720e0c1698e5528abf56cf3ea8bef963193e3ef8acdcf044e14cdf989d99",
-      "VERSION.txt": "04fc2af24f6a13951c4d4c66a776c18297388eb6f77e5bedd30c685e4e78978e",
+      "SKILL.md": "998cea42b36f3d106cb037cd19abe0412187d127b459af3f79a209ed19c591fd",
+      "VERSION.txt": "290661ae02c6acfc816a488d3b748cca7726c6b4205d3f3c3362418236d3be81",
       "scripts/runtime_resources.py": "6edab019082614733186a74214953bea5aaf371493f922752814937249bf283c",
       "scripts/case_archive/service.py": "5aaa1e25ef1a49391aff15a72d621aa3f9bcc485b4819e56774da17582a341f5",
       "scripts/amount_calculator/public.py": "ffd28d43f22260970b7157345a47735f7b992678dc585bbe34889d869d918820",
-      "scripts/documents/public.py": "ecb3f08ab002d52d36a0acb80bf0aaf21444559f36effc3c7411be9c3293b6aa",
-      "scripts/documents/receipts.py": "3b909c645e71f098b169f5c94ea75966d6b80a5c7b474fb14393c1c6c98e2e36",
+      "scripts/documents/public.py": "eb4dc8ca9b21a44c97ae41b0a4e36c7fb2752ead53fa08c30e8dacb0d74ae86c",
+      "scripts/documents/receipts.py": "04884c5984ff8a2452d7e2db195f02eaf4b8a3d665ff22467e60d946cb23fe5a",
       "scripts/documents/delivery.py": "b96d85a31d004f1fb25181f88daad09ac85b185a2d095225135cdb26c30c8ab2",
       "scripts/runtime_identity.py": "147a5fd6510b2b1c2a5e79d36bb697df3e165215d5e3c50066ababe4ed36ef3a",
       "scripts/runtime_manifest.py": "274c82ec491583a08e110a76f0abfec03e0e8b8df40455a185e831ab07dd607d",
@@ -135,5 +135,5 @@
       "scripts/runtime_context.py": "6eb100fe60841a578e6bc5bd1931cac3b451e71e7541b3cb096b04cd72a0eb5f"
     }
   },
-  "runtime_identity_sha256": "6d4c33c6efad4464fc9b6dd304c1562b96121fa1ce5df4fbe356465cdd03ef8b"
+  "runtime_identity_sha256": "22a4e2318e2b3edefc29c92d480e8ae6558237ec0d6ebe82b94a07452030a776"
 }

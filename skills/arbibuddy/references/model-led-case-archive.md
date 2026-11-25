@@ -31,12 +31,14 @@ cwd、显式 `--root` 当前工作区和 `create/read/read-current/commit` trans
 上下文提供）：
 
 ```text
-cd "<installed_skill_root>" && python -B -X utf8 -m scripts.case_archive.cli --root "<workspace_root>" create --jurisdiction "待用户确认" --initial-goal "梳理劳动争议"
+cd "<installed_skill_root>" && python -B -X utf8 -m scripts.case_archive.cli --root "<workspace_root>" create
 cd "<installed_skill_root>" && python -B -X utf8 -m scripts.case_archive.cli --root "<workspace_root>" read-current
 cd "<installed_skill_root>" && python -B -X utf8 -m scripts.case_archive.cli --root "<workspace_root>" read <case_id>
 Write 一次性 JSON 到 "<workspace_root>/.arbibuddy/runtime-input/<nonce>.json"，随后：
 cd "<installed_skill_root>" && python -B -X utf8 -m scripts.case_archive.cli --root "<workspace_root>" commit --input "<workspace_root>/.arbibuddy/runtime-input/<nonce>.json"
 ```
+
+直接使用无可选参数的最小 `create` 即可。只有需要在建档时写入已知元数据时才追加 `--case-label`、`--jurisdiction` 或 `--initial-goal`，按命令行拼写传递。
 
 成功的 `create` 会准备当前工作区的 `.arbibuddy/runtime-input/` 目录，供宿主的单次
 `Write` 写入复杂 commit 请求；`commit --input` 只接受该目录的直接 `.json` 子文件。
