@@ -16,7 +16,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 
 DOCUMENT_TITLES = {
-    "lawyer_case_brief": "律师阅案简报",
+    "lawyer_case_brief": "案情简报",
     "employment_obligation_demand_letter": "劳动用工义务催告函",
     "forced_termination_notice": "被迫解除劳动合同通知书",
     "arbitration_application": "劳动人事争议仲裁申请书",
@@ -27,7 +27,18 @@ DOCUMENT_TITLES = {
     "enforcement_application": "强制执行申请书",
 }
 DOCUMENT_BODY_TEXT = {
-    "lawyer_case_brief": "案情概要\n案情信息截至2026年4月15日\n本次咨询：工资差额及补偿\n青岚设计有限公司、青岚服务有限公司关系待核。已申请仲裁。\n当事人现估3月工资差额8000元；申请书记载3月请求10000元，差异待核。\n当事人称HR微信要求返岗，截图未提供。\n面谈先核实返岗回复和出勤。",
+    "lawyer_case_brief": (
+        "供律师咨询参考\n当事人：当事人\n案件类型：劳动争议\n案情信息截至：2026年4月15日\n"
+        "一、案件概要\n当事人称已申请仲裁，争议涉及工资差额及离岗返岗。\n"
+        "二、基本案情\n劳动合同单位青岚设计有限公司，工资支付单位青岚服务有限公司。\n"
+        "三、主要争议事项\n当事人现估3月工资差额8000元。\n当事人称主管口头通知离岗，随后HR微信要求返岗。原话和日期记不清。\n"
+        "四、争议处理进展\n当事人称已提交的申请书记载3月工资差额请求10000元，受理状态不详，未收到开庭通知。\n"
+        "五、证据及待明确事项\n（一）证据及材料情况\n返岗微信截图、仲裁申请书均未提供。\n"
+        "（二）尚待明确的事项\n两公司关系、3月工资所属年份、金额差异原因及返岗回复和出勤尚不明确。\n"
+        "六、当事人诉求及咨询问题\n（一）当事人诉求\n希望咨询工资差额及离岗后能否主张补偿。\n"
+        "（二）拟与律师讨论的问题\n工资差额应如何认定？离岗及返岗沟通是否可能涉及劳动合同解除及相关补偿？\n"
+        "编制说明：根据当事人陈述整理，供律师阅案参考。"
+    ),
     "employment_obligation_demand_letter": "收件人\n劳动关系说明\n具体义务\n履行期限\n沟通与保留权利",
     "forced_termination_notice": "收件人\n解除意思表示\n解除理由\n结算与手续\n落款",
     "arbitration_application": "申请人：张三\n被申请人：示例公司\n仲裁请求：支付工资差额6000.00元\n事实与理由\n申请人：张三\n2026年9月12日",
@@ -104,11 +115,15 @@ CASE_B = "case-1123456789abcdef01234567"
 _WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
 
-def _write_archive(workspace: Path, case_id: str, revision: int) -> Path:
+def _write_archive(workspace: Path, case_id: str, revision: int, *, document_type: str | None = None) -> Path:
     case_root = workspace / ".arbibuddy" / "cases" / case_id
     case_root.mkdir(parents=True, exist_ok=True)
     archive = case_root / "案情档案.md"
     timestamp = "2026-09-12T00:00:00+08:00"
+    evidence = ("### [E-001] 工资流水", "证据名称：工资流水；证明目的：证明工资差额。")
+    if document_type == "lawyer_case_brief":
+        evidence = ("### [E-001] 返岗微信", "当事人提及返岗微信；截图本次未收到、未阅。", "",
+                    "### [E-002] 仲裁申请书", "当事人转述已提交的申请书；本次未收到、未阅。")
     archive.write_text(
         "\n".join(
             (
@@ -147,8 +162,7 @@ def _write_archive(workspace: Path, case_id: str, revision: int) -> Path:
                 "",
                 "## 证据材料",
                 "",
-                "### [E-001] 工资流水",
-                "证据名称：工资流水；证明目的：证明工资差额。",
+                *evidence,
                 "",
                 "## 分析与假设",
                 "",
@@ -189,18 +203,23 @@ def write_public_archive(workspace: Path, case_id: str, revision: int) -> Path:
 
 def _manual_docx_bytes(title: str, body_text: str) -> bytes:
     w = _WORD_NS
-    body_paragraphs = "".join(
-        '<w:p><w:r><w:rPr><w:rFonts w:eastAsia="宋体"/></w:rPr>'
-        f'<w:t xml:space="preserve">{escape(paragraph)}</w:t></w:r></w:p>'
-        for paragraph in body_text.splitlines()
-    )
+    body_paragraphs = []
+    for paragraph in body_text.splitlines():
+        style = ""
+        if title == "案情简报":
+            if paragraph[:2] in {"一、", "二、", "三、", "四、", "五、", "六、", "七、", "八、"}:
+                style = '<w:pPr><w:pStyle w:val="Heading1"/></w:pPr>'
+            elif paragraph.startswith(("（一）", "（二）", "（三）")):
+                style = '<w:pPr><w:pStyle w:val="Heading2"/></w:pPr>'
+        body_paragraphs.append(f'<w:p>{style}<w:r><w:rPr><w:rFonts w:eastAsia="宋体"/></w:rPr>'
+                               f'<w:t xml:space="preserve">{escape(paragraph)}</w:t></w:r></w:p>')
     document_xml = (
         f'<w:document xmlns:w="{w}" '
         'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
         "<w:body><w:p><w:pPr><w:pStyle w:val=\"title\"/><w:keepNext/>"
         "<w:numPr><w:ilvl w:val=\"0\"/><w:numId w:val=\"1\"/></w:numPr></w:pPr>"
         f'<w:r><w:rPr><w:rFonts w:eastAsia="宋体"/></w:rPr><w:t>{escape(title)}</w:t></w:r>'
-        f"</w:p>{body_paragraphs}<w:sectPr><w:footerReference w:type=\"default\" r:id=\"rIdFooter\"/>"
+        f"</w:p>{''.join(body_paragraphs)}<w:sectPr><w:footerReference w:type=\"default\" r:id=\"rIdFooter\"/>"
         "<w:pgSz w:w=\"11906\" w:h=\"16838\"/><w:pgMar w:top=\"1440\" w:right=\"1440\" "
         "w:bottom=\"1440\" w:left=\"1440\" w:header=\"720\" w:footer=\"720\"/></w:sectPr>"
         "</w:body></w:document>"
@@ -301,7 +320,7 @@ def write_public_contract_delivery(
     archive_revision: int = 3,
     manifest_revision: int | None = None,
 ) -> tuple[str, dict[str, Path]]:
-    _write_archive(workspace, case_id, archive_revision)
+    _write_archive(workspace, case_id, archive_revision, document_type=document_type)
     title = DOCUMENT_TITLES[document_type]
     output_dir = (
         workspace / ".arbibuddy" / "cases" / case_id / "output" / document_type

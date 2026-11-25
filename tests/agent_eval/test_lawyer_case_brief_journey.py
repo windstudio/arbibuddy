@@ -18,11 +18,15 @@ from scripts.model_led_agent_eval import (
 from scripts.model_led_agent_eval.artifact_oracle import inspect_public_artifacts
 from scripts.model_led_agent_eval.brief_journey import check_brief_journey
 from scripts.model_led_agent_eval.postdelivery import capture_delivery_snapshot
-from tests.agent_eval.public_delivery_fixture import write_public_contract_delivery, DOCUMENT_BODY_TEXT
+from scripts.model_led_agent_eval.scenario_responder import ScenarioResponseDecision, validate_scenario_response
+from scripts.platform_adapters.service import PlatformAdapterError
+from tests.agent_eval.public_delivery_fixture import write_public_contract_delivery
 
 ROOT = Path(__file__).resolve().parents[2]
 SCENARIO = ROOT / "evals/model-led/codex-claude-lawyer-case-brief.yaml"
 EDIT_SCENARIO = ROOT / "evals/model-led/variants/ml04-postdelivery-edits.yaml"
+COMPLEX_SCENARIO = ROOT / "evals/model-led/variants/ml04-complex-hearing.yaml"
+PLANNED_SCENARIO = ROOT / "evals/model-led/variants/ml04-planned-arbitration.yaml"
 TYPE = "lawyer_case_brief"
 
 
@@ -54,6 +58,10 @@ class BriefJourneyTests(unittest.TestCase):
     def snapshot(self):
         with patch("scripts.documents.view.managed_delivery_view", return_value=self.view):
             return capture_delivery_snapshot(self.root, document_types={TYPE})
+
+    def change_paragraph(self, snapshot, old, new):
+        for block in snapshot["ordered_blocks"][TYPE]:
+            block["text"] = block["text"].replace(old, new)
 
     def test_runner_retains_verified_brief_before_workspace_cleanup(self):
         # Exercise the runner's real Oracle, copying and cleanup, not just the
@@ -98,6 +106,19 @@ class BriefJourneyTests(unittest.TestCase):
                     self.assertFalse(any("案情档案" in item["path"] for item in retained))
                 else:
                     self.assertEqual(retained, [])
+
+    def test_runner_preserves_setup_failure_as_harness_evidence(self):
+        with patch("scripts.model_led_agent_eval.install_skill",
+                   side_effect=PlatformAdapterError("模拟安装校验失败")):
+            result = run_journey(self.journey, platform="codex", source_root=ROOT, temp_root=self.root / "setup-failure",
+                                 platform_command=["fixture"], responder_mode="rule")
+
+        self.assertFalse(result.passed)
+        self.assertEqual(result.turns, 0)
+        self.assertEqual(result.failure_category, "Harness")
+        evidence = json.loads(result.evidence_path.read_text(encoding="utf-8"))
+        self.assertEqual(evidence["attribution"]["message"], "模拟安装校验失败")
+        self.assertFalse((result.evidence_path.parent / "workspace").exists())
 
     def test_independent_observer_accepts_brief_without_closing_but_requires_internal_checklist(self):
         observed = inspect_public_artifacts(self.root)
@@ -145,47 +166,62 @@ class BriefJourneyTests(unittest.TestCase):
         self.assertFalse(JourneyOracle(self.journey).evaluate(replace(state, runtime_completed=False)).passed)
 
     def test_arbitration_stage_accepts_equivalent_wording_but_not_omission(self):
-        for path in (SCENARIO, EDIT_SCENARIO, ROOT / "evals/model-led/variants/ml04-complex-hearing.yaml"):
-            spec = load_journey(path).lawyer_case_brief
-            group = spec["opening_groups"][4]
-            self.assertIn("已申请劳动仲裁", group)
         snapshot = self.snapshot()
-        snapshot["opening_text"] = snapshot["opening_text"].replace("已申请仲裁", "已申请劳动仲裁")
+        self.change_paragraph(snapshot, "已申请仲裁", "已申请劳动仲裁")
         turns = [{"turn": 1, "public_artifact_snapshot": snapshot}]
         self.assertEqual(check_brief_journey(self.journey.lawyer_case_brief, turns), [])
-        snapshot["opening_text"] = snapshot["opening_text"].replace("已申请劳动仲裁", "仲裁阶段待核")
-        self.assertIn("opening_groups:4", check_brief_journey(self.journey.lawyer_case_brief, turns))
+        self.change_paragraph(snapshot, "已申请劳动仲裁", "仲裁阶段待核")
+        self.assertIn("opening_groups:3", check_brief_journey(self.journey.lawyer_case_brief, turns))
 
-    def test_priority_questions_accept_lawyer_wording_but_not_omission(self):
-        for path in (SCENARIO, EDIT_SCENARIO, ROOT / "evals/model-led/variants/ml04-complex-hearing.yaml"):
-            spec = load_journey(path).lawyer_case_brief
-            self.assertIn("先与律师核实", spec["opening_groups"][5])
+    def test_checks_section_assignment_and_allows_factual_uncertainty(self):
         snapshot = self.snapshot()
-        snapshot["opening_text"] = snapshot["opening_text"].replace("面谈先核实", "建议先与律师核实")
         turns = [{"turn": 1, "public_artifact_snapshot": snapshot}]
-        self.assertEqual(check_brief_journey(self.journey.lawyer_case_brief, turns), [])
-        snapshot["opening_text"] = snapshot["opening_text"].replace("建议先与律师核实返岗回复和出勤。", "")
-        self.assertIn("opening_groups:5", check_brief_journey(self.journey.lawyer_case_brief, turns))
+        self.change_paragraph(snapshot, "尚不明确。", "尚不明确，仍未核实。")
+        spec = self.journey.lawyer_case_brief
+        self.assertEqual(check_brief_journey(spec, turns), [])
+        self.change_paragraph(snapshot, "拟与律师讨论的问题", "面谈优先核对")
+        self.assertIn("missing_brief_section:拟与律师讨论的问题", check_brief_journey(spec, turns))
+        self.change_paragraph(snapshot, "面谈优先核对", "拟与律师讨论的问题")
+        self.change_paragraph(snapshot, "工资差额应如何认定？", "3月差额应如何认定？")
+        self.assertEqual(check_brief_journey(spec, turns), [])
+        self.change_paragraph(snapshot, "3月差额应如何认定？", "建议律师核实工资差额。")
+        self.assertIn("forbidden_content:建议律师核实", check_brief_journey(spec, turns))
 
     def test_content_mutations_cannot_pass_by_chat_claims(self):
         good = self.snapshot()
         self.assertEqual(check_brief_journey(self.journey.lawyer_case_brief, [{"turn": 1, "public_artifact_snapshot": good}]), [])
+        snapshot = deepcopy(good)
+        self.change_paragraph(snapshot, "当事人现估3月工资差额", "当事人现估2026年3月工资差额")
+        self.assertIn("forbidden_content:2026年3月", check_brief_journey(
+            self.journey.lawyer_case_brief, [{"turn": 1, "public_artifact_snapshot": snapshot}]))
         for wrong in ("E03", "F-001", "13800001234", "18000元", "在场人与发出方式均记不清"):
             snapshot = deepcopy(good)
             snapshot["ordered_blocks"][TYPE].append({"text": wrong})
             self.assertTrue(check_brief_journey(self.journey.lawyer_case_brief, [{"turn": 1, "public_artifact_snapshot": snapshot}]))
         snapshot = deepcopy(good)
-        snapshot["ordered_blocks"] = {TYPE: [{"text": DOCUMENT_BODY_TEXT[TYPE].replace("现估3月工资差额8000元；申请书记载3月请求10000元", "现估3月工资差额10000元；申请书记载3月请求8000元")}]}
+        self.change_paragraph(snapshot, "现估3月工资差额8000元", "现估3月工资差额10000元")
+        self.change_paragraph(snapshot, "3月工资差额请求10000元", "3月工资差额请求8000元")
         errors = check_brief_journey(self.journey.lawyer_case_brief, [{"turn": 1, "public_artifact_snapshot": snapshot}])
         self.assertIn("amount_attribution:8000", errors)
         self.assertIn("amount_attribution:10000", errors)
 
+    def test_internal_content_check_distinguishes_public_urls_and_local_paths(self):
+        snapshot = self.snapshot()
+        spec = self.journey.lawyer_case_brief
+        url = "https://example.org/material"
+        self.change_paragraph(snapshot, "返岗微信截图、仲裁申请书均未提供。",
+                              f"返岗微信截图、仲裁申请书均未提供。另有公开链接 {url}。")
+        turns = [{"turn": 1, "public_artifact_snapshot": snapshot}]
+        self.assertEqual(check_brief_journey(spec, turns), [])
+        self.change_paragraph(snapshot, url, "C:/workspace/material.png")
+        self.assertIn("internal_content_leak", check_brief_journey(spec, turns))
+
     def edit_transcripts(self):
         before = self.snapshot()
         before["archive_fact_text"] = "姓名：林晓\n入职日期：2024年3月1日"
-        before["ordered_blocks"][TYPE].append({"text": "林晓，2024年3月1日入职。"})
+        before["ordered_blocks"][TYPE].insert(-1, {"text": "林晓，2024年3月1日入职。"})
         anonymous = deepcopy(before)
-        anonymous["ordered_blocks"][TYPE][-1]["text"] = "当事人，2024年3月1日入职。"
+        anonymous["ordered_blocks"][TYPE][-2]["text"] = "当事人，2024年3月1日入职。"
         corrected = deepcopy(anonymous)
         corrected["archive_revision"] += 1
         corrected["delivery_set_id"] = "set-corrected"
@@ -193,7 +229,7 @@ class BriefJourneyTests(unittest.TestCase):
             item["archive_revision"] = corrected["archive_revision"]
             item["delivery_set_id"] = corrected["delivery_set_id"]
         corrected["archive_fact_text"] = "姓名：林晓\n入职日期：2024年2月29日"
-        corrected["ordered_blocks"][TYPE][-1]["text"] = "当事人，2024年2月29日入职。"
+        corrected["ordered_blocks"][TYPE][-2]["text"] = "当事人，2024年2月29日入职。"
         return [{"turn": i + 1, "selected_fact_ids": [fact], "public_artifact_snapshot": snapshot}
             for i, (fact, snapshot) in enumerate(zip(("brief_request", "anonymize", "correct_date"), (before, anonymous, corrected)))]
 
@@ -220,16 +256,23 @@ class BriefJourneyTests(unittest.TestCase):
         journey = load_journey(EDIT_SCENARIO)
         used = {"brief_request": 1}
         turns = self.edit_transcripts()
-        for history, expected in (([], None), (turns[:1], "anonymize"), (turns[:2], "correct_date")):
+        candidate = deepcopy(turns[:1])
+        candidate[0]["public_artifact_snapshot"]["delivery_state"] = "candidate_ready"
+        for history, expected in (([], None), (candidate, None), (turns[:1], "anonymize"), (turns[:2], "correct_date")):
             counts = {**used, **({"anonymize": 1} if len(history) == 2 else {})}
             request = _build_scenario_response_request(journey, "请查看文档", history, counts, 0)
             self.assertEqual(request.required_next_fact_id, expected)
             edit_ids = {f.id for f in request.available_facts} & {"anonymize", "correct_date"}
             self.assertEqual(edit_ids, {expected} if expected else set())
+            self.assertEqual(request.public_delivery_observation["verified"], expected is not None)
+            if expected is not None:
+                decision = ScenarioResponseDecision("answer", (expected,), "high", "direct_question")
+                self.assertEqual(validate_scenario_response(request, decision).decision.selected_fact_ids, (expected,))
 
     def test_all_brief_scenarios_load_and_reject_bad_contract(self):
-        for path in (SCENARIO, EDIT_SCENARIO, ROOT / "evals/model-led/variants/ml04-complex-hearing.yaml"):
-            self.assertIsNotNone(load_journey(path).lawyer_case_brief)
+        suite = yaml.safe_load((ROOT / "evals/suites/model-led-lawyer-case-brief.yaml").read_text(encoding="utf-8"))
+        for path in suite["journeys"]:
+            self.assertIsNotNone(load_journey(ROOT / path).lawyer_case_brief)
         data = yaml.safe_load(SCENARIO.read_text(encoding="utf-8"))
         for mutation in ("unknown", "turn", "groups"):
             changed = deepcopy(data)
@@ -266,23 +309,36 @@ class BriefJourneyTests(unittest.TestCase):
         self.assertIsNotNone(_normalize_managed_view_receipt(view,
             request={"case_id": case_id, "delivery_set_id": set_id}, workspace=root))
 
-    def test_complex_brief_requires_hearing_in_opening_and_one_separate_timeline(self):
-        journey = load_journey(ROOT / "evals/model-led/variants/ml04-complex-hearing.yaml")
+    def test_complex_brief_requires_hearing_in_overview_and_multiple_dispute_headings(self):
+        spec = load_journey(COMPLEX_SCENARIO).lawyer_case_brief
+        # Isolate the layout checks from the case-specific factual assertions.
+        layout_spec = {**spec, "section_expectations": {}, "amount_attributions": [],
+                       "content_groups": [["案情简报"]], "opening_groups": [["2026年5月8日"]]}
         snapshot = self.snapshot()
-        snapshot["opening_text"] += "开庭通知：2026年5月8日开庭。"
-        snapshot["ordered_blocks"][TYPE].append({"text": "共用时间线"})
-        snapshot["page_break_count"] = 1
+        snapshot["ordered_blocks"][TYPE] = [
+            {"text": text, "style_id": style} for style, text in (
+                (None, "案情简报"), (None, "供律师咨询参考"),
+                ("Heading1", "一、案件概要"), (None, "2026年5月8日开庭。"),
+                ("Heading1", "二、主要争议事项"), ("Heading2", "（一）工资差额"), (None, "工资口径存在差异。"),
+                ("Heading2", "（二）离岗和返岗"), (None, "当事人未返岗。"),
+                (None, "编制说明：供律师阅案。"),
+            )
+        ]
         def errors(value):
-            return check_brief_journey(journey.lawyer_case_brief, [{"turn": 1, "public_artifact_snapshot": value}])
+            return check_brief_journey(layout_spec, [{"turn": 1, "public_artifact_snapshot": value}])
         self.assertEqual(errors(snapshot), [])
-        for mutation in ("no_break", "hearing_not_in_opening", "duplicate_timeline"):
+        for mutation in ("forced_break", "hearing_not_in_opening", "missing_dispute_level", "misnumbered"):
             changed = deepcopy(snapshot)
-            if mutation == "no_break":
-                changed["page_break_count"] = 0
+            blocks = changed["ordered_blocks"][TYPE]
+            if mutation == "forced_break":
+                changed["page_break_count"] = 1
             elif mutation == "hearing_not_in_opening":
-                changed["opening_text"] = "案情概要"
+                blocks[3]["text"] = "本案主要涉及工资差额。"
+                blocks[6]["text"] += "2026年5月8日开庭。"
+            elif mutation == "missing_dispute_level":
+                blocks[7]["style_id"] = None
             else:
-                changed["ordered_blocks"][TYPE].append({"text": "共用时间线"})
+                blocks[7]["text"] = "（三）离岗和返岗"
             with self.subTest(mutation=mutation):
                 self.assertTrue(errors(changed))
 
@@ -291,24 +347,71 @@ class BriefJourneyTests(unittest.TestCase):
         turns = [{"turn": 1, "public_artifact_snapshot": snapshot}]
         spec = self.journey.lawyer_case_brief
         self.assertEqual(check_brief_journey(spec, turns), [])
-        snapshot["ordered_blocks"][TYPE].append({"text": "共用时间线"})
-        self.assertIn("unexpected_brief_continuation", check_brief_journey(spec, turns))
-        snapshot["ordered_blocks"][TYPE].pop()
         snapshot["page_break_count"] = 1
-        self.assertIn("unexpected_brief_continuation", check_brief_journey(spec, turns))
+        self.assertIn("brief_structure", check_brief_journey(spec, turns))
+
+    def test_planned_arbitration_preserves_unknown_notice_status_and_actual_chronology(self):
+        spec = load_journey(PLANNED_SCENARIO).lawyer_case_brief
+        snapshot = self.snapshot()
+        blocks = [
+            (None, "案情简报"), (None, "供律师咨询参考"),
+            ("Heading1", "一、案件概要"), (None, "白屿设备有限公司欠薪与排班争议。"),
+            ("Heading1", "二、基本案情"), ("Heading2", "（一）关键事件时间线"),
+            (None, "2025 年 1 月起工资迟发。"), (None, "2025-05 调整排班。"),
+            ("Heading1", "三、主要争议事项"),
+            ("Heading2", "（一）欠薪"), (None, "当事人称仍欠工资7200元。"),
+            ("Heading2", "（二）排班"), (None, "当事人称排班发生调整。"),
+            ("Heading1", "四、争议处理进展"),
+            (None, "原计划于2026年4月20日申请仲裁，是否提交及后续通知状态未核实。"),
+            ("Heading1", "五、证据及材料情况"), (None, "往来邮件、劳动合同本次未收到。"),
+            ("Heading1", "六、拟与律师讨论的问题"), (None, "现有工资和排班问题如何判断？"),
+            (None, "编制说明：根据当事人陈述整理。"),
+        ]
+        snapshot["ordered_blocks"][TYPE] = [{"style_id": style, "text": text} for style, text in blocks]
+        turns = [{"turn": 1, "public_artifact_snapshot": snapshot}]
+        self.assertEqual(check_brief_journey(spec, turns), [])
+        timeline = snapshot["ordered_blocks"][TYPE]
+        timeline[6], timeline[7] = timeline[7], timeline[6]
+        self.assertEqual(check_brief_journey(spec, turns), ["brief_section_order:关键事件时间线"])
+        timeline[6], timeline[7] = timeline[7], timeline[6]
+        self.change_paragraph(snapshot, "后续通知状态未核实。", "后续进展未核实，尚未收到受理、开庭通知。")
+        self.assertIn("forbidden_content:尚未收到受理", check_brief_journey(spec, turns))
+
+    def test_brief_requires_new_title_and_subtitle_before_the_case_information(self):
+        spec = self.journey.lawyer_case_brief
+        for field in ("案情简报", "供律师咨询参考"):
+            snapshot = self.snapshot()
+            self.change_paragraph(snapshot, field, "")
+            with self.subTest(field=field):
+                self.assertIn("brief_structure", check_brief_journey(spec, [
+                    {"turn": 1, "public_artifact_snapshot": snapshot}
+                ]))
 
     def test_archive_evidence_rejects_unattributed_absence_of_records(self):
         archive = self.root / ".arbibuddy/cases" / self.view["case_id"] / "案情档案.md"
         text = archive.read_text(encoding="utf-8")
-        archive.write_bytes(text.replace("### [E-001] 工资流水\n",
-            "### [E-001] 工资流水\n当事人称无录音或书面记录。\n").encode("utf-8"))
+        archive.write_bytes(text.replace("### [E-001] 返岗微信\n",
+            "### [E-001] 返岗微信\n当事人称无录音或书面记录。\n工资流水未提供。\n").encode("utf-8"))
         snapshot = self.snapshot()
         self.assertTrue(snapshot["verified"], snapshot)
         turns = [{"turn": 1, "public_artifact_snapshot": snapshot}]
         spec = self.journey.lawyer_case_brief
-        self.assertIn("forbidden_archive_evidence:无录音或书面记录", check_brief_journey(spec, turns))
+        failures = check_brief_journey(spec, turns)
+        self.assertIn("forbidden_archive_evidence:无录音或书面记录", failures)
+        self.assertIn("forbidden_archive_evidence:工资流水", failures)
         snapshot.pop("archive_evidence_text")
         self.assertIn("archive_evidence_not_observed", check_brief_journey(spec, turns))
+
+    def test_compact_materials_reject_guessed_records_and_missing_recordings(self):
+        snapshot = self.snapshot()
+        turns = [{"turn": 1, "public_artifact_snapshot": snapshot}]
+        spec = self.journey.lawyer_case_brief
+        self.assertEqual(check_brief_journey(spec, turns), [])
+        self.change_paragraph(snapshot, "返岗微信截图、仲裁申请书均未提供。",
+                              "返岗微信截图、仲裁申请书均未提供。工资支付记录等未阅，口头通知无录音或书面材料。")
+        errors = check_brief_journey(spec, turns)
+        self.assertIn("brief_section_forbidden:证据及材料情况:工资支付记录", errors)
+        self.assertIn("brief_section_forbidden:证据及材料情况:无录音或书面材料", errors)
 
     def test_mixed_view_keeps_other_document_checklist_and_global_order(self):
         view = deepcopy(self.view)

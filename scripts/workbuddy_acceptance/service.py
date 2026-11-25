@@ -1765,12 +1765,12 @@ def _command_masks_business_exit_status(command: str) -> bool:
 
 
 def _case_archive_module_present(record: Mapping[str, Any]) -> bool:
-    serialized = _transcript_serialized_text(dict(record)).replace("\\", "/")
-    return re.search(
-        r"scripts[./]case_archive[./](?:cli|runtime_cli)(?:\.py)?\b",
-        serialized,
-        flags=re.IGNORECASE,
-    ) is not None
+    call = dict(record)
+    invocation = (*_transcript_command_texts(call), *_transcript_call_names(call))
+    return any(
+        re.search(r"scripts[./]case_archive[./](?:cli|runtime_cli)(?:\.py)?\b", value.replace("\\", "/"))
+        for value in invocation
+    )
 
 
 def _managed_runtime_input_transcript_path(
@@ -2659,6 +2659,19 @@ def _audit_revision_timeline(
         "current_artifact_diagnostics": current_artifact_diagnostics,
         "valid": not invalid,
     }
+
+
+def _is_new_brief_presentation(
+    earlier: Mapping[str, Any], later: Mapping[str, Any], user_rounds: list[int]
+) -> bool:
+    """A user-requested brief edit can replace the Word at the same archive revision."""
+    return (
+        earlier["delivery_completed_types"] == later["delivery_completed_types"] == ["lawyer_case_brief"]
+        and bool(earlier["manifest_id"] and later["manifest_id"])
+        and earlier["manifest_id"] != later["manifest_id"]
+        and earlier["file_hashes"] != later["file_hashes"]
+        and any(earlier["index"] < index < min(later["render_indices"]) for index in user_rounds)
+    )
 
 
 def _timeline_path(value: str, *, workspace: Path) -> Path:
@@ -4335,10 +4348,12 @@ def _audit_transcript_jsonl(
             )
             direct_bypass_codes.add("incomplete_managed_presentation")
         historical_presentations = revision_timeline["historical_presentations"]
+        user_rounds = [index for index, record in timeline_records if _transcript_user_round(record)]
         duplicate_present = any(
             left.get("revision") is not None
             and left.get("revision") == right.get("revision")
             and left.get("paths") == right.get("paths")
+            and not _is_new_brief_presentation(left, right, user_rounds)
             for index, left in enumerate(historical_presentations)
             for right in historical_presentations[index + 1:]
         )
@@ -4346,7 +4361,7 @@ def _audit_transcript_jsonl(
             _add(
                 violations,
                 "duplicate_managed_presentation",
-                "同一 archive revision 的受管文书集合不得重复展示",
+                "同一档案修订的受管文书重复展示，缺少合规的新简报交付证据",
                 transcript_jsonl,
             )
             direct_bypass_codes.add("duplicate_managed_presentation")

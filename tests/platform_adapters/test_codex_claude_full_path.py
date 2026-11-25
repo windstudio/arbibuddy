@@ -52,10 +52,9 @@ class CodexClaudeFullPathTests(unittest.TestCase):
 
             with (
                 patch("scripts.platform_adapters.service.os.name", "nt"),
-                patch.dict(
-                    os.environ,
-                    {"HOME": "", "USERPROFILE": r"C:\Users\runtime-test"},
-                    clear=False,
+                patch(
+                    "scripts.platform_adapters.service.os.environ",
+                    {**os.environ, "HOME": "", "USERPROFILE": r"C:\Users\runtime-test"},
                 ),
                 patch(
                     "scripts.platform_adapters.service.subprocess.run",

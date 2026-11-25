@@ -746,7 +746,7 @@ class TwoBatchModelBRemediationTests(unittest.TestCase):
                     sys.modules,
                     {"openai_codex": fake_module},
                 ),
-                patch.dict(os.environ, {secret_name: secret_value}, clear=False),
+                patch("os.environ", {**os.environ, secret_name: secret_value}),
             ):
                 _sdk_worker_main(
                     connection,

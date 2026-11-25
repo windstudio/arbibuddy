@@ -878,10 +878,9 @@ class ModelLedHarnessTests(unittest.TestCase):
             runtime = CliAgentRuntime(platform="codex", command=[sys.executable])
             with (
                 patch("scripts.platform_adapters.service.os.name", "nt"),
-                patch.dict(
-                    os.environ,
-                    {"HOME": "", "USERPROFILE": r"C:\Users\runtime-test"},
-                    clear=False,
+                patch(
+                    "scripts.platform_adapters.service.os.environ",
+                    {**os.environ, "HOME": "", "USERPROFILE": r"C:\Users\runtime-test"},
                 ),
                 patch(
                     "scripts.model_led_agent_eval.subprocess.run",
@@ -914,13 +913,13 @@ class ModelLedHarnessTests(unittest.TestCase):
             runtime = CliAgentRuntime(platform="codex", command=[sys.executable])
             with (
                 patch("scripts.platform_adapters.service.os.name", "nt"),
-                patch.dict(
-                    os.environ,
+                patch(
+                    "scripts.platform_adapters.service.os.environ",
                     {
+                        **os.environ,
                         "HOME": r"C:\Users\explicit-home",
                         "USERPROFILE": r"C:\Users\runtime-test",
                     },
-                    clear=False,
                 ),
                 patch(
                     "scripts.model_led_agent_eval.subprocess.run",

@@ -1,0 +1,45 @@
+schema_version: 2
+id: ML04-award-consultation
+title: 仲裁裁决后仅咨询
+initial_user_message: 我叫许嘉，在枫桥物流有限公司做分拣。我申请仲裁要求公司支付加班费7000元，已经收到了裁决书。裁决书有一段我抄在这里：“认定许嘉2026年6月在岗加班12小时，裁决支付加班费1800元”。但我记得同月加班约26小时，公司提交的考勤与我的记录不一致；我自己的打卡截图丢了，拿不到。裁决书原件我没有发给你，也没记下送达时间。我只想先咨询律师，了解这个差异和裁决结果对我有什么影响，尚未决定是否起诉或增加请求。请直接整理一份可编辑的Word简报，我自己给律师，这轮没空继续回复。
+initial_fact_ids: [brief_request]
+simulator:
+  persona: 虚构的劳动争议当事人
+  objective: 如实呈现裁决和不同记录，用户尚未决定采取行动。
+  max_facts_per_turn: 1
+  max_unavailable_uses: 0
+fact_pool:
+  - id: brief_request
+    message: 请直接整理一份可编辑Word简报，我只想咨询裁决及加班时数口径，尚未决定是否起诉。
+milestones: []
+expect:
+  required_artifacts: [case_archive, docx, checklist]
+  required_deliveries:
+    - {document_type: lawyer_case_brief, mode: external_final}
+  min_turns: 1
+  max_turns: 1
+  allow_degraded_delivery: false
+  allow_extra_deliveries: false
+  completion_paths:
+    - id: brief_delivered
+      requires_sent_facts: [brief_request]
+      required_artifacts: [case_archive, docx, checklist]
+      required_deliveries:
+        - {document_type: lawyer_case_brief, mode: external_final}
+  lawyer_case_brief:
+    first_delivery_turn: 1
+    content_groups: [[枫桥物流有限公司], [12小时, 12 小时], [26小时, 26 小时], [7000元, '7,000元', '7000.00元'], [1800元, '1,800元', '1800.00元']]
+    opening_groups: [[裁决], [加班], ['案情信息截至：不详', '案情信息截至：未知', '案情信息截至：未明确', '案情信息截至：未记载', '案情信息截至：未提供']]
+    section_expectations:
+      争议处理进展:
+        required: [[7000元, '7,000元', '7000.00元'], [1800元, '1,800元', '1800.00元'], [转述, 抄录, 摘录, 节录]]
+      当事人诉求:
+        required: [[咨询, 了解], [未决定, 尚未决定, 暂无, 仅咨询, 仅希望, 只希望, 尚未确定]]
+        forbidden: [要求补发, 要求赔偿, 起诉请求, 7000元, '7,000元', '7000.00元']
+      证据及材料情况:
+        required: [[裁决书], [原件, 全文], [未提供, 未提交, 未阅, 未收到], [打卡, 截图], [丢失, 丢了, 无法取得, 拿不到]]
+      尚待明确的事项:
+        required: [[送达], [差异, 不一致, 不同, 分歧, 对应关系, 差别]]
+      拟与律师讨论的问题:
+        required: [[加班, 考勤], ['？', '?']]
+    forbidden_content: [裁决已生效, 已提起诉讼, 已起诉, 请律师协助, 建议优先请律师, '15日', '15 日', '《劳动争议调解仲裁法》']

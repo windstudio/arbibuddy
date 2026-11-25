@@ -162,10 +162,8 @@ class DocumentRuntimeCliTests(unittest.TestCase):
                     "python_abi": "cp999",
                     "platform_tag": "win_amd64",
                 },
-            ) as probe, patch.object(runtime_cli.os, "execv") as execv, patch.dict(
-                runtime_cli.os.environ,
-                {},
-                clear=False,
+            ) as probe, patch.object(runtime_cli.os, "execv") as execv, patch.object(
+                runtime_cli.os, "environ", dict(runtime_cli.os.environ),
             ):
                 runtime_cli.os.environ.pop(
                     runtime_cli.RUNTIME_BOOTSTRAP_ENV, None
@@ -204,10 +202,9 @@ class DocumentRuntimeCliTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            with patch.object(runtime_cli.os, "execv") as execv, patch.dict(
-                runtime_cli.os.environ,
-                {runtime_cli.RUNTIME_BOOTSTRAP_ENV: "1"},
-                clear=False,
+            with patch.object(runtime_cli.os, "execv") as execv, patch.object(
+                runtime_cli.os, "environ",
+                {**runtime_cli.os.environ, runtime_cli.RUNTIME_BOOTSTRAP_ENV: "1"},
             ):
                 self.assertFalse(
                     runtime_cli.bootstrap_document_runtime(

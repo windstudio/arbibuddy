@@ -8,6 +8,19 @@ import re
 
 from .postdelivery import _text_leaves
 
+_NUMERALS = "一二三四五六七八"
+_CHAPTER_PREFIX = ("案件概要", "基本案情", "主要争议事项", "争议处理进展")
+_FULL_CHAPTERS = (*_CHAPTER_PREFIX, "当事人诉求", "证据及材料情况", "尚待明确的事项", "拟与律师讨论的问题")
+_COMPACT_CHAPTERS = (*_CHAPTER_PREFIX, "证据及待明确事项", "证据及材料情况", "尚待明确的事项",
+                     "当事人诉求及咨询问题", "当事人诉求", "拟与律师讨论的问题")
+
+
+def _valid_groups(groups):
+    return isinstance(groups, list) and bool(groups) and all(
+        isinstance(group, list) and group and all(isinstance(s, str) and s.strip() for s in group)
+        for group in groups
+    )
+
 
 def validate_brief_spec(value, *, facts, initial, initial_fact_ids, max_turns,
                         deliveries, phone_correction):
@@ -15,7 +28,7 @@ def validate_brief_spec(value, *, facts, initial, initial_fact_ids, max_turns,
         return None
     from . import JourneyError
     allowed = {"first_delivery_turn", "content_groups", "opening_groups", "forbidden_content",
-               "forbidden_archive_evidence", "amount_attributions", "complex_timeline", "edits"}
+               "forbidden_archive_evidence", "amount_attributions", "structure", "section_expectations", "edits"}
     if not isinstance(value, Mapping) or set(value) - allowed:
         raise JourneyError("lawyer_case_brief 存在未知字段或不是对象")
     turn = value.get("first_delivery_turn")
@@ -23,14 +36,22 @@ def validate_brief_spec(value, *, facts, initial, initial_fact_ids, max_turns,
         raise JourneyError("lawyer_case_brief.first_delivery_turn 必须是有效轮次")
     if phone_correction is not None or len(deliveries) != 1 or deliveries[0].document_type != "lawyer_case_brief" or deliveries[0].mode != "external_final":
         raise JourneyError("简报场景须独立交付一份 external_final 简报，不混用电话更正场景")
-    if type(value.get("complex_timeline", False)) is not bool:
-        raise JourneyError("complex_timeline 必须是布尔值")
+    if value.get("structure") not in (None, "compact", "full"):
+        raise JourneyError("structure 必须为 compact 或 full")
     for key in ("content_groups", "opening_groups"):
-        groups = value.get(key, [])
-        if not isinstance(groups, list) or not groups or any(
-            not isinstance(group, list) or not group or any(not isinstance(s, str) or not s.strip() for s in group)
-            for group in groups):
+        if not _valid_groups(value.get(key)):
             raise JourneyError(f"lawyer_case_brief.{key} 必须是非空备选词组列表")
+    assertions = value.get("section_expectations", {})
+    if not isinstance(assertions, Mapping) or any(
+        not isinstance(heading, str) or not heading.strip() or not isinstance(assertion, Mapping)
+        or not assertion or set(assertion) - {"required", "forbidden", "ordered"}
+        or ("required" in assertion and not _valid_groups(assertion["required"]))
+        or ("ordered" in assertion and (not _valid_groups(assertion["ordered"]) or len(assertion["ordered"]) < 2))
+        or ("forbidden" in assertion and (not isinstance(assertion["forbidden"], list)
+            or any(not isinstance(s, str) or not s.strip() for s in assertion["forbidden"])))
+        for heading, assertion in assertions.items()
+    ):
+        raise JourneyError("section_expectations 须为标题到 required、ordered 词组或 forbidden 词语的映射")
     for key in ("forbidden_content", "forbidden_archive_evidence"):
         markers = value.get(key, [])
         if not isinstance(markers, list) or any(not isinstance(s, str) or not s.strip() for s in markers):
@@ -68,7 +89,7 @@ def next_brief_edit(spec, transcripts, used_facts):
     if not next_edit or not transcripts:
         return None
     snapshot = transcripts[-1].get("public_artifact_snapshot", {})
-    if snapshot.get("verified") is not True:
+    if _snapshot_errors(snapshot):
         return None
     index = edits.index(next_edit)
     if index and edits[index - 1]["fact_id"] not in (transcripts[-1].get("selected_fact_ids") or ()):
@@ -104,23 +125,88 @@ def _normalize_dates(text):
         lambda m: f"{m[1]}年{int(m[2])}月{int(m[3])}日", text)
 
 
+def _brief_sections(blocks):
+    """Read section titles and their content from actual Word paragraph styles."""
+    names, titles, contents, opening = [], [], {}, []
+    chapter, child = None, None
+    subheadings = []
+    for block in blocks:
+        text = "\n".join(_text_leaves(block)).strip()
+        if not text:
+            continue
+        style = block.get("style_id")
+        if style == "Heading1":
+            names.append(text)
+            chapter = text.partition("、")[2]
+            titles.append(chapter)
+            contents[chapter] = []
+            child = None
+        elif style == "Heading2":
+            match = re.fullmatch(r"（([一二三四五六七八九]|[0-9]+)）(.+)", text)
+            child = match[2] if match else ""
+            subheadings.append((chapter, match[1] if match else ""))
+            contents[child] = []
+        elif text.startswith("编制说明："):
+            contents["编制说明"] = [text.removeprefix("编制说明：")]
+        else:
+            for name in (chapter, child):
+                if name is not None:
+                    contents[name].append(text)
+        if len(names) < 2:
+            opening.append(text)
+    return names, titles, contents, opening, subheadings
+
+
 def _content_errors(snapshot, spec):
     text = _text(snapshot)
-    opening = snapshot.get("opening_text", "")
+    names, titles, sections, opening_lines, subheadings = _brief_sections(snapshot["ordered_blocks"]["lawyer_case_brief"])
+    opening = "\n".join(opening_lines)
     failures = []
-    timeline_count = text.splitlines().count("共用时间线")
-    if spec.get("complex_timeline") is True and (
-        timeline_count != 1
-        or "共用时间线" in opening or snapshot.get("page_break_count") != 1):
-        failures.append("complex_timeline_structure")
-    if spec.get("complex_timeline") is False and (
-        timeline_count or snapshot.get("page_break_count") != 0):
-        failures.append("unexpected_brief_continuation")
+    if (opening_lines[:2] != ["案情简报", "供律师咨询参考"] or titles[:1] != ["案件概要"]
+        or len(titles) != len(set(titles))
+        or names != [f"{number}、{title}" for number, title in zip(_NUMERALS, titles)]
+        or not any(line.startswith("编制说明：") for line in text.splitlines()[-1:])
+        or any(not any(part.strip() for part in parts) for parts in sections.values())
+        or snapshot.get("page_break_count") != 0):
+        failures.append("brief_structure")
+    for title in titles:
+        numbers = [number for chapter, number in subheadings if chapter == title]
+        expected = list("一二三四五六七八九"[:len(numbers)]) + [str(n) for n in range(10, len(numbers) + 1)]
+        if numbers != expected:
+            failures.append("brief_subheading_numbering")
+    if spec.get("structure") == "full" and (
+        titles != [title for title in _FULL_CHAPTERS if title in titles]
+        or sum(chapter == "主要争议事项" for chapter, _ in subheadings) < 2):
+        failures.append("brief_full_structure")
+    if spec.get("structure") == "compact" and (
+        len(titles) > 6 or titles != [title for title in _COMPACT_CHAPTERS if title in titles]):
+        failures.append("brief_compact_structure")
+    for heading, assertions in spec.get("section_expectations", {}).items():
+        if heading not in sections:
+            failures.append("missing_brief_section:" + heading)
+            continue
+        content = "\n".join(sections[heading])
+        for index, group in enumerate(assertions.get("required", [])):
+            if not any(marker in content for marker in group):
+                failures.append(f"brief_section_content:{heading}:{index}")
+        for marker in assertions.get("forbidden", []):
+            if marker in content:
+                failures.append(f"brief_section_forbidden:{heading}:{marker}")
+        ordered = assertions.get("ordered", [])
+        if ordered:
+            remaining = _normalize_dates(content)
+            for group in ordered:
+                pattern = "|".join(re.escape(_normalize_dates(marker)) for marker in group)
+                match = re.search(pattern, remaining)
+                if match is None:
+                    failures.append(f"brief_section_order:{heading}")
+                    break
+                remaining = remaining[match.end():]
     for key, target in (("content_groups", text), ("opening_groups", opening)):
         for index, group in enumerate(spec[key]):
             if not any(marker in target for marker in group):
                 failures.append(f"{key}:{index}")
-    for marker in spec.get("forbidden_content", []):
+    for marker in ("面谈优先核对", *spec.get("forbidden_content", [])):
         if marker in text:
             failures.append("forbidden_content:" + marker)
     archive_markers = spec.get("forbidden_archive_evidence", [])
@@ -136,7 +222,7 @@ def _content_errors(snapshot, spec):
         amount = re.compile(r"(?<![0-9.])" + re.escape(item["amount"]) + r"(?:\.0+)?\s*元")
         if not any(amount.search(clause) and any(marker in clause for marker in item["context"]) for clause in clauses):
             failures.append("amount_attribution:" + item["amount"])
-    if re.search(r"(?<![A-Za-z0-9_])(?:F|E|CL|CAL|CONF|AUTH|N|SC|OR|DR|A|R)-?\d{2,}(?![A-Za-z0-9_])|\.arbibuddy|[A-Za-z]:[\\/]", text):
+    if re.search(r"(?<![A-Za-z0-9_])(?:F|E|CL|CAL|CONF|AUTH|N|SC|OR|DR|A|R)-?\d{2,}(?![A-Za-z0-9_])|\.arbibuddy|(?<![A-Za-z0-9_.])[A-Za-z]:[\\/]", text):
         failures.append("internal_content_leak")
     return failures
 

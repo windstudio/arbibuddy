@@ -803,11 +803,8 @@ def _validate_request(request: Any) -> tuple[dict[str, Any] | None, list[dict[st
             section_ids.add(section_id)
             sections.append({"section_id": section_id, "heading": heading, "full_text": full_text})
         if document_type == brief.DOCUMENT_TYPE:
-            if not sections or sections[0]["heading"] != brief.OVERVIEW:
-                errors.append(_error("missing_section", "sections[0].heading", "简报首页须为案情概要", brief.OVERVIEW, sections[0]["heading"] if sections else None))
-            continuations = [section["heading"] for section in sections[1:]]
-            if continuations and (continuations[0] != brief.TIMELINE or continuations.count(brief.TIMELINE) != 1 or brief.OVERVIEW in continuations):
-                errors.append(_error("missing_section", "sections", "复杂简报须在概要后只写一条共用时间线，再按争议事项续写", "案情概要 → 共用时间线 → 争议事项", continuations))
+            errors.extend(_error("missing_section", path, message, "lawyer_case_brief sections contract", None)
+                          for path, message in brief.structure_errors(sections))
         if document_type in _SECTION_ALIASES and len(sections) != len(_SECTION_ALIASES[document_type]):
             errors.append(
                 _error(
@@ -1672,7 +1669,26 @@ def _normalized_signature_text(value: str) -> str:
     return f"{role}：{name}"
 
 
-def _section_binding_errors(request: Mapping[str, Any]) -> list[dict[str, Any]]:
+def _brief_cutoff_source_matches(body: str, expected: tuple[int, int, int]) -> bool:
+    labelled = _record_field(body, brief.CUTOFF)
+    if labelled:
+        date = _DATE_VALUE_PATTERN.match(labelled)
+        return date is not None and _date_key(date) == expected
+
+    # Existing archives also record the scope in the user's original wording.
+    for match in _DATE_VALUE_PATTERN.finditer(body):
+        if _date_key(match) != expected:
+            continue
+        before, after = body[:match.start()], body[match.end():]
+        if re.search(r"(?:案情(?:信息)?|信息范围|上述情况|所述情况)\s*(?:截至|截止到?)\s*[:：]?\s*$", before):
+            return True
+        if (re.search(r"(?:当事人|本人|我)\s*(?:称|表示)?\s*(?:于|在)?\s*$", before)
+                and re.match(r"\s*整理(?:的)?(?:(?:上述|以上|本案|这些)?(?:情况|案情|信息)|(?=[，,。；;\r\n]|$))", after)):
+            return True
+    return False
+
+
+def _section_binding_errors(request: Mapping[str, Any], records: Mapping[str, str]) -> list[dict[str, Any]]:
     """Bind every amount, date and closing-signature occurrence to its source."""
     errors: list[dict[str, Any]] = []
     sections = {section["section_id"]: section for section in request["sections"]}
@@ -1803,6 +1819,18 @@ def _section_binding_errors(request: Mapping[str, Any]) -> list[dict[str, Any]]:
             else:
                 qualified_span = (target["section_id"], *span)
                 covered_dates.add(qualified_span)
+                if request["document_type"] == brief.DOCUMENT_TYPE and section["heading"] == brief.METADATA:
+                    date_line_prefix = section["full_text"][:span[0]].rsplit("\n", 1)[-1].lstrip()
+                    if (date_line_prefix.startswith(f"{brief.CUTOFF}：")
+                            and not _DATE_VALUE_PATTERN.search(date_line_prefix)):
+                        source = records.get(binding["archive_record_ref"], "")
+                        if not _brief_cutoff_source_matches(source, expected):
+                            errors.append(_error(
+                                "binding_mismatch", path,
+                                "案情信息截至日期须绑定档案明确的信息覆盖范围；无此来源时写「案情信息截至：不详」并移除对应日期定位",
+                                "archive record explicitly establishing the brief information cutoff", binding["rendered_value"],
+                                reason="brief_cutoff_source_missing", repair_scope="review_source",
+                            ))
                 if target["section_id"] in closing_ids:
                     bound_closing_dates.add(qualified_span)
     for index, section in enumerate(request["sections"]):
@@ -2101,7 +2129,7 @@ def _binding_errors(
                     repair_scope="review_source",
                 )
             )
-    errors.extend(_section_binding_errors(request))
+    errors.extend(_section_binding_errors(request, records))
     errors.extend(_section_labelled_binding_errors(request))
     errors.extend(_section_evidence_errors(request))
     errors.extend(_confirmation_reference_errors(request["confirmation_refs"], records, archive_revision))
@@ -3078,13 +3106,11 @@ def _build_docx(path: Path, request: Mapping[str, Any]) -> None:
     docx_builder._add_title(document, request["title"])
 
     if request["document_type"] == brief.DOCUMENT_TYPE:
-        # Keep the overview self-contained; complex matters start on page two.
-        for run in document.paragraphs[-1].runs:
+        for run in document.paragraphs[-2].runs:
             docx_builder._set_run_font(run, name="黑体", size=18, bold=True)
+        brief.add_subtitle(document, docx_builder)
         for index, section in enumerate(request["sections"]):
-            if index == 1:
-                document.add_page_break()
-            brief.add_section(document, section, docx_builder)
+            brief.add_section(document, section, index, docx_builder)
         return docx_builder._save_legal_document(document, path)
 
     if landscape:
@@ -3370,7 +3396,7 @@ class _DocumentRenderer:
                         ],
                     },
                     "amount_category": "仅非证据目录且正文含金额时要求，单独列项",
-                    "closing_category": "仅 external_final 且非证据目录、律师阅案简报时要求，单独列项",
+                    "closing_category": "仅 external_final 且非证据目录、案情简报时要求，单独列项",
                     "candidate_closing_category": "不要求最终签署角色与日期核验项",
                 },
             },

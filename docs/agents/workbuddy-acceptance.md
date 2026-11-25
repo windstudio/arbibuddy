@@ -4,11 +4,13 @@
 
 审计入口 scripts.workbuddy_acceptance.cli 只观察公开档案、DOCX、交付回执、原生trace与会话，按Harness、Scenario、Runtime Adapter、SUT/Skill、环境/模型波动归因。破坏性删除、案件越界、生成旁路与用户可见内部泄漏按直接行为证据判断。memory/USER.md 的宿主读写仅作运行时诊断观察，不是案件事实或文书工具门禁；事实进入业务结果才构成污染证据。
 
-## 律师阅案简报的原生验收
+## 案情简报的原生验收
 
 ML04 的虚构用户输入和修改卡以 `evals/model-led/codex-claude-lawyer-case-brief.yaml` 及 `variants/ml04-*.yaml` 为场景来源。首次目的明确后不补发“确认定稿”，只收一份 Word。原生 view / present_files 应包含简报 Word，内部清单仍保存在受管目录用于校验，不作为用户附件。收到有效首交后才发送隐名卡，收到更新稿后才发送日期更正卡，并分别保留原生 trace、对话及当时文件摘要。
 
-按[ML04 检查边界](model-led-agent-eval.md#律师阅案简报-ml04)核对实际排版、材料来源、金额口径和改稿事实。Codex/Claude CLI 的快照检查不替代 WorkBuddy 原生文件打开、附件展示或 Office 编辑验证；本节提供原生验收步骤，不代表已取得 WorkBuddy ML04 通过证据，也不扩展既有 ML03 专属 contract。
+隐名可沿用同一档案修订和文件路径。审计通过已验证的用户新轮次、其后的重新渲染、新交付集合和变化后的 Word 摘要识别新交付。档案工具的 transport 按实际命令或工具名审计，模型元数据中的命令字样不视为工具调用。
+
+按[ML04 检查边界](model-led-agent-eval.md#案情简报-ml04)核对实际排版、材料来源、金额口径和改稿事实。Codex/Claude CLI 的快照检查不替代 WorkBuddy 原生文件打开、附件展示或 Office 编辑验证；本节提供原生验收步骤，不代表已取得 WorkBuddy ML04 通过证据，也不扩展既有 ML03 专属 contract。
 
 ## 不交付文书的 ML03-v2
 

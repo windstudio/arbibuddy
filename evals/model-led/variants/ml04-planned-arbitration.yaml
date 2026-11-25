@@ -1,0 +1,43 @@
+schema_version: 2
+id: ML04-planned-arbitration
+title: 多事项时间线与仲裁通知状态未知
+initial_user_message: 我叫陆晴，在白屿设备有限公司做质检，2024年9月入职并与公司签了劳动合同。2025年5月改了排班，从这时起排班和原约定不一样。我记得从2025年1月起工资就断断续续迟发，2026年2月工资7200元至今没收到。2026年3月12日我发邮件要求公司支付拖欠工资，公司回信说之后会查。我的邮箱里有往来邮件，劳动合同也在手上，这两样都还没发给你。我原计划2026年4月20日申请劳动仲裁，是否已经提交和后续怎样，我现在不确定。想请律师看看欠薪和排班这两个问题。我这轮没空继续回复，请直接整理一份可编辑的Word简报，我自己转给律师。
+initial_fact_ids: [brief_request]
+simulator:
+  persona: 虚构的劳动争议当事人
+  objective: 如实保留事件日期及程序未知状态，首轮后不补充事实。
+  max_facts_per_turn: 1
+  max_unavailable_uses: 0
+fact_pool:
+  - id: brief_request
+    message: 请直接整理可编辑Word简报，供律师咨询欠薪和排班。
+milestones: []
+expect:
+  required_artifacts: [case_archive, docx, checklist]
+  required_deliveries:
+    - {document_type: lawyer_case_brief, mode: external_final}
+  min_turns: 1
+  max_turns: 1
+  allow_degraded_delivery: false
+  allow_extra_deliveries: false
+  completion_paths:
+    - id: brief_delivered
+      requires_sent_facts: [brief_request]
+      required_artifacts: [case_archive, docx, checklist]
+      required_deliveries:
+        - {document_type: lawyer_case_brief, mode: external_final}
+  lawyer_case_brief:
+    first_delivery_turn: 1
+    structure: full
+    content_groups: [[白屿设备有限公司], [排班], [7200元, '7,200元', '7200.00元']]
+    opening_groups: [[欠薪, 工资], [排班]]
+    section_expectations:
+      关键事件时间线:
+        ordered: [[2025年1月, '2025-01'], [2025年5月, '2025-05']]
+      争议处理进展:
+        required: [[原计划, 计划, 原拟, 拟于], [2026年4月20日, '2026-04-20', '2026 年 4 月 20 日'], [未核实, 不确定, 未知, 尚不明确, 未确认, 不明, 待核, 不详]]
+      证据及材料情况:
+        required: [[邮件], [劳动合同], [未提供, 未提交, 未阅, 未收到]]
+      拟与律师讨论的问题:
+        required: [[排班], [工资, 欠薪], ['？', '?']]
+    forbidden_content: [尚未收到受理, 未收到受理, 尚未收到开庭, 未收到开庭, 未收到仲裁通知, 尚未收到通知, 尚未申请仲裁, 尚未提交仲裁申请, 已向仲裁委员会提交, 仲裁机构已受理]

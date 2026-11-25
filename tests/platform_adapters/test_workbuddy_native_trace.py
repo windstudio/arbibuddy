@@ -1188,6 +1188,14 @@ class WorkBuddyNativeTraceTests(unittest.TestCase):
                         {
                             "sessionId": "native-bash-wrapper",
                             "type": "function_call",
+                            "id": "read-reference",
+                            "name": "Read",
+                            "arguments": {"file_path": str(ROOT / "references/model-led-case-archive.md")},
+                            "providerData": {"reasoning": f"Use {command} after reading the reference."},
+                        },
+                        {
+                            "sessionId": "native-bash-wrapper",
+                            "type": "function_call",
                             "id": "archive",
                             "name": "Bash",
                             "arguments": {"command": command},

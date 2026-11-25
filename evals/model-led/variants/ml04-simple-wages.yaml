@@ -1,0 +1,42 @@
+schema_version: 2
+id: ML04-simple-wages
+title: 单一欠薪与已确认诉求
+initial_user_message: 我叫沈宁，在澄河商贸有限公司做仓管，合同是和这家公司签的，每月固定工资6000元。我2026年9月正常工作，公司说现金流紧张，这一个月的工资一分没发。我只想要回这6000元，也想问律师现有材料能不能支持这个说法。我还没投诉、调解或申请仲裁。劳动合同的照片我手里有，还没发给你。我不记得是哪天整理这段情况的。帮我做一份可编辑Word简报，我自己转给律师，暂时不能继续回复。
+initial_fact_ids: [brief_request]
+simulator:
+  persona: 虚构的劳动争议当事人
+  objective: 保留既定咨询目标，首轮后不补充事实。
+  max_facts_per_turn: 1
+  max_unavailable_uses: 0
+fact_pool:
+  - id: brief_request
+    message: 我只想要回明确拖欠的9月工资并向律师咨询现有材料，首轮直接给我一份可编辑Word简报。
+milestones: []
+expect:
+  required_artifacts: [case_archive, docx, checklist]
+  required_deliveries:
+    - {document_type: lawyer_case_brief, mode: external_final}
+  min_turns: 1
+  max_turns: 1
+  allow_degraded_delivery: false
+  allow_extra_deliveries: false
+  completion_paths:
+    - id: brief_delivered
+      requires_sent_facts: [brief_request]
+      required_artifacts: [case_archive, docx, checklist]
+      required_deliveries:
+        - {document_type: lawyer_case_brief, mode: external_final}
+  lawyer_case_brief:
+    first_delivery_turn: 1
+    structure: compact
+    content_groups: [[澄河商贸有限公司], [9月, '2026-09'], [6000元, '6,000元', '6000.00元'], [尚未投诉, 未投诉, 尚未启动, 未启动, 未进行, 未申请, 尚未申请, 尚未进入]]
+    opening_groups: [['案情信息截至：不详', '案情信息截至：未知', '案情信息截至：未明确', '案情信息截至：未记载', '案情信息截至：未提供'], [工资, 欠薪]]
+    section_expectations:
+      当事人诉求:
+        required: [[工资], [6000元, '6,000元', '6000.00元']]
+        forbidden: [逾期利息, 经济补偿金, 赔偿金]
+      证据及材料情况:
+        required: [[劳动合同], [未提供, 未提交, 未发, 未收到]]
+      拟与律师讨论的问题:
+        required: [[材料, 证据], ['？', '?']]
+    forbidden_content: [关键事件时间线, 已受理, 已申请仲裁, 未提供给律师, 未向律师提供, 尚未交给律师]

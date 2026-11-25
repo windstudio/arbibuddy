@@ -11,6 +11,7 @@ import unittest
 from zipfile import ZipFile
 
 from scripts.documents.public import render as public_render
+from scripts.documents.public import create_delivery_set, describe_contract
 from scripts.documents.runtime_cli import main as document_runtime_main
 from scripts.case_archive import CaseArchive
 from scripts.documents.view import managed_delivery_view
@@ -2664,6 +2665,70 @@ class WorkBuddyClientAcceptanceTests(unittest.TestCase):
                 report["transcript_diagnostic"]["revision_timeline"]["render_count"],
                 1,
             )
+
+    def test_same_revision_brief_edit_requires_a_new_user_turn_and_a_new_word(self):
+        with TemporaryDirectory() as temp:
+            workspace = Path(temp)
+            kind = "lawyer_case_brief"
+            session_id = "same-revision-brief-edit"
+            example = describe_contract("render", document_type=kind)["examples"]["worked_example"]
+            archive = CaseArchive(workspace)
+            created = archive.create(example["create"])
+            self.assertTrue(created["ok"], created)
+            case_id = created["result"]["case_id"]
+            committed = archive.commit({**example["commit"], "case_id": case_id})
+            self.assertTrue(committed["ok"], committed)
+            revision = committed["result"]["revision"]
+            request = {**example["render_requests"][0], "case_id": case_id, "archive_revision": revision}
+
+            def deliver(label):
+                selected = create_delivery_set({**example["delivery_set"], "case_id": case_id,
+                                                "archive_revision": revision}, workspace)
+                self.assertTrue(selected["ok"], selected)
+                delivery_set_id = selected["result"]["delivery_set_id"]
+                rendered = public_render({**request, "delivery_set_id": delivery_set_id}, workspace)
+                self.assertTrue(rendered["ok"], rendered)
+                view = managed_delivery_view(workspace=workspace, case_id=case_id)
+                self.assertFalse(view["stopped"], view)
+                return [
+                    {"type": "function_call", "id": f"render-{label}", "name": "document.render-v1"},
+                    {"type": "function_call_result", "call_id": f"render-{label}", "status": "success", "result": rendered},
+                    {"type": "function_call", "id": f"view-{label}", "name": "Bash",
+                     "arguments": {"command": "python -m scripts.documents.runtime_cli view --json request"}},
+                    {"type": "function_call_result", "call_id": f"view-{label}", "status": "success", "result": view},
+                    {"type": "function_call", "id": f"present-{label}", "name": "present_files",
+                     "arguments": view["present_files_arguments"]},
+                ]
+
+            original = deliver("initial")
+            request["sections"][0]["full_text"] = request["sections"][0]["full_text"].replace("当事人：张三", "当事人：当事人")
+            request["locked_bindings"] = [item for item in request["locked_bindings"] if item["archive_record_ref"] != "F-001"]
+            revised = deliver("anonymized")
+            user_edit = {"type": "message", "role": "user", "content": "请将简报中的张三改为当事人。"}
+            beginning = [{"type": "function_call", "id": "skill", "name": "Skill", "arguments": {"skill": "arbibuddy"}},
+                         {"type": "function_call_result", "call_id": "skill", "name": "Skill", "status": "success"}]
+            transcript = workspace / "brief-edits.jsonl"
+
+            def audit(records):
+                transcript.write_text("\n".join(json.dumps({**record, "sessionId": session_id}, ensure_ascii=False)
+                                                for record in (*beginning, *records)), encoding="utf-8")
+                return audit_workspace(workspace=workspace, case_id=case_id, transcript_jsonl=transcript,
+                                       session_id=session_id, expected_deliveries=(kind,))
+
+            valid = [*original, user_edit, *revised]
+            report = audit(valid)
+            self.assertTrue(report["passed"], report["violations"])
+            presentations = report["transcript_diagnostic"]["revision_timeline"]["historical_presentations"]
+            self.assertEqual([event["revision"] for event in presentations], [revision, revision])
+            self.assertEqual(presentations[0]["paths"], presentations[1]["paths"])
+            self.assertNotEqual(presentations[0]["file_hashes"], presentations[1]["file_hashes"])
+            for label, records in (
+                ("no_new_turn", [*original, *revised]),
+                ("render_before_request", [*original, *revised[:-1], user_edit, revised[-1]]),
+                ("same_file_shown_again", [*valid, user_edit, {**revised[-1], "id": "repeated-present"}]),
+            ):
+                with self.subTest(label=label):
+                    self.assertIn("duplicate_managed_presentation", {v["code"] for v in audit(records)["violations"]})
 
     def test_historical_managed_view_survives_stale_current_delivery_state(self):
         with TemporaryDirectory() as temp:

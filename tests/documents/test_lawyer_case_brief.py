@@ -4,14 +4,17 @@ from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
 
 from scripts.case_archive import CaseArchive
 from scripts.documents.lawyer_case_brief import scaled_source_amount_matches
-from scripts.documents.public import _binding_value_matches
+from scripts.documents.public import _binding_value_matches, _DOCUMENT_TYPE_TITLES
 from scripts.documents.public import create_delivery_set, describe_contract, render
 from scripts.documents.view import managed_delivery_view, managed_edit_context
+
+NS = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
 
 
 class BriefSourceAmountTests(unittest.TestCase):
@@ -66,27 +69,58 @@ class LawyerCaseBriefTests(unittest.TestCase):
         self.assertFalse(view["stopped"], view)
         self.assertEqual([item["kind"] for item in view["presentation_files"]], ["document"])
         path = Path(view["presentation_files"][0]["path"])
-        self.assertEqual(path.suffix, ".docx")
-        self.assertNotIn("候选", path.name)
+        self.assertEqual(path.name, "《案情简报》.docx")
         with ZipFile(path) as package:
             root = ET.fromstring(package.read("word/document.xml"))
+        paragraphs = ["".join(paragraph.itertext()) for paragraph in root.findall("./w:body/w:p", NS)]
+        self.assertEqual(paragraphs[:2], ["案情简报", "供律师咨询参考"])
         text = "".join(root.itertext())
         return result, root, text
 
     def test_first_delivery_without_confirmation_calculation_or_provided_screenshot(self):
-        _, _, text = self.deliver()
+        _, root, text = self.deliver()
         archive = self.archive.read(self.case_id)["result"]["markdown"]
         self.assertNotIn("[CONF-", archive)
         self.assertNotIn("[CAL-", archive)
-        for phrase in ("本次咨询", "主体关系", "当前阶段", "主要分歧", "面谈先核实", "截图尚未提供", "8000元", "10000元", "差异待核", "对方意见尚不清楚"):
+        for phrase in ("当事人：张三", "一、案件概要", "五、证据及待明确事项", "（二）尚待明确的事项",
+                       "六、当事人诉求及咨询问题", "（二）拟与律师讨论的问题", "截图尚未提供",
+                       "8000元", "10000元", "差异原因尚不明确", "对方意见尚不清楚", "编制说明："):
             self.assertIn(phrase, text)
-        for private in ("张三", "310000199001010000", "13800000000", "F-00", "E-00", ".arbibuddy", "CL-00"):
+        self.assertNotIn("面谈优先核对", text)
+        self.assertEqual(len(root.findall(".//w:tbl", NS)), 1)
+        self.assertIsNotNone(root.find(".//w:trPr/w:tblHeader", NS))
+        for private in ("310000199001010000", "13800000000", "F-00", "E-00", ".arbibuddy", "CL-00"):
             self.assertNotIn(private, text)
         context = managed_edit_context(workspace=self.workspace, case_id=self.case_id)
         self.assertTrue(context["ok"], context)
         self.assertEqual(context["result"]["documents"][0]["document_type"], "lawyer_case_brief")
 
-    def test_complex_brief_places_hearing_on_overview_and_has_one_shared_timeline(self):
+    def test_existing_delivery_with_the_previous_title_still_opens(self):
+        old_title = "律师阅案简报"
+        committed = self.archive.commit({
+            "case_id": self.case_id, "expected_revision": self.revision, "change_summary": "准备旧版标题来源",
+            "changes": [{"operation": "replace", "record_type": "fact", "record_id": "F-003",
+                         "reason": "模拟升级前记录", "content_markdown": f"文书准备信息：{old_title}。"}],
+        })
+        self.assertTrue(committed["ok"], committed)
+        self.revision = committed["result"]["revision"]
+        self.request["archive_revision"] = self.revision
+        self.select()
+        self.request["locked_bindings"][0]["rendered_value"] = old_title
+        with (
+            patch.dict(_DOCUMENT_TYPE_TITLES, {"lawyer_case_brief": old_title}),
+            patch("scripts.documents.lawyer_case_brief.add_subtitle"),
+        ):
+            legacy = render(self.request, self.workspace)
+        self.assertTrue(legacy["ok"], legacy)
+        view = managed_delivery_view(workspace=self.workspace, case_id=self.case_id)
+        self.assertFalse(view["stopped"], view)
+        self.assertEqual(Path(view["presentation_files"][0]["path"]).name, f"《{old_title}》.docx")
+        context = managed_edit_context(workspace=self.workspace, case_id=self.case_id)
+        self.assertTrue(context["ok"], context)
+        self.assertEqual(context["result"]["documents"][0]["title"], old_title)
+
+    def test_complex_brief_uses_word_heading_levels_and_natural_pagination(self):
         committed = self.archive.commit({"case_id": self.case_id, "expected_revision": self.revision,
             "change_summary": "补充虚构开庭通知", "changes": [{"operation": "append", "record_type": "evidence",
                 "content_markdown": "已阅仲裁委开庭通知：开庭日期为2026年5月8日。"}]})
@@ -94,23 +128,85 @@ class LawyerCaseBriefTests(unittest.TestCase):
         self.revision = committed["result"]["revision"]
         self.request["archive_revision"] = self.revision
         self.select()
-        self.request["sections"][0]["full_text"] += "\n临近安排：仲裁委开庭通知载明2026年5月8日开庭。"
+        overview = self.request["sections"][1]
+        overview["full_text"] = (
+            overview["full_text"].replace("，尚未收到开庭通知", "")
+            + "\n临近安排：仲裁委开庭通知载明2026年5月8日开庭。"
+        )
         self.request["locked_bindings"].append({"kind": "date", "archive_record_ref": "E-002", "rendered_value": "2026年5月8日",
             "occurrences": [{"section_id": "overview", "text": "仲裁委开庭通知载明2026年5月8日开庭"}]})
-        self.request["sections"].extend([
-            {"section_id": "timeline", "heading": "共用时间线", "full_text": "日期不详：当事人称先被主管口头要求离开，随后又收到HR返岗微信。"},
-            {"section_id": "wages", "heading": "工资争议", "full_text": "双方工资口径不同，待核对工资条和已提交申请书。"},
-            {"section_id": "termination", "heading": "离职争议", "full_text": "结合前述离职及返岗经过，请律师核实是否构成解除及后续出勤情况。"},
-        ])
+        self.request["sections"][2]["full_text"] += "\n### 关键事件时间线\n据当事人陈述，先有口头通知，随后收到返岗微信。"
+        combined = self.request["sections"][-3:-1]
+        materials, gaps = combined[0]["full_text"].split("\n### 尚待明确的事项\n")
+        objectives, questions = combined[1]["full_text"].split("\n### 拟与律师讨论的问题\n")
+        self.request["sections"][-3:-1] = [
+            {"section_id": "objectives", "heading": "当事人诉求", "full_text": objectives.split("\n", 1)[1]},
+            {"section_id": "materials", "heading": "证据及材料情况", "full_text": materials.split("\n", 1)[1]},
+            {"section_id": "gaps", "heading": "尚待明确的事项", "full_text": gaps},
+            {"section_id": "questions", "heading": "拟与律师讨论的问题", "full_text": questions},
+        ]
         _, root, text = self.deliver()
-        ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
-        self.assertEqual(len(root.findall('.//w:br[@w:type="page"]', ns)), 1)
-        self.assertLess(text.index("2026年5月8日"), text.index("共用时间线"))
-        self.assertEqual(text.count("共用时间线"), 1)
-        self.request["sections"].append({"section_id": "another", "heading": "共用时间线", "full_text": "重复"})
-        failed = render(self.request, self.workspace)
-        self.assertFalse(failed["ok"])
-        self.assertIn("missing_section", {error["code"] for error in failed["errors"]})
+        self.assertFalse(root.findall('.//w:br[@w:type="page"]', NS))
+        self.assertLess(text.index("2026年5月8日"), text.index("关键事件时间线"))
+        headings = {
+            level: ["".join(p.itertext()) for p in root.findall(".//w:p", NS)
+                    if p.find(f'w:pPr/w:pStyle[@w:val="Heading{level}"]', NS) is not None]
+            for level in (1, 2)
+        }
+        self.assertEqual(headings[1][0], "一、案件概要")
+        self.assertEqual(headings[1][-1], "八、拟与律师讨论的问题")
+        self.assertEqual(headings[2], ["（一）关键事件时间线", "（一）工资差额", "（二）离岗及返岗"])
+
+    def test_structure_allows_pruning_and_rejects_empty_or_misplaced_sections(self):
+        base = deepcopy(self.request["sections"])
+        for name, mutate in (
+            ("missing_note", lambda sections: sections.pop()),
+            ("empty_subheading", lambda sections: sections[3].update(full_text="### 工资差额")),
+            ("wrong_order", lambda sections: sections.insert(1, sections.pop(3))),
+            ("old_structure", lambda sections: sections[1].update(heading="案情概要")),
+            ("mixed_combined", lambda sections: sections.insert(-1,
+                {"section_id": "duplicate", "heading": "拟与律师讨论的问题", "full_text": "测试"})),
+        ):
+            with self.subTest(name=name):
+                self.request["sections"] = deepcopy(base)
+                mutate(self.request["sections"])
+                failed = render(self.request, self.workspace)
+                self.assertFalse(failed["ok"])
+                self.assertIn("missing_section", {error["code"] for error in failed["errors"]})
+        self.request["sections"] = base[:4] + base[5:]
+        self.request["locked_bindings"] = [item for item in self.request["locked_bindings"]
+                                           if item["archive_record_ref"] != "CL-001"]
+        _, _, text = self.deliver()
+        self.assertIn("四、证据及待明确事项", text)
+        self.assertIn("五、当事人诉求及咨询问题", text)
+
+    def test_provided_materials_retain_reading_status_in_the_same_table(self):
+        sources = [
+            ("工资流水", "已提供，未阅"),
+            ("排班记录", "已提供，部分已阅"),
+        ]
+        committed = self.archive.commit({
+            "case_id": self.case_id, "expected_revision": self.revision, "change_summary": "记录虚构材料状态",
+            "changes": [{"operation": "append", "record_type": "evidence",
+                         "content_markdown": f"材料名称：{name}\n材料状态：{state}。"}
+                        for name, state in sources],
+        })
+        self.assertTrue(committed["ok"], committed)
+        self.revision = committed["result"]["revision"]
+        self.request["archive_revision"] = self.revision
+        self.select()
+        materials = self.request["sections"][5]
+        rows = "".join(f"| {name} | 工资差额 | {state} |\n" for name, state in sources)
+        materials["full_text"] = materials["full_text"].replace("### 尚待明确的事项", rows + "### 尚待明确的事项")
+        self.request["sections"][-1]["full_text"] += "工资流水未阅，排班记录部分已阅。"
+        self.request["locked_bindings"].extend(
+            {"kind": "evidence", "archive_record_ref": f"E-{index:03}", "rendered_value": name}
+            for index, (name, _) in enumerate(sources, start=2)
+        )
+        _, root, _ = self.deliver()
+        rows = ["".join(row.itertext()) for row in root.findall(".//w:tbl/w:tr", NS)]
+        for name, state in sources:
+            self.assertIn(f"{name}工资差额{state}", rows)
 
     def test_estimate_and_material_amount_can_use_conflicting_source_without_changing_other_types(self):
         committed = self.archive.commit({"case_id": self.case_id, "expected_revision": self.revision,
@@ -151,17 +247,16 @@ class LawyerCaseBriefTests(unittest.TestCase):
         self.revision = added["result"]["revision"]
         self.request["archive_revision"] = self.revision
         self.select()
-        self.request["sections"][0]["full_text"] += "\n入职经过：当事人称2024年3月1日入职。"
+        self.request["sections"][2]["full_text"] += "\n入职经过：当事人称2024年3月1日入职。"
         self.request["locked_bindings"].append({"kind": "date", "archive_record_ref": "F-006", "rendered_value": "2024年3月1日",
-            "occurrences": [{"section_id": "overview", "text": "当事人称2024年3月1日入职"}]})
-        self.request["sections"][0]["full_text"] += "\n当事人姓名：张三"
-        self.request["locked_bindings"].append({"kind": "party", "archive_record_ref": "F-001", "rendered_value": "当事人姓名：张三"})
+            "occurrences": [{"section_id": "background", "text": "当事人称2024年3月1日入职"}]})
         self.deliver()
         before = self.archive.read(self.case_id)["result"]
-        self.request["sections"][0]["full_text"] = self.request["sections"][0]["full_text"].replace("当事人姓名：张三", "当事人：隐名")
+        self.request["sections"][0]["full_text"] = self.request["sections"][0]["full_text"].replace("当事人：张三", "当事人：当事人")
         self.request["locked_bindings"] = [item for item in self.request["locked_bindings"] if item["archive_record_ref"] != "F-001"]
         _, _, text = self.deliver()
         self.assertNotIn("张三", text)
+        self.assertIn("当事人：当事人", text)
         self.assertEqual(self.archive.read(self.case_id)["result"], before)
         corrected = self.archive.commit({"case_id": self.case_id, "expected_revision": self.revision,
             "change_summary": "用户核实后纠正入职日期", "changes": [{"operation": "replace", "record_type": "fact", "record_id": "F-006",
@@ -171,7 +266,7 @@ class LawyerCaseBriefTests(unittest.TestCase):
         self.revision = corrected["result"]["revision"]
         self.request["archive_revision"] = self.revision
         self.select()
-        self.request["sections"][0]["full_text"] = self.request["sections"][0]["full_text"].replace("2024年3月1日", "2024年2月29日")
+        self.request["sections"][2]["full_text"] = self.request["sections"][2]["full_text"].replace("2024年3月1日", "2024年2月29日")
         for binding in self.request["locked_bindings"]:
             if binding["archive_record_ref"] == "F-006":
                 binding["rendered_value"] = "2024年2月29日"
@@ -180,9 +275,46 @@ class LawyerCaseBriefTests(unittest.TestCase):
         self.assertIn("2024年2月29日", text)
         self.assertNotIn("2024年3月1日", text)
 
+    def test_conversation_date_cannot_be_bound_as_the_brief_cutoff(self):
+        updated = self.archive.commit({
+            "case_id": self.case_id, "expected_revision": self.revision,
+            "change_summary": "记录陈述日期", "changes": [{
+                "operation": "replace", "record_type": "fact", "record_id": "F-004",
+                "reason": "当事人说明信息截止日不详",
+                "content_markdown": "事实状态：用户陈述\n当事人于2026年4月15日向本工具陈述案情。已申请仲裁，尚未收到开庭通知。",
+            }],
+        })
+        self.assertTrue(updated["ok"], updated)
+        self.revision = updated["result"]["revision"]
+        self.request["archive_revision"] = self.revision
+        self.select()
+        rejected = render(self.request, self.workspace)
+        self.assertFalse(rejected["ok"], rejected)
+        self.assertIn("brief_cutoff_source_missing", {error.get("reason") for error in rejected["errors"]})
+
+        self.request["sections"][0]["full_text"] = self.request["sections"][0]["full_text"].replace(
+            "案情信息截至：2026年4月15日（此后进展尚未核实）", "案情信息截至：不详")
+        self.request["locked_bindings"] = [item for item in self.request["locked_bindings"] if item["kind"] != "date"]
+        self.assertIn("案情信息截至：不详", self.deliver()[2])
+
+    def test_legacy_archive_with_explicit_information_scope_can_still_render(self):
+        updated = self.archive.commit({
+            "case_id": self.case_id, "expected_revision": self.revision,
+            "change_summary": "记录原始案情范围", "changes": [{
+                "operation": "replace", "record_type": "fact", "record_id": "F-004",
+                "reason": "保留当事人说明信息范围的原有表述",
+                "content_markdown": "事实状态：用户陈述\n当事人于2026年4月15日整理上述情况，此后进展未核实。已申请仲裁，尚未收到开庭通知。",
+            }],
+        })
+        self.assertTrue(updated["ok"], updated)
+        self.revision = updated["result"]["revision"]
+        self.request["archive_revision"] = self.revision
+        self.select()
+        self.assertIn("案情信息截至：2026年4月15日", self.deliver()[2])
+
     def test_unknown_dates_are_not_invented_but_internal_ids_and_unbound_dates_still_fail(self):
         self.request["sections"][0]["full_text"] = self.request["sections"][0]["full_text"].replace(
-            "案情信息截至2026年4月15日（依据当事人当日陈述，此后进展尚未核实）。", "案情信息截至日期不详，现有材料的时间范围待核。")
+            "案情信息截至：2026年4月15日（此后进展尚未核实）", "案情信息截至：不详")
         self.request["locked_bindings"] = [item for item in self.request["locked_bindings"] if item["kind"] != "date"]
         self.deliver()
         self.request["sections"][0]["full_text"] += "\n开庭安排：2026年5月8日，F-001。"

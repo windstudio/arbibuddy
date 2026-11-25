@@ -668,16 +668,16 @@ class ScenarioResponderContractTests(unittest.TestCase):
         )
 
     def test_sdk_environment_is_an_allowlist_without_secret_canary_or_pythonpath(self):
-        with patch.dict(
-            os.environ,
+        with patch(
+            "os.environ",
             {
+                **os.environ,
                 "ARBI_B_CANARY": "do-not-copy",
                 "OPENAI_API_KEY": "secret-value",
                 "PYTHONPATH": "C:/agent/workspace",
                 "PROJECT_CUSTOM_SETTING": "do-not-copy",
                 "CODEX_HOME": "C:/Users/test/.codex",
             },
-            clear=False,
         ):
             environment = _sdk_environment()
 
@@ -1608,10 +1608,9 @@ class ScenarioResponderContractTests(unittest.TestCase):
             )
             workspace = root / "responder-workspace"
             workspace.mkdir()
-            with patch.dict(
-                os.environ,
-                {"CODEX_HOME": str(codex_home)},
-                clear=False,
+            with patch(
+                "os.environ",
+                {**os.environ, "CODEX_HOME": str(codex_home)},
             ):
                 responder = CodexSdkScenarioResponder(
                     workspace=workspace,

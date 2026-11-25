@@ -74,7 +74,6 @@ def capture_delivery_snapshot(workspace: Path, *, document_types=None) -> dict:
             raise ValueError("delivery_set_required")
         presented = {Path(item["path"]).resolve(): item for item in view["presentation_files"]}
         files, blocks = [], {}
-        opening_text = ""
         page_break_count = 0
         for delivery in deliveries:
             if delivery["case_id"] != case_id or delivery["archive_revision"] != revision:
@@ -106,20 +105,12 @@ def capture_delivery_snapshot(workspace: Path, *, document_types=None) -> dict:
                         blocks[delivery["document_type"]] = _blocks(body)
                         if delivery["document_type"] == "lawyer_case_brief":
                             page_break_count = len(body.findall('.//' + _W + 'br[@' + _W + 'type="page"]'))
-                            opening = []
-                            for node in body.iter():
-                                if node.tag == _W + "br" and node.get(_W + "type") == "page":
-                                    break
-                                if node.tag == _W + "t":
-                                    opening.append(node.text or "")
-                            opening_text = "".join(opening)
         final_view = managed_delivery_view(workspace=root, case_id=case_id)
         if final_view.get("stopped") or final_view.get("current_archive_revision") != revision or final_view.get("presentation_files") != view["presentation_files"] or final_view.get("delivery_set") != view.get("delivery_set") or sha256(archive_path.read_bytes()).hexdigest() != archive_digest:
             raise ValueError("snapshot_changed_during_capture")
         return {"verified": True, "case_id": case_id, "archive_revision": revision,
                 "delivery_set_id": set_id, "delivery_state": view["delivery_state"],
                 **archive_sections,
-                "opening_text": opening_text,
                 "page_break_count": page_break_count,
                 "ordered_blocks": blocks, "files": files}
     except (OSError, ValueError, TypeError, KeyError, ET.ParseError, BadZipFile) as error:

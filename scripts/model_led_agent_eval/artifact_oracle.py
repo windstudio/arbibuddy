@@ -46,7 +46,7 @@ REQUIRED_ARCHIVE_SECTIONS = (
     "## 更新记录",
 )
 DOCUMENT_TITLES = {
-    "lawyer_case_brief": "律师阅案简报",
+    "lawyer_case_brief": "案情简报",
     "employment_obligation_demand_letter": "劳动用工义务催告函",
     "forced_termination_notice": "被迫解除劳动合同通知书",
     "arbitration_application": "劳动人事争议仲裁申请书",

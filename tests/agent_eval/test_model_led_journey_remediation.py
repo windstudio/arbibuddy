@@ -128,29 +128,29 @@ class ModelLedJourneyRemediationTests(unittest.TestCase):
             self.assertIn("--root", invocation.command_prefix)
 
     def test_codex_environment_derives_codex_home_without_overwriting_explicit_home(self):
-        with patch.dict(
-            os.environ,
+        with patch(
+            "os.environ",
             {
+                **os.environ,
                 "HOME": "",
                 "USERPROFILE": r"C:\Users\runtime-test",
                 "CODEX_HOME": "",
                 "PYTHONPATH": str(ROOT),
             },
-            clear=False,
         ):
             environment = _runtime_process_environment("codex")
 
         self.assertEqual(environment["CODEX_HOME"], r"C:\Users\runtime-test\.codex")
         self.assertNotIn("PYTHONPATH", environment)
 
-        with patch.dict(
-            os.environ,
+        with patch(
+            "os.environ",
             {
+                **os.environ,
                 "HOME": r"C:\Users\explicit-home",
                 "USERPROFILE": r"C:\Users\runtime-test",
                 "CODEX_HOME": r"C:\Users\explicit-codex",
             },
-            clear=False,
         ):
             environment = _runtime_process_environment("codex")
         self.assertEqual(environment["CODEX_HOME"], r"C:\Users\explicit-codex")
@@ -159,13 +159,13 @@ class ModelLedJourneyRemediationTests(unittest.TestCase):
         active_python = r"C:\eval-venv\Scripts\python.exe"
         with (
             patch.object(sys, "executable", active_python),
-            patch.dict(
-                os.environ,
+            patch(
+                "os.environ",
                 {
+                    **os.environ,
                     "PATH": r"C:\system-python;C:\tools",
                     "PYTHONPATH": str(ROOT),
                 },
-                clear=False,
             ),
         ):
             environment = _runtime_process_environment("claude-code")

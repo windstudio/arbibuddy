@@ -1336,6 +1336,7 @@ def run_journey(
     oracle = JourneyOracle(journey)
     assessment = JourneyAssessment(False, failure_category="Scenario", failure_code="not_started")
     sent_fact_ids: list[str] = list(journey.initial_fact_ids)
+    restarted = False
     restart_context_evidence: dict[str, Any] = {}
     restart_observation_evidence: dict[str, Any] | None = None
     unavailable_uses = 0
@@ -1345,6 +1346,7 @@ def run_journey(
     runtime_turn_completed = True
     turns = 0
     platform_version: str | None = None
+    responder_identity: ResponderIdentity | None = None
     try:
         installed = install_skill(
             platform=platform,
@@ -1416,8 +1418,6 @@ def run_journey(
 
         used_facts: dict[str, int] = {fact_id: 1 for fact_id in journey.initial_fact_ids}
         pending_message: str | None = None
-        restarted = False
-        responder_identity: ResponderIdentity | None = None
         for index in range(1, journey.max_turns + 1):
             fact_id: str | None = None
             selected_fact_ids: list[str] = []
@@ -2251,13 +2251,13 @@ def _build_scenario_response_request(
     brief_edit_ids = set()
     next_edit = None
     if journey.lawyer_case_brief is not None:
-        from .brief_journey import next_brief_edit
+        from .brief_journey import _snapshot_errors, next_brief_edit
         brief_edit_ids = {e["fact_id"] for e in journey.lawyer_case_brief.get("edits", [])}
         next_edit = next_brief_edit(journey.lawyer_case_brief, transcripts, used_facts)
         if next_edit is not None or required_next_fact_id in brief_edit_ids:
             required_next_fact_id = next_edit
         snapshot = transcripts[-1].get("public_artifact_snapshot", {}) if transcripts else {}
-        verified = snapshot.get("verified") is True
+        verified = not _snapshot_errors(snapshot)
         public_delivery_observation = {"verified": verified,
             "document_types": ["lawyer_case_brief"] if verified else []}
     return ScenarioResponseRequest(
@@ -2274,7 +2274,10 @@ def _build_scenario_response_request(
                 message=fact.text,
                 max_uses=fact.max_uses,
                 used_count=used_facts.get(fact.id, 0),
-                requires_sent_facts=fact.requires_sent_facts,
+                requires_sent_facts=tuple(
+                    ref for ref in fact.requires_sent_facts
+                    if ref not in brief_edit_ids or not used_facts.get(ref, 0)
+                ),
             )
             for fact in journey.fact_pool
             if phone_spec is None or fact.id != phone_spec["fact_id"] or phone_ready

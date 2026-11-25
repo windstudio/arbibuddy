@@ -1,5 +1,8 @@
 schema_version: 1
 journeys:
   - evals/model-led/codex-claude-lawyer-case-brief.yaml
+  - evals/model-led/variants/ml04-simple-wages.yaml
   - evals/model-led/variants/ml04-complex-hearing.yaml
+  - evals/model-led/variants/ml04-planned-arbitration.yaml
+  - evals/model-led/variants/ml04-award-consultation.yaml
   - evals/model-led/variants/ml04-postdelivery-edits.yaml
